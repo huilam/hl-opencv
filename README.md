@@ -1,2 +1,4 @@
 # hl-opencv
-OpenCV 4.4 loader and util
+OpenCV native loader and util
+
+Tested on OpenCV 4.4.0
