@@ -78,7 +78,7 @@ public class OpenCvUtil{
 
 		return resize(aMatImg, aNewWidth, iNewHeight, false);
 	}
-		
+	
 	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio)
 	{
 		if(isMainAspectRatio)
@@ -92,11 +92,11 @@ public class OpenCvUtil{
 			
 			aNewWidth = (int)(dImageW * dScale);
 			aNewHeight =(int)(dImageH * dScale);
-			System.out.println("dScale="+dScale);
+			//System.out.println("dScale="+dScale);
 		}
 		
-		System.out.println("aNewWidth="+aNewWidth);
-		System.out.println("aNewHeight="+aNewHeight);
+		//System.out.println("aNewWidth="+aNewWidth);
+		//System.out.println("aNewHeight="+aNewHeight);
 		
 		Mat matSized = new Mat();
 		Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight));
@@ -104,15 +104,15 @@ public class OpenCvUtil{
 	}
 	//
 	
-	public static Mat extractForeground(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
 	{
 		if(aDiffThreshold<0 && aDiffThreshold>1)
 		{
 			throw new Exception("Threshold value should be 0.0-1.0");
 		}
 		
-		//downscale to width=640
-		int iProcessWidth = 1080;
+		//downscale to width=720
+		int iProcessWidth = 720;
 		
 		Mat matInResized = matInput;
 		if(matInput.width()>iProcessWidth)
@@ -131,85 +131,72 @@ public class OpenCvUtil{
 		}
 		
 		//
-		Mat matDeltaMask = new Mat();
+		Mat matMask = new Mat(
+				new Size(matInput.width(), matInput.height()), 
+				matInput.type(), 
+				new Scalar(255,255,255));
+
 		try {
-			String sPath = new File(".").getCanonicalPath()+"/test/images/";
-			/**
-			Imgproc.cvtColor( matInResized, matInResized, Imgproc.COLOR_BGR2GRAY );
-			Imgproc.equalizeHist(matInResized, matInResized);
-			saveImageAsFile(matInResized, sPath+"matInResized.jpg");
-			
-			Imgproc.cvtColor( matBgResized, matBgResized, Imgproc.COLOR_BGR2GRAY );
-			Imgproc.equalizeHist(matBgResized, matBgResized);
-			saveImageAsFile(matBgResized, sPath+"matBgResized.jpg");
-			**/
-			
-			Core.absdiff(matBgResized, matInResized, matDeltaMask);
-			
-			//Core.bitwise_and(matBgResized, matInResized, matDeltaMask);			
-			//Core.bitwise_not(matBgResized, matInResized, matDeltaMask);
-			//Core.absdiff(matInResized, matDeltaMask, matDeltaMask);
+			Core.absdiff(matBgResized, matInResized, matMask);
 		}
 		catch(Throwable t)
 		{
 			t.printStackTrace();
-			matDeltaMask = new Mat(0, 0, matInResized.type());
 		}
 		
-		System.out.println("matDeltaMask="+matDeltaMask.width()+"x"+matDeltaMask.height());
-		System.out.println("matInput="+matInput.width()+"x"+matInput.height());
-		
-		Mat matForeground = new Mat();
-		if(matDeltaMask.width()>0)
+		if(matMask!=null && matMask.width()>0)
 		{
-			Imgproc.GaussianBlur(matDeltaMask, matDeltaMask, new Size(21,21), 0);
+			Imgproc.GaussianBlur(matMask, matMask, new Size(21,21), 0);
 			
-			if(matDeltaMask.channels()>2)
+			if(matMask.channels()>2)
 			{
-				Imgproc.cvtColor(matDeltaMask, matDeltaMask, Imgproc.COLOR_BGRA2GRAY);
+				Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
 			}
-			Imgproc.threshold(matDeltaMask, matDeltaMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
+			Imgproc.threshold(matMask, matMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
 			//
-			if(matDeltaMask.total()!=matInput.total())
+			if(matMask.total()!=matInput.total())
 			{
-				matDeltaMask = resize(matDeltaMask, matInput.width(), matInput.height(), false);
+				matMask = resize(matMask, matInput.width(), matInput.height(), false);
 			}
-			
-			Core.copyTo(matInput, matForeground, matDeltaMask);
-			//
-		}
-		else
-		{
-			matForeground = matInput;
 		}
 		
-		return matForeground;
+		return matMask;
 	}
 	//
 	public static Mat colorToWhiteMask(Mat aMat)
 	{
 		Mat matMask = new Mat();
 		Imgproc.threshold(aMat, matMask, 5, 255, Imgproc.THRESH_BINARY);
-		return grayscale(matMask);
+		return grayscale(matMask, false);
 	}
 	
 	//
 	
 	public static Mat grayscale(Mat aMat)
 	{
+		return grayscale(aMat, true);
+	}
+	
+	protected static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
+	{
 		Mat matGray = aMat.clone();
-		int iOrigType = aMat.type();
+		int iOrigChannel = aMat.channels();
 		
-		if(aMat.channels()==3)
-			Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY);
-		else if(aMat.channels()==4)
-			Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY);
-		
-		if(iOrigType!=matGray.type())
+		//System.out.println("grayscale.channels="+matGray.channels());
+		switch(iOrigChannel)
 		{
-			Imgproc.cvtColor(matGray, matGray, Imgproc.COLOR_GRAY2RGB);
+			case 3 :  
+				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY); 
+				if(isConvertBackOrigType)
+					Imgproc.cvtColor(matGray, matGray, Imgproc.COLOR_GRAY2RGB);
+				break;
+			case 4 :  
+				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY); 
+				if(isConvertBackOrigType)
+					Imgproc.cvtColor(matGray, matGray, Imgproc.COLOR_GRAY2RGBA);
+				break;
 		}
-		
+		//System.out.println("grayscale.channels="+matGray.channels());
 		return matGray;
 	}
 	
@@ -253,7 +240,7 @@ public class OpenCvUtil{
 			aPixelateScale = 0;
 		
 		int iNewWidth = (int)((1.0 - aPixelateScale) * aMat.width());
-		Mat matPixelated = resizeByWidth(aMat, iNewWidth);
+		Mat matPixelated = resizeByWidth(aMat.clone(), iNewWidth);
 		return resizeByWidth(matPixelated, aMat.width());
 	}
 	
