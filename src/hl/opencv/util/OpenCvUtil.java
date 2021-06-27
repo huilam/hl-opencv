@@ -170,6 +170,28 @@ public class OpenCvUtil{
 	}
 	
 	//
+	private static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
+	{
+		if(aBeta<0) aBeta = 0;
+		if(aBeta>1) aBeta = 1;
+		
+	    Mat matBlack = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
+	    double alpha = 1.0 - aBeta;
+	    
+	    Mat matAdjusted = new Mat();
+	    Core.addWeighted(aMat, alpha, matBlack, aBeta, 0.0, matAdjusted);
+	    return matAdjusted;
+	}
+	
+	public static Mat darker(Mat aMat, double aThreshold)
+	{
+	    return adjust(aMat, aThreshold, new Scalar(0,0,0));
+	}
+	
+	public static Mat lighter(Mat aMat, double aThreshold)
+	{
+	    return adjust(aMat, aThreshold, new Scalar(255,255,255));
+	}
 	
 	public static Mat grayscale(Mat aMat)
 	{
