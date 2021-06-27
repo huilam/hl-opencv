@@ -25,7 +25,6 @@ package hl.opencv.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.File;
 import java.util.Vector;
 
 import org.opencv.core.Core;
