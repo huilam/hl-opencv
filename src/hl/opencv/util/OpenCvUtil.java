@@ -203,7 +203,6 @@ public class OpenCvUtil{
 		Mat matGray = aMat.clone();
 		int iOrigChannel = aMat.channels();
 		
-		//System.out.println("grayscale.channels="+matGray.channels());
 		switch(iOrigChannel)
 		{
 			case 3 :  
@@ -251,6 +250,17 @@ public class OpenCvUtil{
 		return matBlurred;
 	}
 	
+	public static Mat cannyEdge(Mat aMat, int aThreshold)
+	{
+		Mat matEdges = new Mat();
+		Imgproc.Canny(aMat, matEdges, aThreshold, aThreshold*3, 3, false);
+		switch(aMat.channels())
+		{
+			case 2: Imgproc.cvtColor(matEdges, matEdges, Imgproc.COLOR_GRAY2RGB); break;
+			case 3: Imgproc.cvtColor(matEdges, matEdges, Imgproc.COLOR_GRAY2RGBA); break;
+		}
+		return matEdges;
+	}
 	
 	public static Mat pixelate(Mat aMat, double aPixelateScale)
 	{
