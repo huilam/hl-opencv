@@ -206,20 +206,35 @@ public class OpenCvUtil{
 		switch(iOrigChannel)
 		{
 			case 3 :  
-				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY); 
-				if(isConvertBackOrigType)
-					Imgproc.cvtColor(matGray, matGray, Imgproc.COLOR_GRAY2RGB);
+				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY);
 				break;
 			case 4 :  
-				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY); 
-				if(isConvertBackOrigType)
-					Imgproc.cvtColor(matGray, matGray, Imgproc.COLOR_GRAY2RGBA);
+				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY);
 				break;
 		}
+		
+		if(isConvertBackOrigType)
+		{
+			matGray = grayToMultiChannel(matGray, iOrigChannel);
+		}
+		
 		//System.out.println("grayscale.channels="+matGray.channels());
 		return matGray;
 	}
 	
+	private static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
+	{
+		switch(aNewChannelNo)
+		{
+			case 3 : 
+				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGB);
+				break;
+			case 4 :  
+				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGBA);
+				break;
+		}
+		return aMatGray;
+	}
 	public static Mat solidfill(Mat aMat, Scalar aScalar)
 	{
 		Mat matSolid = new Mat(aMat.size(), aMat.type(), aScalar);
@@ -250,15 +265,18 @@ public class OpenCvUtil{
 		return matBlurred;
 	}
 	
-	public static Mat cannyEdge(Mat aMat, int aThreshold)
+	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
 	{
 		Mat matEdges = new Mat();
-		Imgproc.Canny(aMat, matEdges, aThreshold, aThreshold*3, 3, false);
-		switch(aMat.channels())
+		Imgproc.Canny(aMat, matEdges, aThreshold, aThreshold*2, 3, false);
+		
+		if(isinvert)
 		{
-			case 2: Imgproc.cvtColor(matEdges, matEdges, Imgproc.COLOR_GRAY2RGB); break;
-			case 3: Imgproc.cvtColor(matEdges, matEdges, Imgproc.COLOR_GRAY2RGBA); break;
+			Mat matInvert = new Mat(matEdges.rows(), matEdges.cols(), matEdges.type(), new Scalar(255,255,255));
+			Core.subtract(matInvert, matEdges, matEdges);
 		}
+		
+		matEdges = grayToMultiChannel(matEdges, aMat.channels());
 		return matEdges;
 	}
 	
