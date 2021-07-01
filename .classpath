@@ -3,7 +3,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/hl-common_20210612-1047-39.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/4.4.0/opencv-4.4.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/hl-common_20210627-1225-01.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
