@@ -336,6 +336,21 @@ public class OpenCvUtil{
 	
 	//
 	
+	public static Mat adjBrightness(Mat aMatIn, double aBrightness)
+	{
+		double dContrast = 1 + (aBrightness/100);
+		return adjBrightness(aMatIn, dContrast, aBrightness);
+	}
+	
+	public static Mat adjBrightness(Mat aMatIn, double aContrast, double aBrightness)
+	{
+		Mat aMatOut = new Mat();
+		//Contrast control (1.0-3.0)
+		//Brightness control (0-100)
+		Core.convertScaleAbs(aMatIn, aMatOut, aContrast, aBrightness);
+		return aMatOut;
+	}
+	
 	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
 	{
 		double dDiff = 0;
