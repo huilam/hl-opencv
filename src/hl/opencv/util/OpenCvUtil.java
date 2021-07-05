@@ -42,9 +42,12 @@ public class OpenCvUtil{
 		Mat mat = null;
 		if(img!=null)
 		{
-			img = removeAlphaChannel(img);
+			int iCvType = CvType.CV_8UC4;
+			if(img.getAlphaRaster()==null)
+				iCvType = CvType.CV_8UC3;
+			
 			byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
-	        mat = new Mat(img.getHeight(), img.getWidth(), CvType.CV_8UC3);
+	        mat = new Mat(img.getHeight(), img.getWidth(), iCvType);
 	        mat.put(0, 0, data);
 		}
         return mat;
@@ -69,16 +72,26 @@ public class OpenCvUtil{
 	
 	public static Mat resizeByWidth(final Mat aMatImg, int aNewWidth)
 	{
+		return resizeByWidth(aMatImg, aNewWidth, Imgproc.INTER_LINEAR);
+	}
+	
+	public static Mat resizeByWidth(final Mat aMatImg, int aNewWidth, int aMode)
+	{
 		double dImageW = (double)aMatImg.width();
 		double dImageH = (double)aMatImg.height();
 		
 		double dScaleW 	= aNewWidth>0 ? ((double)aNewWidth) / dImageW : 1.0;
 		int iNewHeight =(int)(dImageH * dScaleW);
 
-		return resize(aMatImg, aNewWidth, iNewHeight, false);
+		return resize(aMatImg, aNewWidth, iNewHeight, false, aMode);
 	}
 	
 	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio)
+	{
+		return resize(aMatImg, aNewWidth, aNewHeight, isMainAspectRatio, Imgproc.INTER_LINEAR);
+	}
+	
+	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio, int aMode)
 	{
 		if(isMainAspectRatio)
 		{
@@ -98,7 +111,7 @@ public class OpenCvUtil{
 		//System.out.println("aNewHeight="+aNewHeight);
 		
 		Mat matSized = new Mat();
-		Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight));
+		Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight), aMode);
 		return matSized;
 	}
 	//
@@ -170,16 +183,25 @@ public class OpenCvUtil{
 	}
 	
 	//
-	private static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
+	public static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
 	{
+
+//alpha = 1.5 # Contrast control (1.0-3.0)
+//beta = 0 # Brightness control (0-100)
+
 		if(aBeta<0) aBeta = 0;
 		if(aBeta>1) aBeta = 1;
 		
-	    Mat matBlack = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
+	    Mat mat2 = aMat;
+	    if(aScalar!=null)
+	    {
+	    	mat2 = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
+	    }
+	    
 	    double alpha = 1.0 - aBeta;
 	    
 	    Mat matAdjusted = new Mat();
-	    Core.addWeighted(aMat, alpha, matBlack, aBeta, 0.0, matAdjusted);
+	    Core.addWeighted(aMat, alpha, mat2, aBeta, 0.0, matAdjusted);
 	    return matAdjusted;
 	}
 	
@@ -198,7 +220,7 @@ public class OpenCvUtil{
 		return grayscale(aMat, true);
 	}
 	
-	protected static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
+	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
 	{
 		Mat matGray = aMat.clone();
 		int iOrigChannel = aMat.channels();
@@ -220,6 +242,25 @@ public class OpenCvUtil{
 		
 		//System.out.println("grayscale.channels="+matGray.channels());
 		return matGray;
+	}
+	
+	public static Mat toHSV(Mat aMat)
+	{
+		Mat matHSV = aMat.clone();
+		int iOrigChannel = aMat.channels();
+		
+		switch(iOrigChannel)
+		{
+			case 1 :  
+				Imgproc.cvtColor(matHSV, matHSV, Imgproc.COLOR_GRAY2BGR);
+				//let it continue to convert to HSV
+			case 3 :  
+			case 4 :  
+				Imgproc.cvtColor(matHSV, matHSV, Imgproc.COLOR_BGR2HSV);
+				break;
+		}
+		
+		return matHSV;
 	}
 	
 	private static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
@@ -289,8 +330,8 @@ public class OpenCvUtil{
 			aPixelateScale = 0;
 		
 		int iNewWidth = (int)((1.0 - aPixelateScale) * aMat.width());
-		Mat matPixelated = resizeByWidth(aMat.clone(), iNewWidth);
-		return resizeByWidth(matPixelated, aMat.width());
+		Mat matPixelated = resizeByWidth(aMat.clone(), iNewWidth, Imgproc.INTER_LINEAR);
+		return resizeByWidth(matPixelated, aMat.width(), Imgproc.INTER_NEAREST);
 	}
 	
 	//
