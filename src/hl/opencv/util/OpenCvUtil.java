@@ -336,6 +336,34 @@ public class OpenCvUtil{
 	
 	//
 	
+	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
+	{
+		double dDiff = 0;
+		
+		Mat mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), 100);
+		Mat mat2 = OpenCvUtil.resizeByWidth(aMat2.clone(), 100);
+		
+		Mat matHSV1 = OpenCvUtil.toHSV(mat1);
+		Mat matHSV2 = OpenCvUtil.toHSV(mat2);
+		
+		matHSV1 = OpenCvUtil.grayscale(matHSV1);
+		matHSV2 = OpenCvUtil.grayscale(matHSV2);
+		
+		Scalar scalar1 = Core.mean(matHSV1);
+		Scalar scalar2 = Core.mean(matHSV2);
+
+		if(scalar1!=null && scalar2!=null && scalar1.val.length>0)
+		{
+			//if Grayscale, only channel 0 (out of 0 to 3) have value
+			double dVal1 = (scalar1.val)[0]; //2
+			double dVal2 = (scalar2.val)[0]; //2
+			dDiff = (dVal2 - dVal1);
+		}
+		
+		return dDiff;
+	}
+	
+	
 	protected static Mat removeAlphaChannel(Mat matInput)
 	{
 		if(matInput.channels()==4)
