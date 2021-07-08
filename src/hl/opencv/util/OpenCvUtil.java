@@ -205,16 +205,6 @@ public class OpenCvUtil{
 	    return matAdjusted;
 	}
 	
-	public static Mat darker(Mat aMat, double aThreshold)
-	{
-	    return adjust(aMat, aThreshold, new Scalar(0,0,0));
-	}
-	
-	public static Mat lighter(Mat aMat, double aThreshold)
-	{
-	    return adjust(aMat, aThreshold, new Scalar(255,255,255));
-	}
-	
 	public static Mat grayscale(Mat aMat)
 	{
 		return grayscale(aMat, true);
@@ -361,18 +351,15 @@ public class OpenCvUtil{
 		Mat matHSV1 = OpenCvUtil.toHSV(mat1);
 		Mat matHSV2 = OpenCvUtil.toHSV(mat2);
 		
-		matHSV1 = OpenCvUtil.grayscale(matHSV1);
-		matHSV2 = OpenCvUtil.grayscale(matHSV2);
-		
 		Scalar scalar1 = Core.mean(matHSV1);
 		Scalar scalar2 = Core.mean(matHSV2);
 
 		if(scalar1!=null && scalar2!=null && scalar1.val.length>0)
 		{
-			//if Grayscale, only channel 0 (out of 0 to 3) have value
-			double dVal1 = (scalar1.val)[0]; //2
-			double dVal2 = (scalar2.val)[0]; //2
-			dDiff = (dVal2 - dVal1);
+			//H=color S=gray V=brightness
+			double dVal1 = (scalar1.val)[1]; //2
+			double dVal2 = (scalar2.val)[1]; //2
+			dDiff = (dVal1 - dVal2);
 		}
 		
 		return dDiff;
