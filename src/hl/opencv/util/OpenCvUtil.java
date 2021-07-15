@@ -25,6 +25,7 @@ package hl.opencv.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
 import java.util.Vector;
 
 import org.opencv.core.Core;
@@ -278,7 +279,7 @@ public class OpenCvUtil{
 		return matReturn;
 	}
 	
-	public static Mat mediumBlur(Mat aMat, double aBlurScale)
+	public static Mat medianBlur(Mat aMat, double aBlurScale)
 	{
 		if(aBlurScale>1)
 			aBlurScale = 1;
@@ -365,6 +366,36 @@ public class OpenCvUtil{
 		return dDiff;
 	}
 	
+	public static double compareImage(Mat matImage1, Mat matImage2)
+	{
+		Mat matResized1 = matImage1.clone();
+		Mat matResized2 = matImage2.clone();
+				
+		if(matImage1.width()>640)
+		{
+			matResized1 = resizeByWidth(matResized1, 640);
+		}
+		
+		if(matImage2.width()!=matResized1.width())
+		{
+			matResized2 = resizeByWidth(matResized2, matResized1.width());
+		}
+		//String sOutputPath = new File("./test/images/output").getAbsolutePath();
+		
+		Mat matGray1 = grayscale(matResized1, false);
+		Mat matGray2 = grayscale(matResized2, false);		
+		//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
+		//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
+		
+		Mat matEdge1 = cannyEdge(matGray1, 90, false);
+		Mat matEdge2 = cannyEdge(matGray2, 90, false);
+
+		//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1.jpg");
+		//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2.jpg");
+	
+		double dDiff = Imgproc.matchShapes(matEdge1, matEdge2, 1, 0);
+		return dDiff;
+	}
 	
 	protected static Mat removeAlphaChannel(Mat matInput)
 	{
