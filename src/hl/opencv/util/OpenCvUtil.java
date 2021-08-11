@@ -25,7 +25,6 @@ package hl.opencv.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.File;
 import java.util.Vector;
 
 import org.opencv.core.Core;
@@ -428,6 +427,27 @@ public class OpenCvUtil{
 		
 		
 		return 1-dScore1;
+	}
+	
+	public static Mat addAlphaChannel(Mat matInput)
+	{
+		if(matInput.channels()==4)
+		{
+			return matInput;
+		}
+		
+		Mat matWithAlpha = matInput.clone();
+		switch(matInput.channels())
+		{
+			case 1:
+				Imgproc.cvtColor(matInput, matWithAlpha, Imgproc.COLOR_GRAY2BGRA);
+				break;
+			case 3:
+				Imgproc.cvtColor(matInput, matWithAlpha, Imgproc.COLOR_BGR2BGRA);
+				break;
+		}
+		
+		return matWithAlpha;
 	}
 	
 	public static Mat removeAlphaChannel(Mat matInput)
