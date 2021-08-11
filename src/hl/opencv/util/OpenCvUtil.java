@@ -31,6 +31,7 @@ import java.util.Vector;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -366,7 +367,32 @@ public class OpenCvUtil{
 		return dDiff;
 	}
 	
-	public static double compareImage(Mat matImage1, Mat matImage2)
+	public static Mat matchImageTemplate(Mat matImage, Mat matTempl)
+	{
+		Mat matResult = new Mat();
+		Imgproc.matchTemplate(matImage, matTempl, matResult, 0);
+		return matResult;
+	}
+	
+	public static double calcBlurriness(Mat matImage)
+	{
+		Mat matLaplacian = new Mat();
+		Mat matGray = matImage.clone();
+		
+		Imgproc.Laplacian(matGray, matLaplacian, 3); 
+		MatOfDouble median = new MatOfDouble();
+		MatOfDouble std= new MatOfDouble();        
+		Core.meanStdDev(matLaplacian, median , std);
+
+		double dSharpness = Math.pow(std.get(0,0)[0],2);
+		
+		if(dSharpness>100)
+			dSharpness = 100;
+		
+		return 1-(dSharpness/100);
+	}
+	
+	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode)
 	{
 		Mat matResized1 = matImage1.clone();
 		Mat matResized2 = matImage2.clone();
@@ -383,21 +409,28 @@ public class OpenCvUtil{
 		//String sOutputPath = new File("./test/images/output").getAbsolutePath();
 		
 		Mat matGray1 = grayscale(matResized1, false);
-		Mat matGray2 = grayscale(matResized2, false);		
+		Mat matGray2 = grayscale(matResized2, false);
+		
+		matGray1 = medianBlur(matGray1, 0.08);
+		matGray2 = medianBlur(matGray2, 0.08);
 		//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
 		//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
 		
-		Mat matEdge1 = cannyEdge(matGray1, 90, false);
-		Mat matEdge2 = cannyEdge(matGray2, 90, false);
+		int iEdgeThreshold = 50;
+		Mat matEdge1 = cannyEdge(matGray1, iEdgeThreshold, false);
+		Mat matEdge2 = cannyEdge(matGray2, iEdgeThreshold, false);
 
-		//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1.jpg");
-		//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2.jpg");
-	
-		double dDiff = Imgproc.matchShapes(matEdge1, matEdge2, 1, 0);
-		return dDiff;
+		//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1_"+iEdgeThreshold+".jpg");
+		//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2_"+iEdgeThreshold+".jpg");
+
+		double dScore1 = Imgproc.matchShapes(
+				matEdge1, matEdge2, iMode, 0);
+		
+		
+		return 1-dScore1;
 	}
 	
-	protected static Mat removeAlphaChannel(Mat matInput)
+	public static Mat removeAlphaChannel(Mat matInput)
 	{
 		if(matInput.channels()==4)
 		{
@@ -439,7 +472,7 @@ public class OpenCvUtil{
 	
 	public static Mat loadImage(String aImageURI)
 	{
-		return Imgcodecs.imread(aImageURI);
+		return Imgcodecs.imread(aImageURI, Imgcodecs.IMREAD_UNCHANGED);
 	}
 	
 	public static void saveImageAsFile(Mat aMatInput, String aFileName)
