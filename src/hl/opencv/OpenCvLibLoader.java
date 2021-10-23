@@ -124,14 +124,24 @@ public class OpenCvLibLoader{
 		return this.loaded;
 	}
 	
-	public static void main(String args[]) throws Exception
+	public static OpenCvLibLoader testLoadCvLib()
 	{
-		File curDir = new File(".");
+		File curDir = new File("./lib/opencv/4.4.0");
 		//
-		String sNativeLibPath = "./"+curDir.getCanonicalPath()+"/lib/opencv/4.4.0";
+		String sNativeLibPath = "./"+curDir.getAbsolutePath();
 		String sNativeLibName = Core.NATIVE_LIBRARY_NAME;
 		OpenCvLibLoader cvLoader = new OpenCvLibLoader(sNativeLibName, sNativeLibPath);
-		System.out.println("Loaded OpenCV Version : "+(cvLoader.init()?cvLoader.getVersion():null));
+		
+		if(cvLoader.init())
+			System.out.println("Loaded OpenCV Version : "+cvLoader.getVersion());
+		else
+			System.err.println("Err : "+cvLoader.getInitException());
+		return cvLoader;
+	}
+	
+	public static void main(String args[]) throws Exception
+	{
+		testLoadCvLib();
 		//
 	}
 }
