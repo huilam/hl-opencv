@@ -24,8 +24,11 @@ package hl.opencv.util;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.util.Vector;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.nio.ByteBuffer;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -47,9 +50,28 @@ public class OpenCvUtil{
 			if(img.getAlphaRaster()==null)
 				iCvType = CvType.CV_8UC3;
 			
-			byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
+
 	        mat = new Mat(img.getHeight(), img.getWidth(), iCvType);
-	        mat.put(0, 0, data);
+			DataBuffer datBuf = img.getRaster().getDataBuffer();
+			byte[] dataBytes = null;
+			
+			switch (datBuf.getDataType())
+			{
+		    	case DataBuffer.TYPE_BYTE:
+		    		dataBytes = ((DataBufferByte)datBuf).getData();
+		    		break;
+		    	case DataBuffer.TYPE_INT:
+		    		int[] dataInts = ((DataBufferInt)datBuf).getData();
+		    		ByteBuffer byteBuf = ByteBuffer.allocate(4 * dataInts.length);
+		            for (int i = 0; i < dataInts.length; i++)
+		            {
+		            	byteBuf.putInt(i, dataInts[i]);
+		            }
+		            dataBytes = byteBuf.array();
+		    		break;
+			}
+			
+			mat.put(0, 0, dataBytes);
 		}
         return mat;
 	}
