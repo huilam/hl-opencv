@@ -46,11 +46,15 @@ public class OpenCvUtil{
 		Mat mat = null;
 		if(img!=null)
 		{
+			int iChannel = 4;
+			
 			int iCvType = CvType.CV_8UC4;
 			if(img.getAlphaRaster()==null)
+			{
 				iCvType = CvType.CV_8UC3;
+				iChannel = 3;
+			}
 			
-
 	        mat = new Mat(img.getHeight(), img.getWidth(), iCvType);
 			DataBuffer datBuf = img.getRaster().getDataBuffer();
 			byte[] dataBytes = null;
@@ -62,7 +66,7 @@ public class OpenCvUtil{
 		    		break;
 		    	case DataBuffer.TYPE_INT:
 		    		int[] dataInts = ((DataBufferInt)datBuf).getData();
-		    		ByteBuffer byteBuf = ByteBuffer.allocate(4 * dataInts.length);
+		    		ByteBuffer byteBuf = ByteBuffer.allocate(iChannel * dataInts.length);
 		            for (int i = 0; i < dataInts.length; i++)
 		            {
 		            	byteBuf.putInt(i, dataInts[i]);
@@ -88,7 +92,21 @@ public class OpenCvUtil{
 		aMat.get(0,0,b); // get all the pixels
 		BufferedImage image = new BufferedImage(aMat.cols(), aMat.rows(), type);
 		final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-		System.arraycopy(b, 0, targetPixels, 0, b.length);  
+		
+		try {
+			System.arraycopy(b, 0, targetPixels, 0, b.length);  
+		}catch(Exception ex)
+		{
+			System.err.println(">>> aMat.rows="+aMat.rows());
+			System.err.println(">>> aMat.cols="+aMat.cols());
+			System.err.println(">>> aMat.channels="+aMat.channels());
+			System.err.println(">>> bufferSize="+bufferSize);
+			System.err.println(">>> b.length="+b.length);
+			System.err.println(">>> targetPixels.length="+targetPixels.length);
+			
+			throw ex;
+		}
+		
 		return image;
 	}
 	//
