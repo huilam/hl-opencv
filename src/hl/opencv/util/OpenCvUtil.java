@@ -141,7 +141,7 @@ public class OpenCvUtil{
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
 	{
-		if(aDiffThreshold<0 && aDiffThreshold>1)
+		if(aDiffThreshold<0 || aDiffThreshold>1)
 		{
 			throw new Exception("Threshold value should be 0.0-1.0");
 		}
@@ -166,10 +166,11 @@ public class OpenCvUtil{
 		}
 		
 		//
+		
 		Mat matMask = new Mat(
 				new Size(matInput.width(), matInput.height()), 
 				matInput.type(), 
-				new Scalar(255,255,255));
+				Scalar.all(255));
 
 		try {
 			Core.absdiff(matBgResized, matInResized, matMask);
@@ -181,12 +182,18 @@ public class OpenCvUtil{
 		
 		if(matMask!=null && matMask.width()>0)
 		{
-			Imgproc.GaussianBlur(matMask, matMask, new Size(21,21), 0);
+			Imgproc.GaussianBlur(matMask, matMask, new Size(11,11), 0);
 			
-			if(matMask.channels()>2)
+			switch(matMask.channels())
 			{
-				Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
-			}
+				case 3 : 
+					Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
+					break;
+					
+				case 4 : 
+					Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
+					break;
+			}	
 			Imgproc.threshold(matMask, matMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
 			//
 			if(matMask.total()!=matInput.total())
