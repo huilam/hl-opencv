@@ -76,30 +76,50 @@ public class OpenCvUtil{
 			}
 			
 			mat.put(0, 0, dataBytes);
+			
+			if(iChannel==4)
+			{
+				//BufferedImage.TYPE_4BYTE_ABGR
+				//Imgproc.COLOR_BGR2BGRA
+				Vector<Mat> vMat = new Vector<>();
+				Core.split(mat, vMat);
+				Mat matAlpha = vMat.remove(0);
+				vMat.add(matAlpha);
+				Core.merge(vMat, mat);
+			}
+			
 		}
         return mat;
 	}
 	
 	public static BufferedImage mat2BufferedImage(Mat aMat){
+		Mat mat = aMat.clone();
 		int type = BufferedImage.TYPE_BYTE_GRAY;
-		switch(aMat.channels())
+		switch(mat.channels())
 		{
 			case 3 : type = BufferedImage.TYPE_3BYTE_BGR; break;
-			case 4 : type = BufferedImage.TYPE_4BYTE_ABGR; break;
+			case 4 : type = BufferedImage.TYPE_4BYTE_ABGR; 
+			
+				Vector<Mat> vMat = new Vector<>();
+				Core.split(mat, vMat);
+				Mat matAlpha = vMat.remove(vMat.size()-1);
+				vMat.add(0,matAlpha);
+				Core.merge(vMat, mat);
+				break;
 		}
-		int bufferSize = aMat.channels()* aMat.cols()* aMat.rows();
+		int bufferSize = mat.channels()* mat.cols()* mat.rows();
 		byte [] b = new byte[bufferSize];
-		aMat.get(0,0,b); // get all the pixels
-		BufferedImage image = new BufferedImage(aMat.cols(), aMat.rows(), type);
+		mat.get(0,0,b); // get all the pixels
+		BufferedImage image = new BufferedImage(mat.cols(), mat.rows(), type);
 		final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 		
 		try {
 			System.arraycopy(b, 0, targetPixels, 0, b.length);  
 		}catch(Exception ex)
 		{
-			System.err.println(">>> aMat.rows="+aMat.rows());
-			System.err.println(">>> aMat.cols="+aMat.cols());
-			System.err.println(">>> aMat.channels="+aMat.channels());
+			System.err.println(">>> aMat.rows="+mat.rows());
+			System.err.println(">>> aMat.cols="+mat.cols());
+			System.err.println(">>> aMat.channels="+mat.channels());
 			System.err.println(">>> bufferSize="+bufferSize);
 			System.err.println(">>> b.length="+b.length);
 			System.err.println(">>> targetPixels.length="+targetPixels.length);
