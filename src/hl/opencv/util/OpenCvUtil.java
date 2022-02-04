@@ -247,7 +247,7 @@ public class OpenCvUtil{
 	}
 	//
 	
-	public Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
+	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
 	{
 		if(aMatMask!=null && !aMatMask.empty())
 		{
