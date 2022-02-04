@@ -24,6 +24,8 @@ package hl.opencv.util;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -34,6 +36,7 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -242,6 +245,36 @@ public class OpenCvUtil{
 		
 		return matMask;
 	}
+	//
+	
+	public Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
+	{
+		if(aMatMask!=null && !aMatMask.empty())
+		{
+			if(aMinContourArea>0 || aMaxContourArea>0) 
+			{
+				List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+				
+				Imgproc.findContours(aMatMask, contours, new Mat(), 
+						Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+				
+				List<MatOfPoint> contours_remove = new ArrayList<MatOfPoint>();
+				for(MatOfPoint c : contours)
+				{
+					if(aMinContourArea>0 && Imgproc.contourArea(c)<aMinContourArea)
+						contours_remove.add(c);
+					
+					if(aMaxContourArea>0 && Imgproc.contourArea(c)>aMaxContourArea)
+						contours_remove.add(c);
+				}
+				if(contours_remove.size()>0)
+					Imgproc.drawContours(aMatMask, contours_remove, -1, new Scalar(0), -1);
+			}
+		}	
+		
+		return aMatMask;
+	}
+	
 	//
 	public static Mat colorToWhiteMask(Mat aMat)
 	{
