@@ -182,10 +182,11 @@ public class OpenCvUtil{
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
 	{
-		return extractFGMask(matInput, matBackground, aDiffThreshold, 720);
+		return extractFGMask(matInput, matBackground, aDiffThreshold, 600, 500);
 	}
 	
-	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold, int aProcessWidth) throws Exception
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
+			int aProcessWidth, int minContourPixelSize) throws Exception
 	{
 		if(aDiffThreshold<0 || aDiffThreshold>1)
 		{
@@ -247,6 +248,11 @@ public class OpenCvUtil{
 			//
 			if(matMask.total()!=matInput.total())
 			{
+				if(minContourPixelSize>0)
+				{
+					matMask = removeMaskContourAreas(matMask,minContourPixelSize,0);
+				}
+				
 				matMask = resize(matMask, matInput.width(), matInput.height(), false);
 			}
 		}
