@@ -264,7 +264,7 @@ public class OpenCvUtil{
 	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
 	{
 		return removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea,
-				Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+				Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 	}
 	
 	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea,
