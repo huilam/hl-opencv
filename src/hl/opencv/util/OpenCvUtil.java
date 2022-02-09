@@ -182,13 +182,21 @@ public class OpenCvUtil{
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
 	{
+		return extractFGMask(matInput, matBackground, aDiffThreshold, 720);
+	}
+	
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold, int aProcessWidth) throws Exception
+	{
 		if(aDiffThreshold<0 || aDiffThreshold>1)
 		{
 			throw new Exception("Threshold value should be 0.0-1.0");
 		}
 		
-		//downscale to width=720
-		int iProcessWidth = 720;
+		//downscale to width=360
+		int iProcessWidth = 360;
+		
+		if(aProcessWidth>0)
+			iProcessWidth = aProcessWidth;
 		
 		Mat matInResized = matInput;
 		if(matInput.width()>iProcessWidth)
@@ -249,6 +257,13 @@ public class OpenCvUtil{
 	
 	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
 	{
+		return removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea,
+				Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+	}
+	
+	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea,
+			int iFindContourMode, int iFindContourMethod)
+	{
 		if(aMatMask!=null && !aMatMask.empty())
 		{
 			if(aMinContourArea>0 || aMaxContourArea>0) 
@@ -256,7 +271,7 @@ public class OpenCvUtil{
 				List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 				
 				Imgproc.findContours(aMatMask, contours, new Mat(), 
-						Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+						iFindContourMode, iFindContourMethod);
 				
 				List<MatOfPoint> contours_remove = new ArrayList<MatOfPoint>();
 				for(MatOfPoint c : contours)
