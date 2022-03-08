@@ -128,7 +128,7 @@ public class OpenCvLibLoader{
 	{
 		File curDir = new File("./lib/opencv/4.4.0");
 		//
-		String sNativeLibPath = "./"+curDir.getAbsolutePath();
+		String sNativeLibPath = curDir.getAbsolutePath();
 		String sNativeLibName = Core.NATIVE_LIBRARY_NAME;
 		OpenCvLibLoader cvLoader = new OpenCvLibLoader(sNativeLibName, sNativeLibPath);
 		
