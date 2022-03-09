@@ -495,6 +495,54 @@ public class OpenCvUtil{
 		return matBlurred;
 	}
 	
+	public static Mat blur(Mat aMat, double aBlurScale)
+	{
+		if(aBlurScale>1)
+			aBlurScale = 1;
+		
+		if(aBlurScale<0)
+			aBlurScale = 0;
+		
+		
+		int iH = (int)(80 * aBlurScale);
+		int iW = (int)(80 * aBlurScale);
+		
+		Mat matBlurred = new Mat();
+		if(iH>0 && iW>0)
+		{
+			Size ksize = new Size(iW,iH);
+			Imgproc.blur(aMat, matBlurred, ksize);
+		}
+		else
+		{
+			matBlurred = aMat;
+		}
+		return matBlurred;
+	}
+	
+	public static Mat gaussianBlur(Mat aMat, double aBlurScale)
+	{
+		if(aBlurScale>1)
+			aBlurScale = 1;
+		
+		if(aBlurScale<0)
+			aBlurScale = 0;
+
+		Mat matBlurred = new Mat();
+		
+		if(aBlurScale>0)
+		{
+			int iThreshold = (int)(121 * aBlurScale);
+			
+			if(iThreshold%2==0)
+				iThreshold += 1;
+			
+			Size ksize = new Size(iThreshold, iThreshold);
+			Imgproc.GaussianBlur(aMat, matBlurred, ksize, 0);
+		}
+		return matBlurred;
+	}
+	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
 	{
 		Mat matEdges = new Mat();
