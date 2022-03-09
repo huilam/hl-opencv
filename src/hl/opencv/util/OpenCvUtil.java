@@ -25,8 +25,15 @@ package hl.opencv.util;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Base64.Encoder;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
@@ -35,7 +42,9 @@ import java.nio.ByteBuffer;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -44,6 +53,74 @@ import org.opencv.imgproc.Imgproc;
 
 public class OpenCvUtil{
 	
+	private static Decoder base64Decoder = Base64.getDecoder();
+	private static Encoder base64Encoder = Base64.getEncoder();
+	
+	public static Mat base64Img2Mat(String aBase64Img)
+	{
+	    byte[] bytes =  base64Decoder.decode(aBase64Img);
+	    
+	    Mat mattemp = new Mat();
+	    mattemp.put(0,0,bytes);
+	    Mat mat = Imgcodecs.imdecode(mattemp, Imgcodecs.IMREAD_COLOR);
+	    mattemp.release();
+	    return mat;
+	}
+	
+	public static String mat2base64Img(Mat aMat, String aImgFormat)
+	{
+		Map<Integer, Integer> mapImgParams = new HashMap<Integer,Integer>();
+		
+		if(aImgFormat==null)
+			aImgFormat = ".jpg";
+		
+		if(aImgFormat.toLowerCase().endsWith("jpg"))
+		{
+			mapImgParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+		}
+		
+		return mat2base64Img(aMat, aImgFormat, mapImgParams);
+	}
+	
+	public static String mat2base64Img(Mat aMat, String aImgFormat, Map<Integer, Integer> aMapImgParams)
+	{
+		String sBase64 = null; 
+		if(aMat!=null)
+		{
+			if(aImgFormat==null)
+				aImgFormat = ".jpg";
+			else if (!aImgFormat.startsWith("."))
+				aImgFormat = "." + aImgFormat;
+			
+			MatOfInt matOfInt = new MatOfInt();
+			
+			if(aMapImgParams!=null && aMapImgParams.size()>0)
+			{
+				List<Integer> list = new ArrayList<Integer> ();
+				Iterator<Integer> iter = aMapImgParams.keySet().iterator();
+				while(iter.hasNext())
+				{
+					Integer ParamName 	= iter.next();
+					Integer ParamValue 	= aMapImgParams.get(ParamName);
+					
+					if(ParamValue!=null)
+					{
+						list.add(ParamName);
+						list.add(ParamValue);
+					}
+				}
+				matOfInt.fromList(list);
+			}
+			
+			MatOfByte matByteBuf = new MatOfByte();
+			Imgcodecs.imencode(aImgFormat, aMat, matByteBuf, matOfInt);
+			byte[] bytes = matByteBuf.toArray(); 
+			sBase64 = base64Encoder.encodeToString(bytes);
+			matByteBuf.release();
+		}
+	    return sBase64;
+	}
+
 	public static Mat bufferedImg2Mat(BufferedImage img)
 	{
 		Mat mat = null;
@@ -618,7 +695,39 @@ public class OpenCvUtil{
 	
 	public static void saveImageAsFile(Mat aMatInput, String aFileName)
 	{
-		Imgcodecs.imwrite(aFileName, aMatInput);
+		Map<Integer, Integer> mapImageParams = new HashMap<Integer, Integer>();
+		
+		if(aFileName.toLowerCase().endsWith(".jpg"))
+		{
+			mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+		}
+		
+		saveImageAsFile(aMatInput, aFileName, mapImageParams);
+	}
+	
+	public static void saveImageAsFile(Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
+	{
+		MatOfInt matOfInt = new MatOfInt();
+		
+		if(mapImageParams!=null && mapImageParams.size()>0)
+		{
+			List<Integer> list = new ArrayList<Integer> ();
+			Iterator<Integer> iter = mapImageParams.keySet().iterator();
+			while(iter.hasNext())
+			{
+				Integer ParamName 	= iter.next();
+				Integer ParamValue 	= mapImageParams.get(ParamName);
+				
+				if(ParamValue!=null)
+				{
+					list.add(ParamName);
+					list.add(ParamValue);
+				}
+			}
+			matOfInt.fromList(list);
+		}
+		
+		Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
 	}
 	
 }
