@@ -539,7 +539,7 @@ public class OpenCvUtil{
 	
 	public static Mat addAlphaChannel(Mat matInput)
 	{
-		if(matInput.channels()==4)
+		if(matInput==null || matInput.empty() || matInput.channels()==4)
 		{
 			return matInput;
 		}
@@ -560,7 +560,7 @@ public class OpenCvUtil{
 	
 	public static Mat removeAlphaChannel(Mat matInput)
 	{
-		if(matInput.channels()==4)
+		if(matInput!=null && !matInput.empty() && matInput.channels()==4)
 		{
 			Mat matReturn = matInput.clone();
 			Vector<Mat> vRgba = new Vector<Mat>();
@@ -572,31 +572,6 @@ public class OpenCvUtil{
 		return matInput;
 	}
 	
-	protected static BufferedImage removeAlphaChannel(BufferedImage aImage)
-	{
-		if(aImage.getAlphaRaster()!=null)
-		{
-			BufferedImage imgTmp = new BufferedImage(
-					aImage.getWidth(), aImage.getHeight(), 
-					BufferedImage.TYPE_3BYTE_BGR);
-	
-			Graphics2D g = null;
-			try {
-				g = imgTmp.createGraphics();
-				g.drawImage(aImage, 0, 0, null);
-			}
-			finally
-			{
-				if(g!=null)
-					g.dispose();
-			}
-			return imgTmp;
-		}
-		else
-		{
-			return aImage;			
-		}
-	}
 	
 	public static Mat loadImage(String aImageURI)
 	{
