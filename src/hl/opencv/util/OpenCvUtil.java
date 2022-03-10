@@ -644,42 +644,49 @@ public class OpenCvUtil{
 	//////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 	
-
+	@Deprecated
 	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
 	{
 		return OpenCvFilters.cannyEdge(aMat, aThreshold, isinvert);
 	}
 	
+	@Deprecated
 	public static Mat pixelate(Mat aMat, double aPixelateScale)
 	{
 		return OpenCvFilters.pixelate(aMat, aPixelateScale);
 	}
 	
+	@Deprecated
 	public static Mat solidfill(Mat aMat, Scalar aScalar)
 	{
 		return OpenCvFilters.solidfill(aMat, aScalar);
 	}
 	
+	@Deprecated
 	public static Mat medianBlur(Mat aMat, double aBlurScale)
 	{
 		return OpenCvFilters.medianBlur(aMat, aBlurScale);
 	}
 	
+	@Deprecated
 	public static Mat blur(Mat aMat, double aBlurScale)
 	{
 		return OpenCvFilters.blur(aMat, aBlurScale);
 	}
 	
+	@Deprecated
 	public static Mat gaussianBlur(Mat aMat, double aBlurScale)
 	{
 		return OpenCvFilters.gaussianBlur(aMat, aBlurScale);
 	}
 	
+	@Deprecated
 	public static Mat grayscale(Mat aMat)
 	{
 		return OpenCvFilters.grayscale(aMat, true);
 	}
 	
+	@Deprecated 
 	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
 	{
 		return OpenCvFilters.grayscale(aMat, isConvertBackOrigType);
