@@ -451,19 +451,18 @@ public class OpenCvUtil{
 	
 	public static double compareBrightnessDiff(Mat aMat1, Mat aMat2)
 	{
-		double dMean1 = calcBrightnessDiff(aMat1);
-		double dMean2 = calcBrightnessDiff(aMat2);
+		double dMean1 = calcBrightness(aMat1);
+		double dMean2 = calcBrightness(aMat2);
 		
 		return dMean1-dMean2;
 	}
 	
-	@Deprecated
 	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
 	{
 		return compareBrightnessDiff(aMat1, aMat2);
 	}
 	
-	public static double calcBrightnessDiff(Mat aMat1)
+	public static double calcBrightness(Mat aMat1)
 	{
 		if(aMat1==null)
 			return 0;

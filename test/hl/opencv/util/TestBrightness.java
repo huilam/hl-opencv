@@ -50,7 +50,11 @@ public class TestBrightness{
 					System.out.println();
 					System.out.println(f.getName());
 					Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
-					System.out.println(" - Brightness:"+OpenCvUtil.calcBrightnessDiff(mat));
+					Mat matBlur = OpenCvUtil.blur(mat, 0.5);
+					
+					
+					System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat));
+					System.out.println(" - Blurriness:"+OpenCvUtil.calcBlurriness(mat)+" vs "+OpenCvUtil.calcBlurriness(matBlur));
 				}
 			}
 		}
