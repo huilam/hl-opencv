@@ -22,7 +22,6 @@
 
 package hl.opencv.util;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -450,28 +449,39 @@ public class OpenCvUtil{
 		return aMatOut;
 	}
 	
+	public static double compareBrightnessDiff(Mat aMat1, Mat aMat2)
+	{
+		double dMean1 = calcBrightnessDiff(aMat1);
+		double dMean2 = calcBrightnessDiff(aMat2);
+		
+		return dMean1-dMean2;
+	}
+	
+	@Deprecated
 	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
 	{
-		double dDiff = 0;
+		return compareBrightnessDiff(aMat1, aMat2);
+	}
+	
+	public static double calcBrightnessDiff(Mat aMat1)
+	{
+		if(aMat1==null)
+			return 0;
 		
 		Mat mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), 100);
-		Mat mat2 = OpenCvUtil.resizeByWidth(aMat2.clone(), 100);
 		
 		Mat matHSV1 = OpenCvUtil.toHSV(mat1);
-		Mat matHSV2 = OpenCvUtil.toHSV(mat2);
 		
 		Scalar scalar1 = Core.mean(matHSV1);
-		Scalar scalar2 = Core.mean(matHSV2);
 
-		if(scalar1!=null && scalar2!=null && scalar1.val.length>0)
+		if(scalar1!=null && scalar1.val.length>0)
 		{
 			//H=color S=gray V=brightness
-			double dVal1 = (scalar1.val)[1]; //2
-			double dVal2 = (scalar2.val)[1]; //2
-			dDiff = (dVal1 - dVal2);
+			double dVal1 = (scalar1.val)[2];
+			return dVal1;
 		}
 		
-		return dDiff;
+		return 0;
 	}
 	
 	public static Mat matchImageTemplate(Mat matImage, Mat matTempl)
