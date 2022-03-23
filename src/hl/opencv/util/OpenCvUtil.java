@@ -58,11 +58,7 @@ public class OpenCvUtil{
 	public static Mat base64Img2Mat(String aBase64Img)
 	{
 	    byte[] bytes =  base64Decoder.decode(aBase64Img);
-	    
-	    Mat mattemp = new Mat();
-	    mattemp.put(0,0,bytes);
-	    Mat mat = Imgcodecs.imdecode(mattemp, Imgcodecs.IMREAD_COLOR);
-	    mattemp.release();
+	    Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
 	    return mat;
 	}
 	
