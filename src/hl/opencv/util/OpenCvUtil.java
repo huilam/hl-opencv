@@ -252,11 +252,24 @@ public class OpenCvUtil{
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
 	{
-		return extractFGMask(matInput, matBackground, aDiffThreshold, 600, 500);
+		int iProcWidth = 1080;
+		
+		if(matInput.width()<iProcWidth)
+			iProcWidth = matInput.width();
+		
+		int iMinObjSize = iProcWidth/5;
+		
+		return extractFGMask(matInput, matBackground, aDiffThreshold, iProcWidth, iMinObjSize);
 	}
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
 			int aProcessWidth, int minContourPixelSize) throws Exception
+	{
+		return extractFGMask(matInput, matBackground, aDiffThreshold, aProcessWidth, minContourPixelSize, false);
+	}
+	
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
+			int aProcessWidth, int minContourPixelSize, boolean isGrayscale) throws Exception
 	{
 		if(aDiffThreshold<0 || aDiffThreshold>1)
 		{
@@ -293,6 +306,13 @@ public class OpenCvUtil{
 				Scalar.all(255));
 
 		try {
+			
+			if(isGrayscale)
+			{
+				matBgResized = OpenCvFilters.grayscale(matBgResized);
+				matInResized = OpenCvFilters.grayscale(matInResized);
+			}
+			
 			Core.absdiff(matBgResized, matInResized, matMask);
 		}
 		catch(Throwable t)
