@@ -24,12 +24,9 @@ package hl.opencv.util;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
-import hl.common.ImgUtil;
 import hl.opencv.OpenCvLibLoader;
 
 public class TestFGMask {
