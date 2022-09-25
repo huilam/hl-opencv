@@ -30,33 +30,68 @@ import hl.opencv.OpenCvLibLoader;
 
 public class TestBrightness{
 	
-	public static void main(String[] args) throws Exception
+	private static void initOpenCV()
 	{
-		File folderImages = new File("./test/images");
-		File fileImageOutput = new File("./test/images/output");
-		fileImageOutput.mkdirs();
-		
 		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
 		cvLib.init();
+	}
+	
+	private static void assessImage(File f)
+	{
+		if(f!=null && f.isFile())
+		{
+			String sFileName = f.getName().toLowerCase();
+			
+			if(sFileName.endsWith(".jpg") || sFileName.endsWith(".png"))
+			{
+				System.out.println(f.getName());
+				Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
+				Mat matBlur = OpenCvFilters.blur(mat, 0.5);
+				Mat matBrighter = OpenCvUtil.adjBrightness(mat, 1.0);
+				
+				
+				System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat)+" vs "+OpenCvUtil.calcBrightness(matBrighter));
+				System.out.println(" - Blurriness:"+OpenCvUtil.calcBlurriness(mat)+" vs "+OpenCvUtil.calcBlurriness(matBlur));
+				System.out.println();
+			}
+		}
 		
+	}
+	
+	private static int processImages(File folderImages, boolean isRecursive)
+	{
+		int iCount = 0;
 		for(File f : folderImages.listFiles())
 		{
 			if(f.isFile())
 			{
-				String sFileName = f.getName().toLowerCase();
-				
-				if(sFileName.endsWith(".jpg") || sFileName.endsWith(".png"))
-				{
-					System.out.println();
-					System.out.println(f.getName());
-					Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
-					Mat matBlur = OpenCvUtil.blur(mat, 0.5);
-					
-					
-					System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat));
-					System.out.println(" - Blurriness:"+OpenCvUtil.calcBlurriness(mat)+" vs "+OpenCvUtil.calcBlurriness(matBlur));
-				}
+				assessImage(f);
 			}
+			else if(isRecursive && f.isDirectory())
+			{
+				iCount += processImages(f, isRecursive);
+			}
+			
+		}
+		return iCount;
+	}
+	
+	
+	public static void main(String[] args) throws Exception
+	{
+		initOpenCV();
+		System.out.println();
+		
+		File folderImages = new File("./test/images");
+		
+		boolean isRecursive = true;
+		
+		int iCount = processImages(folderImages, isRecursive);
+		
+		
+		if(iCount<=0)
+		{
+			System.out.println("No files found in "+folderImages.getAbsolutePath());
 		}
 		
 	}

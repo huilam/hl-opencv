@@ -83,17 +83,17 @@ public class TestFGMask {
 
 				int iProcWidth = 1080;
 				int iSmallestObjAreaPx = 50;
-				
+				boolean isUseGrayScale = false;
 				
 				Mat matMask = 
-					OpenCvUtil.extractFGMask(mat, matBg, 0.18, iProcWidth, iSmallestObjAreaPx);
+					OpenCvUtil.extractFGMask(mat, matBg, 0.18, iProcWidth, iSmallestObjAreaPx, isUseGrayScale);
 				
 				Mat matOutput = new Mat();
 				Core.copyTo(mat, matOutput, matMask);
 				
 				if(matOutput!=null)
 				{
-					File f = new File(fileImageOutput.getAbsolutePath()+"/"+fImg.getName()+"_output_w"+iProcWidth+"_o"+iSmallestObjAreaPx+".png");
+					File f = new File(fileImageOutput.getAbsolutePath()+"/"+fImg.getName()+"_output_w"+iProcWidth+"_o"+iSmallestObjAreaPx+(isUseGrayScale?"_gray":"")+".png");
 					OpenCvUtil.saveImageAsFile(matOutput, f.getAbsolutePath());
 					System.out.println(" - Saved "+f.getName());
 					

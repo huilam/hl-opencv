@@ -36,6 +36,7 @@ import java.util.Vector;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.opencv.core.Core;
@@ -598,9 +599,19 @@ public class OpenCvUtil{
 	}
 	
 	
-	public static Mat loadImage(String aImageURI)
+	public static Mat loadImage(String aImageURI) 
 	{
-		return Imgcodecs.imread(aImageURI, Imgcodecs.IMREAD_UNCHANGED);
+		Mat mat = null;
+				
+		try {
+			mat = Imgcodecs.imread(aImageURI, Imgcodecs.IMREAD_UNCHANGED);
+		}catch(Exception ex)
+		{
+			mat = null;
+			System.err.println("Failed to load "+aImageURI);
+		}
+		
+		return mat;
 	}
 	
 	public static void saveImageAsFile(Mat aMatInput, String aFileName)
