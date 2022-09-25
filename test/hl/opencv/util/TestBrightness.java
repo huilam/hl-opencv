@@ -25,6 +25,9 @@ package hl.opencv.util;
 import java.io.File;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.video.Video;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 
 import hl.opencv.OpenCvLibLoader;
 
@@ -39,14 +42,16 @@ public class TestBrightness{
 		}
 	}
 	
-	private static void assessImage(File f)
+	private static boolean processImage(File f)
 	{
+		boolean isProcessed = false;
 		if(f!=null && f.isFile())
 		{
 			String sFileName = f.getName().toLowerCase();
 			
 			if(sFileName.endsWith(".jpg") || sFileName.endsWith(".png"))
 			{
+				isProcessed = true;
 				System.out.println(f.getName());
 				Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
 				Mat matBlur = OpenCvFilters.blur(mat, 0.5);
@@ -58,21 +63,73 @@ public class TestBrightness{
 				System.out.println();
 			}
 		}
-		
+		return isProcessed;
 	}
 	
-	private static int processImages(File folderImages, boolean isRecursive)
+	private static boolean processVideo(File f)
+	{
+		boolean isProcessed = false;
+		if(f!=null && f.isFile())
+		{
+			String sFileName = f.getName().toLowerCase();
+			
+			if(sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv"))
+			{
+				isProcessed = true;
+				String sVidFileName = f.getAbsolutePath();
+				
+				System.out.println(sVidFileName);
+				
+				VideoCapture vid = null;
+				
+				try{
+					Mat matFrame = new Mat();
+					vid = new VideoCapture(sVidFileName);
+					if(vid.isOpened())
+					{
+						double dFps = vid.get(Videoio.CAP_PROP_FPS);
+						double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+
+						System.out.println("Total Frames = "+dTotalFrames);
+						System.out.println("FPS = "+dFps);
+						
+						double dDuration = dTotalFrames/dFps;
+						
+						System.out.println("Duration (secs) = "+dDuration);
+						
+						vid.read(matFrame);
+						System.out.println("read WxH = "+matFrame.width()+"x"+matFrame.height());
+					}
+				}finally
+				{
+					vid.release();
+				}
+			}
+		}
+		return isProcessed;
+	}
+	
+	private static int processFiles(File folderImages, boolean isRecursive)
 	{
 		int iCount = 0;
 		for(File f : folderImages.listFiles())
 		{
 			if(f.isFile())
 			{
-				assessImage(f);
+				if(processImage(f))
+				{
+					//images
+				}
+				else
+				{
+					// try video
+					processVideo(f);
+				}
+				
 			}
 			else if(isRecursive && f.isDirectory())
 			{
-				iCount += processImages(f, isRecursive);
+				iCount += processFiles(f, isRecursive);
 			}
 			
 		}
@@ -85,12 +142,11 @@ public class TestBrightness{
 		initOpenCV();
 		System.out.println();
 		
-		File folderImages = new File("./test/images");
+		File folderImages = new File("./test/videos");
 		
 		boolean isRecursive = true;
 		
-		int iCount = processImages(folderImages, isRecursive);
-		
+		int iCount = processFiles(folderImages, isRecursive);
 		
 		if(iCount<=0)
 		{
