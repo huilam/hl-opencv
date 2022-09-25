@@ -33,7 +33,10 @@ public class TestBrightness{
 	private static void initOpenCV()
 	{
 		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		cvLib.init();
+		if(!cvLib.init())
+		{
+			throw new RuntimeException("OpenCv is NOT loaded !");
+		}
 	}
 	
 	private static void assessImage(File f)

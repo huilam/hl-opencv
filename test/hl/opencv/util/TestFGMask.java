@@ -36,6 +36,15 @@ public class TestFGMask {
 		return System.currentTimeMillis() - aStartTime;
 	}
 	
+	private static void initOpenCV()
+	{
+		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
+		if(!cvLib.init())
+		{
+			throw new RuntimeException("OpenCv is NOT loaded !");
+		}
+	}
+	
 	public static void main(String[] args)
 	{
 		File fileImages = new File("./test/images/b01/input");
@@ -45,9 +54,7 @@ public class TestFGMask {
 		
 		fileImageOutput.mkdirs();
 		
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		
-		cvLib.init();
+		initOpenCV();
 		
 		long lStart 	= 0;
 		long lElapsed2 	= 0;
