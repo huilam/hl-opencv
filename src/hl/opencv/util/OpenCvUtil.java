@@ -494,7 +494,7 @@ public class OpenCvUtil{
 		{
 			//H=color S=gray V=brightness
 			double dVal1 = (scalar1.val)[2];
-			return dVal1;
+			return dVal1 / 255;
 		}
 		
 		return 0;

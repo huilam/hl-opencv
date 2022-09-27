@@ -25,7 +25,8 @@ package hl.opencv.util;
 import java.io.File;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.video.Video;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -54,12 +55,13 @@ public class TestBrightness{
 				isProcessed = true;
 				System.out.println(f.getName());
 				Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
-				Mat matBlur = OpenCvFilters.blur(mat, 0.5);
-				Mat matBrighter = OpenCvUtil.adjBrightness(mat, 1.0);
+				
+				Mat matWhite = new Mat(new Size(10,10), mat.type(), Scalar.all(255));
+				
+				System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat));
+				System.out.println(" - matWhite:"+OpenCvUtil.calcBrightness(matWhite));
 				
 				
-				System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat)+" vs "+OpenCvUtil.calcBrightness(matBrighter));
-				System.out.println(" - Blurriness:"+OpenCvUtil.calcBlurriness(mat)+" vs "+OpenCvUtil.calcBlurriness(matBlur));
 				System.out.println();
 			}
 		}
@@ -99,6 +101,7 @@ public class TestBrightness{
 						
 						vid.read(matFrame);
 						System.out.println("read WxH = "+matFrame.width()+"x"+matFrame.height());
+						
 					}
 				}finally
 				{
@@ -141,6 +144,10 @@ public class TestBrightness{
 	{
 		initOpenCV();
 		System.out.println();
+		
+		Mat matWhite = new Mat(new Size(10,10), new Mat().type(), Scalar.all(255));
+		System.out.println(" - matWhite:"+(OpenCvUtil.calcBrightness(matWhite)/255));
+		
 		
 		File folderImages = new File("./test/videos");
 		
