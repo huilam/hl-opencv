@@ -144,12 +144,8 @@ public class TestBrightness{
 	{
 		initOpenCV();
 		System.out.println();
-		
-		Mat matWhite = new Mat(new Size(10,10), new Mat().type(), Scalar.all(255));
-		System.out.println(" - matWhite:"+(OpenCvUtil.calcBrightness(matWhite)/255));
-		
-		
-		File folderImages = new File("./test/videos");
+
+		File folderImages = new File("./test/images/ace");
 		
 		boolean isRecursive = true;
 		

@@ -36,7 +36,6 @@ import java.util.Vector;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.opencv.core.Core;
@@ -58,8 +57,21 @@ public class OpenCvUtil{
 	
 	public static Mat base64Img2Mat(String aBase64Img)
 	{
+		Mat mat = null;
 	    byte[] bytes =  base64Decoder.decode(aBase64Img);
-	    Mat mat = Imgcodecs.imdecode(new MatOfByte(bytes), Imgcodecs.IMREAD_UNCHANGED);
+	    
+	    MatOfByte matOfBytes = null;
+	    
+	    try {
+	    	matOfBytes = new MatOfByte(bytes);
+		    mat = Imgcodecs.imdecode(matOfBytes, Imgcodecs.IMREAD_UNCHANGED);
+	    }
+	    finally
+	    {
+	    	if(matOfBytes!=null)
+	    		matOfBytes.release();
+	    }
+	    
 	    return mat;
 	}
 	
@@ -88,31 +100,48 @@ public class OpenCvUtil{
 			else if (!aImgFormat.startsWith("."))
 				aImgFormat = "." + aImgFormat;
 			
-			MatOfInt matOfInt = new MatOfInt();
+			MatOfInt matOfInt = null;
 			
-			if(aMapImgParams!=null && aMapImgParams.size()>0)
-			{
-				List<Integer> list = new ArrayList<Integer> ();
-				Iterator<Integer> iter = aMapImgParams.keySet().iterator();
-				while(iter.hasNext())
+			try {
+			
+				matOfInt = new MatOfInt();
+				
+				if(aMapImgParams!=null && aMapImgParams.size()>0)
 				{
-					Integer ParamName 	= iter.next();
-					Integer ParamValue 	= aMapImgParams.get(ParamName);
-					
-					if(ParamValue!=null)
+					List<Integer> list = new ArrayList<Integer> ();
+					Iterator<Integer> iter = aMapImgParams.keySet().iterator();
+					while(iter.hasNext())
 					{
-						list.add(ParamName);
-						list.add(ParamValue);
+						Integer ParamName 	= iter.next();
+						Integer ParamValue 	= aMapImgParams.get(ParamName);
+						
+						if(ParamValue!=null)
+						{
+							list.add(ParamName);
+							list.add(ParamValue);
+						}
 					}
+					matOfInt.fromList(list);
 				}
-				matOfInt.fromList(list);
+				
+				MatOfByte matByteBuf = null;
+				try {
+					matByteBuf = new MatOfByte();
+					Imgcodecs.imencode(aImgFormat, aMat, matByteBuf, matOfInt);
+					byte[] bytes = matByteBuf.toArray(); 
+					sBase64 = base64Encoder.encodeToString(bytes);
+				}
+				finally
+				{
+					if(matByteBuf!=null)
+						matByteBuf.release();
+				}
 			}
-			
-			MatOfByte matByteBuf = new MatOfByte();
-			Imgcodecs.imencode(aImgFormat, aMat, matByteBuf, matOfInt);
-			byte[] bytes = matByteBuf.toArray(); 
-			sBase64 = base64Encoder.encodeToString(bytes);
-			matByteBuf.release();
+			finally
+			{
+				if(matOfInt!=null)
+					matOfInt.release();
+			}
 		}
 	    return sBase64;
 	}
@@ -159,9 +188,17 @@ public class OpenCvUtil{
 				//Imgproc.COLOR_BGR2BGRA
 				Vector<Mat> vMat = new Vector<>();
 				Core.split(mat, vMat);
-				Mat matAlpha = vMat.remove(0);
-				vMat.add(matAlpha);
-				Core.merge(vMat, mat);
+				Mat matAlpha = null;
+				try {
+					matAlpha = vMat.remove(0);
+					vMat.add(matAlpha);
+					Core.merge(vMat, mat);
+				}
+				finally
+				{
+					if(matAlpha!=null)
+						matAlpha.release();
+				}
 			}
 			
 		}

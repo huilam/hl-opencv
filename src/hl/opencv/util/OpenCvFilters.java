@@ -75,13 +75,21 @@ public class OpenCvFilters{
 	
 	public static Mat solidfill(Mat aMat, Scalar aScalar)
 	{
-		Mat matSolid = new Mat(aMat.size(), aMat.type(), aScalar);
-		
-		Mat matMask = OpenCvUtil.colorToWhiteMask(aMat);
-		
 		Mat matReturn = new Mat();
-		Core.copyTo(matSolid, matReturn, matMask);
-		
+		Mat matSolid = null;
+		Mat matMask = null;
+		try {
+			matSolid = new Mat(aMat.size(), aMat.type(), aScalar);
+			matMask = OpenCvUtil.colorToWhiteMask(aMat);
+			Core.copyTo(matSolid, matReturn, matMask);
+		}
+		finally
+		{
+			if(matSolid!=null)
+				matSolid.release();
+			if(matMask!=null)
+				matMask.release();
+		}
 		return matReturn;
 	}
 	
@@ -158,8 +166,16 @@ public class OpenCvFilters{
 		
 		if(isinvert)
 		{
-			Mat matInvert = new Mat(matEdges.rows(), matEdges.cols(), matEdges.type(), new Scalar(255,255,255));
-			Core.subtract(matInvert, matEdges, matEdges);
+			Mat matInvert = null;
+			try {			
+				matInvert = new Mat(matEdges.rows(), matEdges.cols(), matEdges.type(), new Scalar(255,255,255));
+				Core.subtract(matInvert, matEdges, matEdges);
+			}
+			finally
+			{
+				if(matInvert!=null)
+					matInvert.release();
+			}
 		}
 		
 		matEdges = grayToMultiChannel(matEdges, aMat.channels());
@@ -177,8 +193,18 @@ public class OpenCvFilters{
 		int iNewWidth = (int)((1.0 - aPixelateScale) * (aMat.width()*0.25));
 		int iNewHeight = (int)((1.0 - aPixelateScale) * (aMat.height()*0.25));
 		
-		Mat matPixelated = OpenCvUtil.resize(aMat.clone(), iNewWidth, iNewHeight, true);
-		return OpenCvUtil.resize(matPixelated, aMat.width(), aMat.height(), false);
+		Mat matReturn = null;
+		Mat matPixelated = null;
+		try {
+			matPixelated = OpenCvUtil.resize(aMat.clone(), iNewWidth, iNewHeight, true);
+			matReturn = OpenCvUtil.resize(matPixelated, aMat.width(), aMat.height(), false);
+		}
+		finally
+		{
+			if(matPixelated!=null)
+				matPixelated.release();
+		}
+		return matReturn;
 	}
 	
 	//

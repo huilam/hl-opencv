@@ -101,7 +101,7 @@ public class TestBrightness2{
 						Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
 						JSONObject jsonMatchResult = poiMatching(matFace);
 						
-						JSONArray jsonArrMatchPois = jsonMatchResult.getJSONArray("result");
+						JSONArray jsonArrMatchPois = jsonMatchResult.optJSONArray("result");
 						
 						if(jsonArrMatchPois!=null && jsonArrMatchPois.length()>0)
 						{
@@ -205,7 +205,7 @@ public class TestBrightness2{
 				Mat matOrg = OpenCvUtil.loadImage(f.getAbsolutePath());
 				System.out.println("  - "+matOrg.width()+"x"+matOrg.height());
 			
-				double dAdjs[] = new double[] {0,50,-40};//, 10, 20, 50, -10, -20, -50};
+				double dAdjs[] = new double[] {0,-10};//, 10, 20, 50, -10, -20, -50};
 				
 				for(int i=0; i<dAdjs.length; i++)
 				{
@@ -245,7 +245,7 @@ public class TestBrightness2{
 							Mat matDetect = mat.submat(new Rect(iX, iY, iW, iH));
 							double dBrightness = OpenCvUtil.calcBrightness(matDetect);
 							
-							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness+"_"+iX+""+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
+							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
 							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
 							
 						}
