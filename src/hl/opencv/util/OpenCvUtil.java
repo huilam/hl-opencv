@@ -309,80 +309,94 @@ public class OpenCvUtil{
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
 			int aProcessWidth, int minContourPixelSize, boolean isGrayscale) throws Exception
 	{
-		if(aDiffThreshold<0 || aDiffThreshold>1)
-		{
-			throw new Exception("Threshold value should be 0.0-1.0");
-		}
 		
-		//downscale to width=360
-		int iProcessWidth = 360;
+		Mat matMask = null;
+		Mat matBgResized = null;
+		Mat matInResized = null;
 		
-		if(aProcessWidth>0)
-			iProcessWidth = aProcessWidth;
-		
-		Mat matInResized = matInput;
-		if(matInput.width()>iProcessWidth)
-		{
-			matInResized = resizeByWidth(matInput, iProcessWidth);
-		}
-		else
-		{
-			iProcessWidth = matInResized.width();
-		}
-		
-		Mat matBgResized = matBackground;
-		if(matBackground.width()!=iProcessWidth)
-		{
-			matBgResized = resizeByWidth(matBackground, iProcessWidth);
-		}
-		
-		//
-		
-		Mat matMask = new Mat(
-				new Size(matInput.width(), matInput.height()), 
-				matInput.type(), 
-				Scalar.all(255));
-
 		try {
-			
-			if(isGrayscale)
+			if(aDiffThreshold<0 || aDiffThreshold>1)
 			{
-				matBgResized = OpenCvFilters.grayscale(matBgResized);
-				matInResized = OpenCvFilters.grayscale(matInResized);
+				throw new Exception("Threshold value should be 0.0-1.0");
 			}
 			
-			Core.absdiff(matBgResized, matInResized, matMask);
-		}
-		catch(Throwable t)
-		{
-			t.printStackTrace();
-		}
-		
-		if(matMask!=null && matMask.width()>0)
-		{
-			Imgproc.GaussianBlur(matMask, matMask, new Size(11,11), 0);
+			//downscale to width=360
+			int iProcessWidth = 360;
 			
-			switch(matMask.channels())
+			if(aProcessWidth>0)
+				iProcessWidth = aProcessWidth;
+			
+			matInResized = matInput;
+			if(matInput.width()>iProcessWidth)
 			{
-				case 3 : 
-					Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
-					break;
-					
-				case 4 : 
-					Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
-					break;
-			}	
-			Imgproc.threshold(matMask, matMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
+				matInResized = resizeByWidth(matInput, iProcessWidth);
+			}
+			else
+			{
+				iProcessWidth = matInResized.width();
+			}
+			
+			matBgResized = matBackground;
+			if(matBackground.width()!=iProcessWidth)
+			{
+				matBgResized = resizeByWidth(matBackground, iProcessWidth);
+			}
+			
 			//
-			if(matMask.total()!=matInput.total())
-			{
-				if(minContourPixelSize>0)
+			matMask = new Mat(
+					new Size(matInput.width(), matInput.height()), 
+					matInput.type(), 
+					Scalar.all(255));
+	
+			try {
+				
+				if(isGrayscale)
 				{
-					matMask = removeMaskContourAreas(matMask,minContourPixelSize,0);
+					matBgResized = OpenCvFilters.grayscale(matBgResized);
+					matInResized = OpenCvFilters.grayscale(matInResized);
 				}
 				
-				matMask = resize(matMask, matInput.width(), matInput.height(), false);
+				Core.absdiff(matBgResized, matInResized, matMask);
 			}
+			catch(Throwable t)
+			{
+				t.printStackTrace();
+			}
+			
+			if(matMask!=null && matMask.width()>0)
+			{
+				Imgproc.GaussianBlur(matMask, matMask, new Size(11,11), 0);
+				
+				switch(matMask.channels())
+				{
+					case 3 : 
+						Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
+						break;
+						
+					case 4 : 
+						Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
+						break;
+				}	
+				Imgproc.threshold(matMask, matMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
+				//
+				if(matMask.total()!=matInput.total())
+				{
+					if(minContourPixelSize>0)
+					{
+						matMask = removeMaskContourAreas(matMask,minContourPixelSize,0);
+					}
+					
+					matMask = resize(matMask, matInput.width(), matInput.height(), false);
+				}
+			}
+		}
+		finally
+		{
+			if(matBgResized!=null)
+				matBgResized.release();
+			
+			if(matInResized!=null)
+				matInResized.release();
 		}
 		
 		return matMask;
@@ -403,21 +417,46 @@ public class OpenCvUtil{
 			if(aMinContourArea>0 || aMaxContourArea>0) 
 			{
 				List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+				List<MatOfPoint> contours_remove = null;
 				
-				Imgproc.findContours(aMatMask, contours, new Mat(), 
-						iFindContourMode, iFindContourMethod);
+				try {
 				
-				List<MatOfPoint> contours_remove = new ArrayList<MatOfPoint>();
-				for(MatOfPoint c : contours)
-				{
-					if(aMinContourArea>0 && Imgproc.contourArea(c)<aMinContourArea)
-						contours_remove.add(c);
+					Imgproc.findContours(aMatMask, contours, new Mat(), 
+							iFindContourMode, iFindContourMethod);
 					
-					if(aMaxContourArea>0 && Imgproc.contourArea(c)>aMaxContourArea)
-						contours_remove.add(c);
+					if(contours.size()>0)
+					{
+						contours_remove = new ArrayList<MatOfPoint>();
+						for(MatOfPoint c : contours)
+						{
+							if(aMinContourArea>0 && Imgproc.contourArea(c)<aMinContourArea)
+								contours_remove.add(c);
+							
+							if(aMaxContourArea>0 && Imgproc.contourArea(c)>aMaxContourArea)
+								contours_remove.add(c);
+						}
+						if(contours_remove.size()>0)
+							Imgproc.drawContours(aMatMask, contours_remove, -1, new Scalar(0), -1);
+					}
 				}
-				if(contours_remove.size()>0)
-					Imgproc.drawContours(aMatMask, contours_remove, -1, new Scalar(0), -1);
+				finally
+				{
+					if(contours!=null)
+					{
+						for(MatOfPoint c : contours)
+						{
+							c.release();
+						}
+					}
+					
+					if(contours_remove!=null)
+					{
+						for(MatOfPoint c : contours_remove)
+						{
+							c.release();
+						}
+					}
+				}
 			}
 		}	
 		
@@ -442,16 +481,26 @@ public class OpenCvUtil{
 		if(aBeta<0) aBeta = 0;
 		if(aBeta>1) aBeta = 1;
 		
-	    Mat mat2 = aMat;
-	    if(aScalar!=null)
-	    {
-	    	mat2 = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
-	    }
-	    
-	    double alpha = 1.0 - aBeta;
-	    
-	    Mat matAdjusted = new Mat();
-	    Core.addWeighted(aMat, alpha, mat2, aBeta, 0.0, matAdjusted);
+		Mat matAdjusted = null;
+		Mat mat2 = null;
+		
+		try {
+		    mat2 = aMat;
+		    if(aScalar!=null)
+		    {
+		    	mat2 = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
+		    }
+		    
+		    double alpha = 1.0 - aBeta;
+		    
+		    matAdjusted = new Mat();
+		    Core.addWeighted(aMat, alpha, mat2, aBeta, 0.0, matAdjusted);
+		}
+		finally
+		{
+			if(mat2!=null)
+				mat2.release();
+		}
 	    return matAdjusted;
 	}
 	
@@ -521,17 +570,31 @@ public class OpenCvUtil{
 		if(aMat1==null)
 			return 0;
 		
-		Mat mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), 100);
+		Mat mat1 = null;
+		Mat matHSV1 = null;
 		
-		Mat matHSV1 = OpenCvUtil.toHSV(mat1);
+		try {
 		
-		Scalar scalar1 = Core.mean(matHSV1);
-
-		if(scalar1!=null && scalar1.val.length>0)
+			mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), 100);
+			
+			matHSV1 = OpenCvUtil.toHSV(mat1);
+			
+			Scalar scalar1 = Core.mean(matHSV1);
+	
+			if(scalar1!=null && scalar1.val.length>0)
+			{
+				//H=color S=gray V=brightness
+				double dVal1 = (scalar1.val)[2];
+				return dVal1 / 255;
+			}
+		}
+		finally
 		{
-			//H=color S=gray V=brightness
-			double dVal1 = (scalar1.val)[2];
-			return dVal1 / 255;
+			if(mat1!=null)
+				mat1.release();
+			
+			if(matHSV1!=null)
+				matHSV1.release();
 		}
 		
 		return 0;
@@ -546,58 +609,110 @@ public class OpenCvUtil{
 	
 	public static double calcBlurriness(Mat matImage)
 	{
-		Mat matLaplacian = new Mat();
-		Mat matGray = matImage.clone();
+		Mat matLaplacian = null;
+		Mat matGray = null;
+		MatOfDouble median = null;
+		MatOfDouble std = null;
 		
-		Imgproc.Laplacian(matGray, matLaplacian, 3); 
-		MatOfDouble median = new MatOfDouble();
-		MatOfDouble std= new MatOfDouble();        
-		Core.meanStdDev(matLaplacian, median , std);
-
-		double dSharpness = Math.pow(std.get(0,0)[0],2);
-		
-		if(dSharpness>100)
-			dSharpness = 100;
-		
-		return 1-(dSharpness/100);
+		try {
+			matLaplacian = new Mat();
+			matGray = matImage.clone();
+			
+			Imgproc.Laplacian(matGray, matLaplacian, 3); 
+			median = new MatOfDouble();
+			std= new MatOfDouble();        
+			Core.meanStdDev(matLaplacian, median , std);
+			double dSharpness = Math.pow(std.get(0,0)[0],2);
+			
+			if(dSharpness>100)
+				dSharpness = 100;
+			
+			return 1-(dSharpness/100);
+		}
+		finally
+		{
+			if(matLaplacian!=null)
+				matLaplacian.release();
+			
+			if(matGray!=null)
+				matGray.release();
+			
+			if(median!=null)
+				median.release();
+			
+			if(std!=null)
+				std.release();
+		}
 	}
 	
 	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode)
 	{
-		Mat matResized1 = matImage1.clone();
-		Mat matResized2 = matImage2.clone();
-				
-		if(matImage1.width()>640)
+		Mat matResized1 = null;
+		Mat matResized2 = null;
+		Mat matGray1 = null;
+		Mat matGray2 = null;
+		Mat matEdge1 = null;
+		Mat matEdge2 = null;
+		
+		try {
+		
+			matResized1 = matImage1.clone();
+			matResized2 = matImage2.clone();
+					
+			if(matImage1.width()>640)
+			{
+				matResized1 = resizeByWidth(matResized1, 640);
+			}
+			
+			if(matImage2.width()!=matResized1.width())
+			{
+				matResized2 = resizeByWidth(matResized2, matResized1.width());
+			}
+			//String sOutputPath = new File("./test/images/output").getAbsolutePath();
+			
+			matGray1 = grayscale(matResized1, false);
+			matGray2 = grayscale(matResized2, false);
+			
+			matGray1 = medianBlur(matGray1, 0.08);
+			matGray2 = medianBlur(matGray2, 0.08);
+			//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
+			//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
+			
+			int iEdgeThreshold = 50;
+			matEdge1 = cannyEdge(matGray1, iEdgeThreshold, false);
+			matEdge2 = cannyEdge(matGray2, iEdgeThreshold, false);
+	
+			//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1_"+iEdgeThreshold+".jpg");
+			//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2_"+iEdgeThreshold+".jpg");
+	
+			double dScore1 = Imgproc.matchShapes(
+					matEdge1, matEdge2, iMode, 0);
+			
+			return 1-dScore1;
+		
+		}
+		finally
 		{
-			matResized1 = resizeByWidth(matResized1, 640);
+			if(matResized1!=null)
+				matResized1.release();
+			
+			if(matResized2!=null)
+				matResized2.release();
+			
+			if(matGray1!=null)
+				matGray1.release();
+			
+			if(matGray2!=null)
+				matGray2.release();
+			
+			if(matEdge1!=null)
+				matEdge1.release();
+			
+			if(matEdge2!=null)
+				matEdge2.release();
 		}
 		
-		if(matImage2.width()!=matResized1.width())
-		{
-			matResized2 = resizeByWidth(matResized2, matResized1.width());
-		}
-		//String sOutputPath = new File("./test/images/output").getAbsolutePath();
-		
-		Mat matGray1 = grayscale(matResized1, false);
-		Mat matGray2 = grayscale(matResized2, false);
-		
-		matGray1 = medianBlur(matGray1, 0.08);
-		matGray2 = medianBlur(matGray2, 0.08);
-		//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
-		//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
-		
-		int iEdgeThreshold = 50;
-		Mat matEdge1 = cannyEdge(matGray1, iEdgeThreshold, false);
-		Mat matEdge2 = cannyEdge(matGray2, iEdgeThreshold, false);
-
-		//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1_"+iEdgeThreshold+".jpg");
-		//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2_"+iEdgeThreshold+".jpg");
-
-		double dScore1 = Imgproc.matchShapes(
-				matEdge1, matEdge2, iMode, 0);
-		
-		
-		return 1-dScore1;
+	
 	}
 	
 	public static Mat addAlphaChannel(Mat matInput)
@@ -626,10 +741,24 @@ public class OpenCvUtil{
 		if(matInput!=null && !matInput.empty() && matInput.channels()==4)
 		{
 			Mat matReturn = matInput.clone();
-			Vector<Mat> vRgba = new Vector<Mat>();
-			Core.split(matReturn, vRgba);
-			vRgba.remove(vRgba.size()-1);
-			Core.merge(vRgba, matReturn);
+			Vector<Mat> vRgba = null;
+			try {
+				vRgba = new Vector<Mat>();
+				Core.split(matReturn, vRgba);
+				vRgba.remove(vRgba.size()-1);
+				Core.merge(vRgba, matReturn);
+			}
+			finally
+			{
+				if(vRgba!=null && vRgba.size()>0)
+				{
+					for(Mat m : vRgba)
+					{
+						if(m!=null)
+							m.release();
+					}
+				}
+			}
 			return matReturn;
 		}
 		return matInput;
@@ -665,27 +794,35 @@ public class OpenCvUtil{
 	
 	public static void saveImageAsFile(Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
 	{
-		MatOfInt matOfInt = new MatOfInt();
-		
-		if(mapImageParams!=null && mapImageParams.size()>0)
-		{
-			List<Integer> list = new ArrayList<Integer> ();
-			Iterator<Integer> iter = mapImageParams.keySet().iterator();
-			while(iter.hasNext())
+		MatOfInt matOfInt = null;
+		try {
+			matOfInt = new MatOfInt();
+			
+			if(mapImageParams!=null && mapImageParams.size()>0)
 			{
-				Integer ParamName 	= iter.next();
-				Integer ParamValue 	= mapImageParams.get(ParamName);
-				
-				if(ParamValue!=null)
+				List<Integer> list = new ArrayList<Integer> ();
+				Iterator<Integer> iter = mapImageParams.keySet().iterator();
+				while(iter.hasNext())
 				{
-					list.add(ParamName);
-					list.add(ParamValue);
+					Integer ParamName 	= iter.next();
+					Integer ParamValue 	= mapImageParams.get(ParamName);
+					
+					if(ParamValue!=null)
+					{
+						list.add(ParamName);
+						list.add(ParamValue);
+					}
 				}
+				matOfInt.fromList(list);
 			}
-			matOfInt.fromList(list);
+			
+			Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
 		}
-		
-		Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
+		finally
+		{
+			if(matOfInt!=null)
+				matOfInt.release();
+		}
 	}
 	
 	
