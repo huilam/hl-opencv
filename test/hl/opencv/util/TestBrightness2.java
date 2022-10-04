@@ -243,11 +243,14 @@ public class TestBrightness2{
 							int iH = jsonRegion.optInt("height"); 
 							
 							Mat matDetect = mat.submat(new Rect(iX, iY, iW, iH));
-							double dBrightness = OpenCvUtil.calcBrightness(matDetect);
+							double dBrightness = OpenCvUtil.calcBrightness(matDetect, false);
+							double dBrightness2 = OpenCvUtil.calcBrightness(matDetect, true);
 							
 							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
 							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
 							
+							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness2+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
+							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
 						}
 						
 					}

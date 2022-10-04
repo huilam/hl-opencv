@@ -25,8 +25,6 @@ package hl.opencv.util;
 import java.io.File;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -55,12 +53,10 @@ public class TestBrightness{
 				isProcessed = true;
 				System.out.println(f.getName());
 				Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
+				double dBrightness = OpenCvUtil.calcBrightness(mat);
 				
-				Mat matWhite = new Mat(new Size(10,10), mat.type(), Scalar.all(255));
-				
-				System.out.println(" - Brightness:"+OpenCvUtil.calcBrightness(mat));
-				System.out.println(" - matWhite:"+OpenCvUtil.calcBrightness(matWhite));
-				
+				System.out.println(" - Brightness:"+dBrightness);
+				System.out.println(" - Brightness2:"+OpenCvUtil.calcBrightness(mat, true));
 				
 				System.out.println();
 			}

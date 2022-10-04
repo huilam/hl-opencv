@@ -567,11 +567,32 @@ public class OpenCvUtil{
 	
 	public static double calcBrightness(Mat aMat1)
 	{
+		return calcBrightness(aMat1, null);
+	}
+	
+	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
+	{
+		Mat matMask = null;
+		if(isExclBlack)
+		{			
+			matMask = new Mat(
+					new Size(aMat1.width(), aMat1.height()), 
+					CvType.CV_8UC1,
+					Scalar.all(0));
+			Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
+			Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
+		}
+		
+		return calcBrightness(aMat1, matMask);
+	}
+	public static double calcBrightness(Mat aMat1, Mat aBgMat)
+	{
 		if(aMat1==null)
 			return 0;
 		
 		Mat mat1 = null;
 		Mat matHSV1 = null;
+		Mat matMask1 = null;
 		
 		try {
 		
@@ -579,8 +600,34 @@ public class OpenCvUtil{
 			
 			matHSV1 = OpenCvUtil.toHSV(mat1);
 			
-			Scalar scalar1 = Core.mean(matHSV1);
-	
+			Scalar scalar1 = null;
+			
+			if(aBgMat!=null && !aBgMat.empty())
+			{
+				if(aBgMat.channels()==1)
+				{
+					matMask1 = aBgMat;
+				}
+				else
+				{
+					try {
+						matMask1 = extractFGMask(aMat1, aBgMat, 0.18);
+					} catch (Exception e) {
+						matMask1 = null;
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			if(matMask1!=null && !matMask1.empty())
+			{
+				scalar1 = Core.mean(matHSV1, matMask1);
+			}
+			else
+			{
+				scalar1 = Core.mean(matHSV1);
+			}
+			
 			if(scalar1!=null && scalar1.val.length>0)
 			{
 				//H=color S=gray V=brightness
@@ -595,6 +642,9 @@ public class OpenCvUtil{
 			
 			if(matHSV1!=null)
 				matHSV1.release();
+			
+			if(matMask1!=null)
+				matMask1.release();
 		}
 		
 		return 0;
