@@ -55,6 +55,8 @@ public class OpenCvUtil{
 	private static Decoder base64Decoder = Base64.getDecoder();
 	private static Encoder base64Encoder = Base64.getEncoder();
 	
+	private static int BRIGHTNESS_MIN_SAMPLING_WIDTH = 100;
+	
 	public static Mat base64Img2Mat(String aBase64Img)
 	{
 		Mat mat = null;
@@ -567,7 +569,7 @@ public class OpenCvUtil{
 	
 	public static double calcBrightness(Mat aMat1)
 	{
-		return calcBrightness(aMat1, null);
+		return calcBrightness(aMat1, null, BRIGHTNESS_MIN_SAMPLING_WIDTH);
 	}
 	
 	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
@@ -580,15 +582,17 @@ public class OpenCvUtil{
 					CvType.CV_8UC1,
 					Scalar.all(0));
 			Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
-			Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
+			matMask = OpenCvFilters.grayscale(matMask, false);
 		}
 		
-		return calcBrightness(aMat1, matMask);
+		return calcBrightness(aMat1, matMask, BRIGHTNESS_MIN_SAMPLING_WIDTH);
 	}
-	public static double calcBrightness(Mat aMat1, Mat aBgMat)
+	public static double calcBrightness(Mat aMat1, Mat aBgMat, int aSamplingWidth)
 	{
 		if(aMat1==null)
 			return 0;
+		
+		double dBrightnessScore = 0;
 		
 		Mat mat1 = null;
 		Mat matHSV1 = null;
@@ -596,7 +600,10 @@ public class OpenCvUtil{
 		
 		try {
 		
-			mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), 100);
+			if(aSamplingWidth<=10)
+				aSamplingWidth = BRIGHTNESS_MIN_SAMPLING_WIDTH;
+			
+			mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), aSamplingWidth);
 			
 			matHSV1 = OpenCvUtil.toHSV(mat1);
 			
@@ -619,7 +626,7 @@ public class OpenCvUtil{
 				}
 			}
 			
-			if(matMask1!=null && !matMask1.empty())
+			if(matMask1!=null)
 			{
 				scalar1 = Core.mean(matHSV1, matMask1);
 			}
@@ -632,7 +639,7 @@ public class OpenCvUtil{
 			{
 				//H=color S=gray V=brightness
 				double dVal1 = (scalar1.val)[2];
-				return dVal1 / 255;
+				dBrightnessScore = dVal1 / 255;
 			}
 		}
 		finally
@@ -647,7 +654,7 @@ public class OpenCvUtil{
 				matMask1.release();
 		}
 		
-		return 0;
+		return dBrightnessScore;
 	}
 	
 	public static Mat matchImageTemplate(Mat matImage, Mat matTempl)

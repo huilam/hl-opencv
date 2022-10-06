@@ -74,75 +74,84 @@ public class TestBrightness2{
 				{
 					JSONObject jsonPerson = jArrPersons.getJSONObject(i);
 					
-					
-					
-					JSONObject jsonRegion = null;
-					
-					if(jsonPerson.optJSONObject("head")!=null)
-					{
-						jsonRegion = jsonPerson.optJSONObject("head").optJSONObject("HeadRegion");
-					}
-					
-					if(jsonRegion==null)
-					{
-						jsonRegion = jsonPerson.optJSONObject("face").optJSONObject("faceRegion");
-					}
-					
-					if(jsonRegion!=null)
+					if(jsonPerson!=null)
 					{
 					
-						JSONObject jsonDetection = new JSONObject();
+						JSONObject jsonRegion = null;
 						
-						int iY = jsonRegion.optInt("top");
-						int iX = jsonRegion.optInt("left");
-						int iW = jsonRegion.optInt("width");
-						int iH = jsonRegion.optInt("height"); 
-						
-						Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
-						JSONObject jsonMatchResult = poiMatching(matFace);
-						
-						JSONArray jsonArrMatchPois = jsonMatchResult.optJSONArray("result");
-						
-						if(jsonArrMatchPois!=null && jsonArrMatchPois.length()>0)
+						if(jsonPerson.optJSONObject("head")!=null)
 						{
-						
-							JSONObject jsonMatchPoi = jsonArrMatchPois.getJSONObject(0);
-							
-							if(jsonArrMatchPois.length()>1)
-							{
-								double dHighestMatchScore = jsonMatchPoi.optDouble("score");
-								
-								for(int p=0; p<jsonArrMatchPois.length(); p++)
-								{
-									JSONObject jsonCurPoi = jsonArrMatchPois.getJSONObject(p);
-									
-									double dCurMatchScore = jsonCurPoi.optDouble("score");
-									
-									if(dCurMatchScore > dHighestMatchScore)
-									{
-										jsonMatchPoi = jsonCurPoi;
-									}
-								}
-							}
-							
-							String sMatchPoiName = jsonMatchPoi.optString("personName");
-							double dMatchCore 	 = jsonMatchPoi.optDouble("score");
-							
-							System.out.println("[POI] "+iX+"_"+iY+"_"+iW+"_"+iH+" : "+sMatchPoiName+" - "+dMatchCore);
-							
-							jsonDetection.put("region", jsonRegion);
-							jsonDetection.put("personName", sMatchPoiName);
-							jsonDetection.put("score", dMatchCore);
-							
-							jarrOutput.put(jsonDetection);
-							
-							
+							jsonRegion = jsonPerson.optJSONObject("head").optJSONObject("headRegion");
 						}
 						
-					}
-					else
-					{
-						System.err.println(jsonPerson.toString());
+						if(jsonRegion==null)
+						{
+							if(jsonPerson.optJSONObject("face")!=null)
+							{
+								jsonRegion = jsonPerson.optJSONObject("face").optJSONObject("faceRegion");
+							}
+						}
+						
+						if(jsonRegion!=null)
+						{
+						
+							JSONObject jsonDetection = new JSONObject();
+							
+							int iY = jsonRegion.optInt("top");
+							int iX = jsonRegion.optInt("left");
+							int iW = jsonRegion.optInt("width");
+							int iH = jsonRegion.optInt("height"); 
+							
+							Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
+							
+							double dFaceBrightness = OpenCvUtil.calcBrightness(matFace);
+							
+							jsonDetection.put("region", jsonRegion);
+							jsonDetection.put("brightnessScore", dFaceBrightness);
+							jsonDetection.put("jpgBase64", OpenCvUtil.mat2base64Img(matFace, "JPG"));
+							
+							
+							JSONObject jsonMatchResult = poiMatching(matFace);
+							
+							JSONArray jsonArrMatchPois = jsonMatchResult.optJSONArray("result");
+							
+							if(jsonArrMatchPois!=null && jsonArrMatchPois.length()>0)
+							{
+							
+								JSONObject jsonMatchPoi = jsonArrMatchPois.getJSONObject(0);
+								
+								if(jsonArrMatchPois.length()>1)
+								{
+									double dHighestMatchScore = jsonMatchPoi.optDouble("score");
+									
+									for(int p=0; p<jsonArrMatchPois.length(); p++)
+									{
+										JSONObject jsonCurPoi = jsonArrMatchPois.getJSONObject(p);
+										
+										double dCurMatchScore = jsonCurPoi.optDouble("score");
+										
+										if(dCurMatchScore > dHighestMatchScore)
+										{
+											jsonMatchPoi = jsonCurPoi;
+										}
+									}
+								}
+								
+								String sMatchPoiName = jsonMatchPoi.optString("personName");
+								double dMatchCore 	 = jsonMatchPoi.optDouble("score");
+								
+								//System.out.println("[POI] "+iX+"_"+iY+"_"+iW+"_"+iH+" : "+sMatchPoiName+" - "+dMatchCore);
+								
+								jsonDetection.put("personName", sMatchPoiName);
+								jsonDetection.put("matchingScore", dMatchCore);
+							}
+							jarrOutput.put(jsonDetection);
+							
+						}
+						else
+						{
+							System.err.println(jsonPerson.toString());
+						}
 					}
 				}
 			
@@ -153,6 +162,8 @@ public class TestBrightness2{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		System.out.println(jarrOutput.toString());
 		
 		return jarrOutput;
 	}
@@ -205,7 +216,7 @@ public class TestBrightness2{
 				Mat matOrg = OpenCvUtil.loadImage(f.getAbsolutePath());
 				System.out.println("  - "+matOrg.width()+"x"+matOrg.height());
 			
-				double dAdjs[] = new double[] {0,-10};//, 10, 20, 50, -10, -20, -50};
+				double dAdjs[] = new double[] {0};//, 10, 20, 50, -10, -20, -50};
 				
 				for(int i=0; i<dAdjs.length; i++)
 				{
@@ -244,13 +255,15 @@ public class TestBrightness2{
 							
 							Mat matDetect = mat.submat(new Rect(iX, iY, iW, iH));
 							double dBrightness = OpenCvUtil.calcBrightness(matDetect, false);
-							double dBrightness2 = OpenCvUtil.calcBrightness(matDetect, true);
+							//double dBrightness2 = OpenCvUtil.calcBrightness(matDetect, true);
 							
 							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
 							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
 							
+							/**
 							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness2+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
 							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
+							**/
 						}
 						
 					}
