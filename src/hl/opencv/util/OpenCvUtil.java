@@ -556,8 +556,8 @@ public class OpenCvUtil{
 	
 	public static double compareBrightnessDiff(Mat aMat1, Mat aMat2)
 	{
-		double dMean1 = calcBrightness(aMat1);
-		double dMean2 = calcBrightness(aMat2);
+		double dMean1 = calcBrightness(aMat1, true);
+		double dMean2 = calcBrightness(aMat2, true);
 		
 		return dMean1-dMean2;
 	}
@@ -598,6 +598,7 @@ public class OpenCvUtil{
 			
 			try
 			{
+				matMask = new Mat();
 				matHsv = OpenCvUtil.toHSV(aMat1);
 				Core.inRange(matHsv, aFromScalar, aToScalar, matMask);
 			}

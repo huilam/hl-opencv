@@ -30,6 +30,7 @@ import org.json.JSONObject;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -104,7 +105,9 @@ public class TestBrightness2{
 							
 							Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
 							
-							double dFaceBrightness = OpenCvUtil.calcBrightness(matFace);
+							Scalar scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
+							Scalar scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
+							double dFaceBrightness = OpenCvUtil.calcBrightness(matFace, scalarFrom, scalarTo);
 							
 							jsonDetection.put("region", jsonRegion);
 							jsonDetection.put("brightnessScore", dFaceBrightness);
@@ -246,7 +249,7 @@ public class TestBrightness2{
 							
 							JSONObject jsonRegion = jsonDetect.optJSONObject("region");
 							String sPoiName = jsonDetect.optString("personName", "UNKNOWN");
-							double dScore = jsonDetect.optDouble("score", 0);
+							double dScore = jsonDetect.optDouble("matchingScore", 0);
 							
 							int iY = jsonRegion.optInt("top");
 							int iX = jsonRegion.optInt("left");
@@ -353,7 +356,7 @@ public class TestBrightness2{
 		initOpenCV();
 		System.out.println();
 		
-		File folderImages = new File("./test/images/poi");
+		File folderImages = new File("./test/images/poi/xinlai");
 		
 		boolean isRecursive = true;
 		
