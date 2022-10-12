@@ -587,6 +587,32 @@ public class OpenCvUtil{
 		
 		return calcBrightness(aMat1, matMask, BRIGHTNESS_MIN_SAMPLING_WIDTH);
 	}
+	
+	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	{
+		Mat matMask = null;
+		
+		if(aMat1!=null && aFromScalar!=null && aToScalar!=null)
+		{
+			Mat matHsv = null;
+			
+			try
+			{
+				matHsv = OpenCvUtil.toHSV(aMat1);
+				Core.inRange(matHsv, aFromScalar, aToScalar, matMask);
+			}
+			finally
+			{
+				if(matHsv!=null)
+					matHsv.release();
+			}
+
+		}
+		
+		
+		return calcBrightness(aMat1, matMask, BRIGHTNESS_MIN_SAMPLING_WIDTH);
+	}
+	
 	public static double calcBrightness(Mat aMat1, Mat aBgMat, int aSamplingWidth)
 	{
 		if(aMat1==null)
@@ -626,7 +652,7 @@ public class OpenCvUtil{
 				}
 			}
 			
-			if(matMask1!=null)
+			if(matMask1!=null && matHSV1.size() == matMask1.size())
 			{
 				scalar1 = Core.mean(matHSV1, matMask1);
 			}
@@ -637,7 +663,7 @@ public class OpenCvUtil{
 			
 			if(scalar1!=null && scalar1.val.length>0)
 			{
-				//H=color S=gray V=brightness
+				//H=Hue S=Saturation V=Value (channel=HSV)
 				double dVal1 = (scalar1.val)[2];
 				dBrightnessScore = dVal1 / 255;
 			}

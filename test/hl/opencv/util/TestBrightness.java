@@ -25,6 +25,7 @@ package hl.opencv.util;
 import java.io.File;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -56,7 +57,11 @@ public class TestBrightness{
 				double dBrightness = OpenCvUtil.calcBrightness(mat);
 				
 				System.out.println(" - Brightness:"+dBrightness);
-				System.out.println(" - Brightness2:"+OpenCvUtil.calcBrightness(mat, true));
+				System.out.println(" - Brightness (excl black):"+OpenCvUtil.calcBrightness(mat, true));
+				
+				Scalar scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
+				Scalar scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
+				System.out.println(" - Brightness2:"+OpenCvUtil.calcBrightness(mat, scalarFrom, scalarTo));
 				
 				System.out.println();
 			}
