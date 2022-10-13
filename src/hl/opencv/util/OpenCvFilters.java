@@ -193,6 +193,12 @@ public class OpenCvFilters{
 		int iNewWidth = (int)((1.0 - aPixelateScale) * (aMat.width()*0.25));
 		int iNewHeight = (int)((1.0 - aPixelateScale) * (aMat.height()*0.25));
 		
+		if(iNewWidth<=0)
+			iNewWidth = 1;
+		
+		if(iNewHeight<=0)
+			iNewHeight = 1;
+		
 		Mat matReturn = null;
 		Mat matPixelated = null;
 		try {
