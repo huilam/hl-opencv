@@ -190,8 +190,8 @@ public class OpenCvFilters{
 		if(aPixelateScale<0)
 			aPixelateScale = 0.001;
 		
-		int iNewWidth = (int)((1.0 - aPixelateScale) * (aMat.width()*0.25));
-		int iNewHeight = (int)((1.0 - aPixelateScale) * (aMat.height()*0.25));
+		int iNewWidth = (int)((1.0 - aPixelateScale) * (aMat.width()*0.15));
+		int iNewHeight = (int)((1.0 - aPixelateScale) * (aMat.height()*0.15));
 		
 		if(iNewWidth<=0)
 			iNewWidth = 1;
@@ -202,8 +202,9 @@ public class OpenCvFilters{
 		Mat matReturn = null;
 		Mat matPixelated = null;
 		try {
-			matPixelated = OpenCvUtil.resize(aMat.clone(), iNewWidth, iNewHeight, true);
-			matReturn = OpenCvUtil.resize(matPixelated, aMat.width(), aMat.height(), false);
+			
+			matPixelated = OpenCvUtil.resize(aMat.clone(), iNewWidth, iNewHeight, false, Imgproc.INTER_LINEAR_EXACT);
+			matReturn = OpenCvUtil.resize(matPixelated, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST );
 		}
 		finally
 		{

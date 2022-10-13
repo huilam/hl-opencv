@@ -52,6 +52,16 @@ public class TestBrightness2{
 		}
 	}
 	
+	private static double calcFaceBrightness(Mat aMatFace)
+	{
+		Scalar scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
+		Scalar scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
+		double dFaceBrightness = OpenCvUtil.calcBrightness(aMatFace, scalarFrom, scalarTo);
+		
+		return dFaceBrightness;
+		
+	}
+	
 	private static JSONArray detectFaces(final Mat matInput)
 	{	
 		JSONArray jarrOutput = new JSONArray();
@@ -105,9 +115,8 @@ public class TestBrightness2{
 							
 							Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
 							
-							Scalar scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
-							Scalar scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
-							double dFaceBrightness = OpenCvUtil.calcBrightness(matFace, scalarFrom, scalarTo);
+							double dFaceBrightness = calcFaceBrightness(matFace);
+							double dImageBrightness = calcFaceBrightness(matFace);
 							
 							jsonDetection.put("region", jsonRegion);
 							jsonDetection.put("brightnessScore", dFaceBrightness);
