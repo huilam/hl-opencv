@@ -37,10 +37,10 @@ public class TestVideoDecoder extends VideoDecoder {
 		System.out.println("Total frames : "+aTotalFrames);
 	}
 	
-	protected boolean decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
+	protected Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
 		System.out.println(aFrameNo+" - "+aFrameMs);
-		return true;
+		return matFrame;
 	}
 	
 	private static void initOpenCV()
@@ -56,7 +56,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		initOpenCV();
 		
-		File file = new File("./test/videos/youtube/XXXX.mp4");
+		File file = new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
 		new TestVideoDecoder().processVideo(file);
 	}
 }

@@ -43,17 +43,13 @@ public class VideoDecoder {
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 				double dFrameMs = 1000 / (int)dFps;
 				
-				System.out.println("dFps="+dFps);
-				System.out.println("dTotalFrames="+dTotalFrames);
-				System.out.println("dFrameMs="+dFrameMs);
-				
 				decodedMetadata((long)dFps, (long)dTotalFrames);
 				double dFrameCount = -1;
 				while(vid.read(matFrame))
 				{
 					dFrameCount++;
-					boolean isContinue = decodedVideoFrame(matFrame, (long)dFrameCount+1, (long)(dFrameCount*dFrameMs));
-					if(!isContinue)
+					matFrame = decodedVideoFrame(matFrame, (long)dFrameCount+1, (long)(dFrameCount*dFrameMs));
+					if(matFrame==null)
 						break;
 				}
 			}
@@ -69,9 +65,9 @@ public class VideoDecoder {
 	{
 	}
 	
-	protected boolean decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
+	protected Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
-		return true;
+		return matFrame;
 	}
 	
 }
