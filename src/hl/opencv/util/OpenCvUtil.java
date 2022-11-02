@@ -55,7 +55,7 @@ public class OpenCvUtil{
 	private static Decoder base64Decoder = Base64.getDecoder();
 	private static Encoder base64Encoder = Base64.getEncoder();
 	
-	private static int BRIGHTNESS_MIN_SAMPLING_WIDTH = 100;
+	private static int BRIGHTNESS_MAX_SAMPLING_WIDTH = 500;
 	
 	public static Mat base64Img2Mat(String aBase64Img)
 	{
@@ -524,20 +524,6 @@ public class OpenCvUtil{
 		
 		return matHSV;
 	}
-	
-	private static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
-	{
-		switch(aNewChannelNo)
-		{
-			case 3 : 
-				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGB);
-				break;
-			case 4 :  
-				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGBA);
-				break;
-		}
-		return aMatGray;
-	}
 
 	public static Mat adjBrightness(Mat aMatIn, double aBrightness)
 	{
@@ -569,7 +555,7 @@ public class OpenCvUtil{
 	
 	public static double calcBrightness(Mat aMat1)
 	{
-		return calcBrightness(aMat1, null, BRIGHTNESS_MIN_SAMPLING_WIDTH);
+		return calcBrightness(aMat1, null, aMat1.width());
 	}
 	
 	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
@@ -585,10 +571,10 @@ public class OpenCvUtil{
 			matMask = OpenCvFilters.grayscale(matMask, false);
 		}
 		
-		return calcBrightness(aMat1, matMask, BRIGHTNESS_MIN_SAMPLING_WIDTH);
+		return calcBrightness(aMat1, matMask, aMat1.width());
 	}
 	
-	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	public static Mat getMask(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
 	{
 		Mat matMask = null;
 		
@@ -609,9 +595,13 @@ public class OpenCvUtil{
 			}
 
 		}
-		
-		
-		return calcBrightness(aMat1, matMask, BRIGHTNESS_MIN_SAMPLING_WIDTH);
+		return matMask;
+	}
+	
+	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	{
+		Mat matMask = getMask(aMat1, aFromScalar, aToScalar);
+		return calcBrightness(aMat1, matMask, aMat1.width());
 	}
 	
 	public static double calcBrightness(Mat aMat1, Mat aBgMat, int aSamplingWidth)
@@ -627,17 +617,20 @@ public class OpenCvUtil{
 		
 		try {
 		
-			if(aSamplingWidth<=10)
-				aSamplingWidth = BRIGHTNESS_MIN_SAMPLING_WIDTH;
+			if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
+				aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
 			
 			mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), aSamplingWidth);
-			
-			matHSV1 = OpenCvUtil.toHSV(mat1);
 			
 			Scalar scalar1 = null;
 			
 			if(aBgMat!=null && !aBgMat.empty())
 			{
+				if(aBgMat.width()!=mat1.width())
+				{
+					aBgMat = OpenCvUtil.resize(aBgMat, mat1.width(), mat1.height(), false);
+				}
+				
 				if(aBgMat.channels()==1)
 				{
 					matMask1 = aBgMat;
@@ -653,7 +646,10 @@ public class OpenCvUtil{
 				}
 			}
 			
-			if(matMask1!=null && matHSV1.size() == matMask1.size())
+			
+			matHSV1 = OpenCvUtil.toHSV(mat1);
+			
+			if(matMask1!=null && matHSV1.width() == matMask1.width())
 			{
 				scalar1 = Core.mean(matHSV1, matMask1);
 			}
