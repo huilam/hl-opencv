@@ -30,6 +30,10 @@ import org.opencv.videoio.Videoio;
 
 public class VideoDecoder {
 	
+	private static long SECOND_MS = 1000;
+	private static long MINUTE_MS = SECOND_MS * 60;
+	private static long HOUR_MS = MINUTE_MS * 60;
+	
 	public long processVideo(File fileVideo)
 	{
 		VideoCapture vid = null;
@@ -61,11 +65,49 @@ public class VideoDecoder {
 		return lProcessed;
 	}
 	
-	protected void decodedMetadata(long aFps, long aTotalFrames)
+	public static String toDurationStr(long aTimeMs)
+	{
+		StringBuffer sbTimeMs = new StringBuffer();
+		
+		long lHour 	= 0;
+		long lMin 	= 0;
+		long lSec 	= 0;
+		
+		lHour = aTimeMs / HOUR_MS;
+		aTimeMs = aTimeMs % HOUR_MS;
+		
+		lMin = aTimeMs / MINUTE_MS;
+		aTimeMs = aTimeMs % MINUTE_MS;
+		
+		lSec = aTimeMs / SECOND_MS;
+		aTimeMs = aTimeMs % SECOND_MS;
+		
+		if(lHour<10)
+			sbTimeMs.append("0");
+		sbTimeMs.append(lHour).append(":");
+		
+		if(lMin<10)
+			sbTimeMs.append("0");
+		sbTimeMs.append(lMin).append(":");
+		
+		if(lSec<10)
+			sbTimeMs.append("0");
+		sbTimeMs.append(lSec).append(".");
+		
+		if(aTimeMs<10)
+			sbTimeMs.append("00");
+		else if(aTimeMs<100)
+			sbTimeMs.append("0");
+		sbTimeMs.append(aTimeMs);
+		
+		return sbTimeMs.toString();
+	}
+	
+	public void decodedMetadata(long aFps, long aTotalFrameCount)
 	{
 	}
 	
-	protected Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
+	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
 	{
 		return matFrame;
 	}

@@ -30,16 +30,17 @@ import org.opencv.core.Mat;
 import hl.opencv.OpenCvLibLoader;
 
 public class TestVideoDecoder extends VideoDecoder {
-
-	protected void decodedMetadata(long aFps, long aTotalFrames)
+	
+	public void decodedMetadata(long aFps, long aTotalFrames)
 	{
 		System.out.println("FPS : "+aFps);
 		System.out.println("Total frames : "+aTotalFrames);
+		System.out.println("Duration : "+ toDurationStr(aTotalFrames/aFps*1000));
 	}
 	
-	protected Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
+	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
-		System.out.println(aFrameNo+" - "+aFrameMs);
+		System.out.println(aFrameNo+" - "+toDurationStr(aFrameMs));
 		return matFrame;
 	}
 	
@@ -56,7 +57,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		initOpenCV();
 		
-		File file = new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
+		File file = new File("./test/videos/XXX/XXX.mp4");
 		new TestVideoDecoder().processVideo(file);
 	}
 }
