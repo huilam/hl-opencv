@@ -28,33 +28,89 @@ import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import hl.opencv.image.ImageProcessor;
+
 public class VideoDecoder {
 	
 	private static long SECOND_MS = 1000;
 	private static long MINUTE_MS = SECOND_MS * 60;
 	private static long HOUR_MS = MINUTE_MS * 60;
 	
-	public long processVideo(File fileVideo)
+	////
+	private double min_brightness_score = 0.0;
+	private Mat bgref_mat = null;
+	
+	////
+	public double getMin_brightness_score() {
+		return min_brightness_score;
+	}
+	public void setMin_brightness_score(double min_brightness_score) {
+		this.min_brightness_score = min_brightness_score;
+	}
+	////
+	public Mat getBgref_mat() {
+		return bgref_mat;
+	}
+	public void setBgref_mat(Mat bgref_mat) {
+		this.bgref_mat = bgref_mat;
+	}
+	////
+	
+	public long processVideo(File aVideoFile, long aFrameTimestamp)
+	{
+		return processVideo(aVideoFile, aFrameTimestamp, aFrameTimestamp);
+	}
+	
+	public long processVideo(File aVideoFile, long aFrameTimestampFrom, long aFrameTimestampTo)
 	{
 		VideoCapture vid = null;
+		Mat matFrame = null;
+		
 		long lProcessed = 0;
+
 		try{
-			Mat matFrame = new Mat();
-			vid = new VideoCapture(fileVideo.getAbsolutePath());
+			matFrame = new Mat();
+			vid = new VideoCapture(aVideoFile.getAbsolutePath());
 			if(vid.isOpened())
 			{
 				double dFps = vid.get(Videoio.CAP_PROP_FPS);
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-				double dFrameMs = 1000 / (int)dFps;
+				double dFrameMs = 1000.0 / dFps;
 				
 				decodedMetadata((long)dFps, (long)dTotalFrames);
-				double dFrameCount = -1;
+				long lFrameTimestamp = 0;
+				
+				ImageProcessor imgProcessor = new ImageProcessor();
+				imgProcessor.setMin_brightness_score(this.min_brightness_score);
+				imgProcessor.setBackground_ref_mat(this.bgref_mat);
+				
 				while(vid.read(matFrame))
 				{
-					dFrameCount++;
-					matFrame = decodedVideoFrame(matFrame, (long)dFrameCount+1, (long)(dFrameCount*dFrameMs));
-					if(matFrame==null)
-						break;
+					lProcessed++;
+					matFrame = imgProcessor.processImage(matFrame);
+					
+					if(matFrame!=null)
+					{
+					
+						lFrameTimestamp = (long)((lProcessed-1)*dFrameMs);
+						
+						if(lFrameTimestamp<aFrameTimestampFrom)
+							continue;
+						
+						if(aFrameTimestampTo!=-1 && lFrameTimestamp>aFrameTimestampTo)
+							break;
+						
+						if(lFrameTimestamp>=aFrameTimestampFrom)
+						{
+							if(lFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
+							{
+								matFrame = decodedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
+							}
+						}
+						
+						if(matFrame==null)
+							break;
+					}
 				}
 			}
 		}finally
@@ -63,6 +119,11 @@ public class VideoDecoder {
 		}
 		
 		return lProcessed;
+	}
+	
+	public long processVideo(File fileVideo)
+	{
+		return processVideo(fileVideo, 0, -1);
 	}
 	
 	public static String toDurationStr(long aTimeMs)

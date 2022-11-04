@@ -28,6 +28,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import hl.opencv.OpenCvLibLoader;
+import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
 	
@@ -40,7 +41,9 @@ public class TestVideoDecoder extends VideoDecoder {
 	
 	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
-		System.out.println(aFrameNo+" - "+toDurationStr(aFrameMs));
+		
+		double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame);
+		System.out.println(aFrameNo+" - "+aFrameMs+" "+toDurationStr(aFrameMs)+" brightness:"+dBrightnessScore);
 		return matFrame;
 	}
 	
@@ -57,7 +60,12 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		initOpenCV();
 		
-		File file = new File("./test/videos/XXX/XXX.mp4");
-		new TestVideoDecoder().processVideo(file);
+		long lStartMs = System.currentTimeMillis();
+		
+		File file = new File("./test/videos/nls/XinLai.mp4");
+		//new TestVideoDecoder().processVideo(file);
+		new TestVideoDecoder().processVideo(file, 0, 5000);
+		
+		System.out.println("Elapsed : "+(System.currentTimeMillis()-lStartMs)+" ms");
 	}
 }
