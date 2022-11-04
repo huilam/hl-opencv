@@ -29,7 +29,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
@@ -43,6 +42,8 @@ public class TestBrightness2{
 	private static String POIAPI_DETECT_URL = "http://203.127.252.55/scc/poiapi/human/detect";
 	private static String POIAPI_SEARCH_URL = "http://203.127.252.55/scc/poiapi/face/search";
 	
+	private static String OUTPUT_FOLDER = null;
+	
 	private static void initOpenCV()
 	{
 		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
@@ -50,6 +51,63 @@ public class TestBrightness2{
 		{
 			throw new RuntimeException("OpenCv is NOT loaded !");
 		}
+	}
+	
+	private static Mat resizeImageToFaceWidth(Mat aMatFace, double aTargetFaceWidth)
+	{
+		if(aMatFace==null || aTargetFaceWidth<=0)
+			return null;
+		
+		int iFaceWidth = getFaceWidth(aMatFace);
+		
+		if(iFaceWidth>0)
+		{
+			double dResizeScale = 1.0;
+			if(iFaceWidth>1)
+			{
+				dResizeScale = aTargetFaceWidth / iFaceWidth;
+			}
+			
+			if(dResizeScale!=1.0)
+			{
+				int iWidth = (int) (aMatFace.width() * dResizeScale);
+				int iHeight = (int) (aMatFace.height() * dResizeScale);
+				
+				return OpenCvUtil.resize(aMatFace, iWidth, iHeight, true);
+			}
+		}
+		return null;
+	}
+	
+	private static int getFaceWidth(Mat aMatFace)
+	{
+		if(aMatFace==null)
+			return -1;
+		
+		JSONArray jArrFaces = detectFaces(aMatFace); 
+		if(jArrFaces!=null && jArrFaces.length()>0)
+		{
+			JSONObject jsonPerson = jArrFaces.optJSONObject(0);
+			
+			JSONObject jsonFace = jsonPerson.optJSONObject("face", null);
+			if(jsonFace!=null)
+			{
+				int iWidth = jsonFace.optInt("width", -2);
+				if(iWidth>0)
+					return iWidth;
+				System.out.println("jsonFace="+jsonFace.toString());
+			}
+			else
+			{
+				System.out.println("jsonPerson="+jsonPerson);
+			}
+		}
+		else
+		{
+			System.out.println("jArrFaces="+jArrFaces);
+		}
+		
+		return -3;
 	}
 	
 	private static double calcFaceBrightness(Mat aMatFace)
@@ -78,7 +136,9 @@ public class TestBrightness2{
 			if(resp.isSuccess())
 			{
 				JSONObject jsonDetects = new JSONObject(resp.getContent_data());
-
+				
+				//System.out.println("##### "+jsonDetects.toString());
+				
 				JSONArray jArrPersons = jsonDetects.optJSONArray("detections");
 				
 				for(int i=0; i<jArrPersons.length(); i++)
@@ -87,82 +147,54 @@ public class TestBrightness2{
 					
 					if(jsonPerson!=null)
 					{
-					
-						JSONObject jsonRegion = null;
+						//System.out.println(jsonPerson.toString());
 						
-						if(jsonPerson.optJSONObject("head")!=null)
+						JSONObject jsonRegion = new JSONObject();
+						
+						
+						JSONObject jsonHead = jsonPerson.optJSONObject("head", null);
+						JSONObject jsonface = jsonPerson.optJSONObject("face", null);
+						
+						if(jsonHead!=null)
 						{
-							jsonRegion = jsonPerson.optJSONObject("head").optJSONObject("headRegion");
+							jsonRegion.put("head", jsonHead.optJSONObject("headRegion"));
 						}
 						
-						if(jsonRegion==null)
+						if(jsonface!=null)
 						{
-							if(jsonPerson.optJSONObject("face")!=null)
+							JSONObject jsonFaceRegion = jsonface.optJSONObject("faceRegion");
+							
+							JSONObject jsonEyes = jsonface.optJSONObject("eyes", null);
+							
+							if(jsonEyes!=null)
 							{
-								jsonRegion = jsonPerson.optJSONObject("face").optJSONObject("faceRegion");
+								JSONObject jsonLeftEyePos = jsonEyes.optJSONObject("leftEye").optJSONObject("position");
+								JSONObject jsonRightEyePos = jsonEyes.optJSONObject("rightEye").optJSONObject("position");
+								
+								int iLeftX = jsonLeftEyePos.optInt("left");
+								int iLeftY = jsonLeftEyePos.optInt("top");
+								
+								int iRightX = jsonRightEyePos.optInt("left");
+								int iRightY = jsonRightEyePos.optInt("top");
+								
+								int iEyeDistance = Math.abs(iLeftX-iRightX);
+								if(iLeftY!=iRightY)
+								{
+									iEyeDistance = (int) Math.hypot(Math.abs(iRightX-iLeftX), Math.abs(iRightY-iLeftY));
+								}
+								
+								jsonFaceRegion.put("eyeDistance", iEyeDistance);
+								jsonFaceRegion.put("leftEye", jsonLeftEyePos);
+								jsonFaceRegion.put("rightEye", jsonRightEyePos);
 							}
+							
+							jsonRegion.put("face", jsonFaceRegion);
 						}
 						
 						if(jsonRegion!=null)
 						{
-						
-							JSONObject jsonDetection = new JSONObject();
 							
-							int iY = jsonRegion.optInt("top");
-							int iX = jsonRegion.optInt("left");
-							int iW = jsonRegion.optInt("width");
-							int iH = jsonRegion.optInt("height"); 
-							
-							Mat matFace = matInput.submat(new Rect(iX, iY, iW, iH));
-							
-							double dFaceBrightness = calcFaceBrightness(matFace);
-							double dImageBrightness = calcFaceBrightness(matFace);
-							
-							jsonDetection.put("region", jsonRegion);
-							jsonDetection.put("brightnessScore", dFaceBrightness);
-							jsonDetection.put("jpgBase64", OpenCvUtil.mat2base64Img(matFace, "JPG"));
-							
-							
-							JSONObject jsonMatchResult = poiMatching(matFace);
-							
-							JSONArray jsonArrMatchPois = jsonMatchResult.optJSONArray("result");
-							
-							if(jsonArrMatchPois!=null && jsonArrMatchPois.length()>0)
-							{
-							
-								JSONObject jsonMatchPoi = jsonArrMatchPois.getJSONObject(0);
-								
-								if(jsonArrMatchPois.length()>1)
-								{
-									double dHighestMatchScore = jsonMatchPoi.optDouble("score");
-									
-									for(int p=0; p<jsonArrMatchPois.length(); p++)
-									{
-										JSONObject jsonCurPoi = jsonArrMatchPois.getJSONObject(p);
-										
-										double dCurMatchScore = jsonCurPoi.optDouble("score");
-										
-										if(dCurMatchScore > dHighestMatchScore)
-										{
-											jsonMatchPoi = jsonCurPoi;
-										}
-									}
-								}
-								
-								String sMatchPoiName = jsonMatchPoi.optString("personName");
-								double dMatchCore 	 = jsonMatchPoi.optDouble("score");
-								
-								//System.out.println("[POI] "+iX+"_"+iY+"_"+iW+"_"+iH+" : "+sMatchPoiName+" - "+dMatchCore);
-								
-								jsonDetection.put("personName", sMatchPoiName);
-								jsonDetection.put("matchingScore", dMatchCore);
-							}
-							jarrOutput.put(jsonDetection);
-							
-						}
-						else
-						{
-							System.err.println(jsonPerson.toString());
+							jarrOutput.put(jsonRegion);
 						}
 					}
 				}
@@ -175,7 +207,7 @@ public class TestBrightness2{
 			e.printStackTrace();
 		}
 		
-		System.out.println(jarrOutput.toString());
+		//System.out.println(jarrOutput.toString());
 		
 		return jarrOutput;
 	}
@@ -215,7 +247,7 @@ public class TestBrightness2{
 		
 		if(f!=null && f.isFile())
 		{
-			String sOutputFolder = f.getParentFile().getAbsolutePath()+"/output";
+			String sOutputFolder = OUTPUT_FOLDER;
 			
 			new File(sOutputFolder).mkdirs();
 			
@@ -228,61 +260,37 @@ public class TestBrightness2{
 				Mat matOrg = OpenCvUtil.loadImage(f.getAbsolutePath());
 				System.out.println("  - "+matOrg.width()+"x"+matOrg.height());
 			
-				double dAdjs[] = new double[] {0};//, 10, 20, 50, -10, -20, -50};
+				double dBrightnessScore1 = calcImageBrightness(matOrg, true);
+				double dBrightnessScore2 = calcImageBrightness(matOrg, false);
 				
-				for(int i=0; i<dAdjs.length; i++)
+				/**
+				
+				int iTargetWidth[] = new int[] {30, 34, 90}; //, 30, 20, 50, -10, -20, -50};
+				
+				int iOrgFaceWidth = getFaceWidth(matOrg);
+				System.out.println(" - Org FaceWidth = "+iOrgFaceWidth);
+				
+				
+				for(int iWidth : iTargetWidth)
 				{
-					Mat mat = matOrg;
+					System.out.println(" - Resizing face width to "+iWidth+" ...");
 					
-					if(dAdjs[i]!=0)
+					Mat matResized = resizeImageToFaceWidth(matOrg, iWidth);
+					
+					if(matResized!=null)
 					{
-						mat = OpenCvUtil.adjBrightness(matOrg, dAdjs[i]);
+						int iResizedImgFaceWidth = getFaceWidth(matResized);
+						System.out.println("   - Resized = "+matResized.width()+"x"+matResized.height()+" faceWidth:"+iResizedImgFaceWidth);
+					
+						OpenCvUtil.saveImageAsFile(matResized, sOutputFolder+"/"+f.getName()+"_"+iResizedImgFaceWidth+"_"+matResized.width()+"x"+matResized.height()+".jpg");
 					}
-				
-					String sBrightness = ""+OpenCvUtil.calcBrightness(mat);
-					//sBrightness = sBrightness.replaceAll("-","neg_");
-					
-					String sOutputFileName = sOutputFolder+"/"+f.getName()+"_"+sBrightness+".jpg";
-					
-					OpenCvUtil.saveImageAsFile(mat, sOutputFileName);
-					System.out.println();
-					System.out.println("  - saved "+sOutputFileName);
-					
-					JSONArray jarrDetections = detectFaces(mat);
-					
-					if(jarrDetections!=null && jarrDetections.length()>0)
+					else
 					{
-						for(int d=0; d<jarrDetections.length(); d++)
-						{
-							JSONObject jsonDetect = jarrDetections.optJSONObject(d);
-							
-							JSONObject jsonRegion = jsonDetect.optJSONObject("region");
-							String sPoiName = jsonDetect.optString("personName", "UNKNOWN");
-							double dScore = jsonDetect.optDouble("matchingScore", 0);
-							
-							int iY = jsonRegion.optInt("top");
-							int iX = jsonRegion.optInt("left");
-							int iW = jsonRegion.optInt("width");
-							int iH = jsonRegion.optInt("height"); 
-							
-							Mat matDetect = mat.submat(new Rect(iX, iY, iW, iH));
-							double dBrightness = OpenCvUtil.calcBrightness(matDetect, false);
-							//double dBrightness2 = OpenCvUtil.calcBrightness(matDetect, true);
-							
-							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
-							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
-							
-							/**
-							sOutputFileName = sOutputFolder+"/"+f.getName().substring(0, f.getName().length()-4)+"_"+dBrightness2+"_"+iX+"_"+iY+"_"+iW+"_"+iH+"_"+sPoiName+"_"+dScore+".jpg";
-							OpenCvUtil.saveImageAsFile(matDetect, sOutputFileName);
-							**/
-						}
-						
+						System.out.println("   - Skipped");
 					}
-					
 				}
 				
-				
+				**/
 				
 				System.out.println();
 			}
@@ -352,11 +360,36 @@ public class TestBrightness2{
 			}
 			else if(isRecursive && f.isDirectory())
 			{
+				if(OUTPUT_FOLDER.equals(f.getAbsolutePath()))
+				{
+					System.out.println(" ** [SKIP] "+f.getAbsolutePath());
+					continue;
+					//skip output folder
+				}
 				iCount += processFiles(f, isRecursive);
 			}
 			
 		}
 		return iCount;
+	}
+	
+
+	private static double calcImageBrightness(Mat aMaImage, boolean isTargetSkins)
+	{
+		Scalar scalarFrom 	= null;
+		Scalar scalarTo 	= null; 
+		
+		if(isTargetSkins)
+		{
+			scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
+			scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
+		}
+		
+		
+		double dFaceBrightness = OpenCvUtil.calcBrightness(aMaImage, scalarFrom, scalarTo);
+		System.out.println("isTargetSkins="+isTargetSkins);
+		System.out.println("dFaceBrightness="+dFaceBrightness);
+		return dFaceBrightness;
 	}
 	
 	
@@ -365,7 +398,9 @@ public class TestBrightness2{
 		initOpenCV();
 		System.out.println();
 		
-		File folderImages = new File("./test/images/poi/xinlai");
+		File folderImages = new File("./test/images/sunn");
+		
+		OUTPUT_FOLDER = folderImages.getAbsolutePath()+"/output";
 		
 		boolean isRecursive = true;
 		

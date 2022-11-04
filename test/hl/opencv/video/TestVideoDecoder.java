@@ -32,11 +32,17 @@ import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
 	
-	public void decodedMetadata(long aFps, long aTotalFrames)
+	public boolean decodedMetadata(
+			String aVideoFileName, int aResWidth, int aResHeight, 
+			int aFps, long aTotalFrameCount)
 	{
+		System.out.println();
+		System.out.println("Resolution : "+aResWidth+"x"+aResHeight);
 		System.out.println("FPS : "+aFps);
-		System.out.println("Total frames : "+aTotalFrames);
-		System.out.println("Duration : "+ toDurationStr(aTotalFrames/aFps*1000));
+		System.out.println("Total frames : "+aTotalFrameCount);
+		System.out.println("Duration : "+ toDurationStr(aTotalFrameCount/aFps*1000));
+		System.out.println();
+		return true;
 	}
 	
 	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
@@ -79,10 +85,10 @@ public class TestVideoDecoder extends VideoDecoder {
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		vidDecoder.setBgref_mat(null);
 		vidDecoder.setMin_brightness_skip_threshold(0.0);
-		vidDecoder.setMin_similarity_skip_threshold(0.9);
+		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		//
 		vidDecoder.processVideo(file, 0, 5000);
-		
+		System.out.println();
 		System.out.println("Elapsed : "+(System.currentTimeMillis()-lStartMs)+" ms");
 	}
 }
