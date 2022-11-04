@@ -62,9 +62,15 @@ public class TestVideoDecoder extends VideoDecoder {
 		
 		long lStartMs = System.currentTimeMillis();
 		
-		File file = new File("./test/videos/nls/XinLai.mp4");
+		File file = new File("./test/videos/nls/XXX.mp4");
 		//new TestVideoDecoder().processVideo(file);
-		new TestVideoDecoder().processVideo(file, 0, 5000);
+		
+		TestVideoDecoder vidDecoder = new TestVideoDecoder();
+		vidDecoder.setBgref_mat(null);
+		vidDecoder.setMin_brightness_score(0.10);
+		vidDecoder.setMin_similarity_score(0.0);
+		//
+		vidDecoder.processVideo(file, 0, 5000);
 		
 		System.out.println("Elapsed : "+(System.currentTimeMillis()-lStartMs)+" ms");
 	}

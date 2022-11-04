@@ -29,6 +29,7 @@ import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
 import hl.opencv.image.ImageProcessor;
+import hl.opencv.util.OpenCvUtil;
 
 public class VideoDecoder {
 	
@@ -37,9 +38,17 @@ public class VideoDecoder {
 	private static long HOUR_MS = MINUTE_MS * 60;
 	
 	////
+	private double min_similarity_score = 0.0;
 	private double min_brightness_score = 0.0;
 	private Mat bgref_mat = null;
 	
+	////
+	public double getMin_similarity_score() {
+		return min_similarity_score;
+	}
+	public void setMin_similarity_score(double min_similarity_score) {
+		this.min_similarity_score = min_similarity_score;
+	}
 	////
 	public double getMin_brightness_score() {
 		return min_brightness_score;
@@ -84,6 +93,7 @@ public class VideoDecoder {
 				imgProcessor.setMin_brightness_score(this.min_brightness_score);
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
 				
+				Mat matSimilarityCompare = null;
 				while(vid.read(matFrame))
 				{
 					lProcessed++;
@@ -91,7 +101,20 @@ public class VideoDecoder {
 					
 					if(matFrame!=null)
 					{
-					
+						if(this.min_similarity_score>0)
+						{
+							if(matSimilarityCompare!=null)
+							{
+								double dSimilarityScore = OpenCvUtil.compareSimilarity(
+										matFrame, matSimilarityCompare, 0);
+								
+								if(dSimilarityScore>=this.min_similarity_score)
+								{
+									continue;
+								}
+							}
+						}
+						
 						lFrameTimestamp = (long)((lProcessed-1)*dFrameMs);
 						
 						if(lFrameTimestamp<aFrameTimestampFrom)

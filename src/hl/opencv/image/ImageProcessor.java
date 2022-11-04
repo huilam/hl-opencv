@@ -79,7 +79,7 @@ public class ImageProcessor {
 		{
 			if(this.min_brightness_score>0 && this.min_brightness_score<=1.0)
 			{
-				double dBrightness = OpenCvUtil.calcBrightness(aMatImage);
+				double dBrightness = OpenCvUtil.calcBrightness(aMatImage, null, 100);
 				if(dBrightness<this.min_brightness_score)
 				{
 					aMatImage = null;
