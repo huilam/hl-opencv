@@ -25,6 +25,8 @@ package hl.opencv.video;
 import java.io.File;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -38,23 +40,23 @@ public class VideoDecoder {
 	private static long HOUR_MS = MINUTE_MS * 60;
 	
 	////
-	private double min_similarity_score = 0.0;
-	private double min_brightness_score = 0.0;
+	private double min_similarity_skip_threshold = 0.0;
+	private double min_brightness_skip_threshold = 0.0;
 	private Mat bgref_mat = null;
 	
 	////
-	public double getMin_similarity_score() {
-		return min_similarity_score;
+	public double getMin_similarity_skip_threshold() {
+		return min_similarity_skip_threshold;
 	}
-	public void setMin_similarity_score(double min_similarity_score) {
-		this.min_similarity_score = min_similarity_score;
+	public void setMin_similarity_skip_threshold(double min_similarity_score) {
+		this.min_similarity_skip_threshold = min_similarity_score;
 	}
 	////
-	public double getMin_brightness_score() {
-		return min_brightness_score;
+	public double getMin_brightness_skip_threshold() {
+		return min_brightness_skip_threshold;
 	}
-	public void setMin_brightness_score(double min_brightness_score) {
-		this.min_brightness_score = min_brightness_score;
+	public void setMin_brightness_skip_threshold(double min_brightness_score) {
+		this.min_brightness_skip_threshold = min_brightness_score;
 	}
 	////
 	public Mat getBgref_mat() {
@@ -86,33 +88,52 @@ public class VideoDecoder {
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 				double dFrameMs = 1000.0 / dFps;
 				
-				decodedMetadata((long)dFps, (long)dTotalFrames);
+				int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
+				int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
+				
+				boolean isProcessVideo = decodedMetadata(
+						aVideoFile.getName(), iWidth, iHeight, 
+						(int)dFps, (long)dTotalFrames);
+				
+				if(!isProcessVideo)
+					return 0;
+				
 				long lFrameTimestamp = 0;
 				
 				ImageProcessor imgProcessor = new ImageProcessor();
-				imgProcessor.setMin_brightness_score(this.min_brightness_score);
+				imgProcessor.setMin_brightness_score(this.min_brightness_skip_threshold);
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
 				
 				Mat matSimilarityCompare = null;
 				while(vid.read(matFrame))
 				{
 					lProcessed++;
-					matFrame = imgProcessor.processImage(matFrame);
+					boolean isOk = imgProcessor.processImage(matFrame);
+					
+					if(!isOk)
+					{
+						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
+						continue;
+					}
 					
 					if(matFrame!=null)
 					{
-						if(this.min_similarity_score>0)
+						if(this.min_similarity_skip_threshold>0)
 						{
 							if(matSimilarityCompare!=null)
 							{
 								double dSimilarityScore = OpenCvUtil.compareSimilarity(
-										matFrame, matSimilarityCompare, 0);
+										matFrame, matSimilarityCompare, 
+										Imgproc.CONTOURS_MATCH_I1, 300);
 								
-								if(dSimilarityScore>=this.min_similarity_score)
+								if(dSimilarityScore>=this.min_similarity_skip_threshold)
 								{
+									skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
 									continue;
 								}
 							}
+							
+							matSimilarityCompare = matFrame;
 						}
 						
 						lFrameTimestamp = (long)((lProcessed-1)*dFrameMs);
@@ -132,7 +153,10 @@ public class VideoDecoder {
 						}
 						
 						if(matFrame==null)
+						{
+							skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
 							break;
+						}
 					}
 				}
 			}
@@ -187,8 +211,14 @@ public class VideoDecoder {
 		return sbTimeMs.toString();
 	}
 	
-	public void decodedMetadata(long aFps, long aTotalFrameCount)
+	public boolean decodedMetadata(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
 	{
+		return true;
+	}
+	
+	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	{
+		return matFrame;
 	}
 	
 	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)

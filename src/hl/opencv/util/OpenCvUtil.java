@@ -727,6 +727,11 @@ public class OpenCvUtil{
 	
 	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode)
 	{
+		return compareSimilarity(matImage1, matImage2, iMode, 640);
+	}
+	
+	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode, int iProcessWidth)
+	{
 		Mat matResized1 = null;
 		Mat matResized2 = null;
 		Mat matGray1 = null;
@@ -739,9 +744,9 @@ public class OpenCvUtil{
 			matResized1 = matImage1.clone();
 			matResized2 = matImage2.clone();
 					
-			if(matImage1.width()>640)
+			if(matImage1.width()>iProcessWidth)
 			{
-				matResized1 = resizeByWidth(matResized1, 640);
+				matResized1 = resizeByWidth(matResized1, iProcessWidth);
 			}
 			
 			if(matImage2.width()!=matResized1.width())
@@ -750,17 +755,17 @@ public class OpenCvUtil{
 			}
 			//String sOutputPath = new File("./test/images/output").getAbsolutePath();
 			
-			matGray1 = grayscale(matResized1, false);
-			matGray2 = grayscale(matResized2, false);
+			matGray1 = OpenCvFilters.grayscale(matResized1, false);
+			matGray2 = OpenCvFilters.grayscale(matResized2, false);
 			
-			matGray1 = medianBlur(matGray1, 0.08);
-			matGray2 = medianBlur(matGray2, 0.08);
+			matGray1 = OpenCvFilters.medianBlur(matGray1, 0.08);
+			matGray2 = OpenCvFilters.medianBlur(matGray2, 0.08);
 			//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
 			//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
 			
 			int iEdgeThreshold = 50;
-			matEdge1 = cannyEdge(matGray1, iEdgeThreshold, false);
-			matEdge2 = cannyEdge(matGray2, iEdgeThreshold, false);
+			matEdge1 = OpenCvFilters.cannyEdge(matGray1, iEdgeThreshold, false);
+			matEdge2 = OpenCvFilters.cannyEdge(matGray2, iEdgeThreshold, false);
 	
 			//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1_"+iEdgeThreshold+".jpg");
 			//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2_"+iEdgeThreshold+".jpg");

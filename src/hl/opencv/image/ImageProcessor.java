@@ -73,7 +73,7 @@ public class ImageProcessor {
 		}
 	}
 	
-	public Mat processImage(Mat aMatImage)
+	public boolean processImage(Mat aMatImage)
 	{
 		if(aMatImage!=null)
 		{
@@ -82,7 +82,7 @@ public class ImageProcessor {
 				double dBrightness = OpenCvUtil.calcBrightness(aMatImage, null, 100);
 				if(dBrightness<this.min_brightness_score)
 				{
-					aMatImage = null;
+					return false;
 				}
 			}
 			
@@ -121,7 +121,7 @@ public class ImageProcessor {
 		}
 		
 		
-		return aMatImage;
+		return true;
 	}
 	
 }
