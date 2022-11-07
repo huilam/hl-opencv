@@ -24,11 +24,13 @@ package hl.opencv.video;
 
 import java.io.File;
 
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import hl.opencv.OpenCvLibLoader;
 import hl.opencv.image.ImageProcessor;
 import hl.opencv.util.OpenCvUtil;
 
@@ -66,9 +68,20 @@ public class VideoDecoder {
 	}
 	////
 	
+	private static void initOpenCV()
+	{
+		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
+		if(!cvLib.init())
+		{
+			throw new RuntimeException("OpenCv is NOT loaded !");
+		}
+	}
+	
+	////
+	
 	public long processVideo(File aVideoFile, long aFrameTimestamp)
 	{
-		return processVideo(aVideoFile, aFrameTimestamp, aFrameTimestamp);
+		return processVideo(aVideoFile, aFrameTimestamp, -1);
 	}
 	
 	public long processVideo(File aVideoFile, long aFrameTimestampFrom, long aFrameTimestampTo)
