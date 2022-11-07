@@ -102,7 +102,7 @@ public class ImageProcessor {
 						
 						if(matOutput!=null)
 						{
-							aMatImage = matOutput;
+							matOutput.copyTo(aMatImage);
 						}
 					}
 					finally

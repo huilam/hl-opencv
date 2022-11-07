@@ -37,7 +37,7 @@ public class TestFileBaseProcessor {
 	private List<String> listImageExt = new ArrayList<String>();
 	private List<String> listVideoExt = new ArrayList<String>();
 	
-	private static void initOpenCV()
+	public static void initOpenCV()
 	{
 		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
 		if(!cvLib.init())
@@ -54,9 +54,10 @@ public class TestFileBaseProcessor {
 		listVideoExt.add(".mkv");
 		listVideoExt.add(".mp4");
 		
-		initOpenCV();
 		System.out.println();
 		
+		int iImageSeqNo = 0;
+		int iVideoSeqNo = 0;
 		for(File f : folder.listFiles())
 		{
 			if(!f.isFile())
@@ -67,22 +68,22 @@ public class TestFileBaseProcessor {
 			
 			if(listImageExt.contains(sFileExt))
 			{
-				processImageFile(f);
+				processImageFile(++iImageSeqNo, f);
 			}
 			else if(listVideoExt.contains(sFileExt))
 			{
-				processVideoFile(f);
+				processVideoFile(++iVideoSeqNo, f);
 			}
 		}
 	}
 	
-	public void processImageFile(File aImageFile)
+	public void processImageFile(int aSeqNo, File aImageFile)
 	{
 		Mat matFile = OpenCvUtil.loadImage(aImageFile.getAbsolutePath());
 		System.out.println(" - "+aImageFile.getName()+" : "+matFile.width()+"x"+matFile.height());
 	}
 	
-	public void processVideoFile(File aVideoFile)
+	public void processVideoFile(int aSeqNo, File aVideoFile)
 	{
 		VideoDecoder vidDecoder = new VideoDecoder()
 		{

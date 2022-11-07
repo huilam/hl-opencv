@@ -22,104 +22,49 @@
 
 package hl.opencv.util;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
-import hl.opencv.OpenCvLibLoader;
+import hl.opencv.image.ImageProcessor;
 
-public class TestFGMask {
+public class TestFGMask extends TestFileBaseProcessor {
 	
-	private static long getElapsedMs(long aStartTime)
-	{
-		return System.currentTimeMillis() - aStartTime;
-	}
+	private static ImageProcessor imgProcessor = null;
+	private static File fileImageOutput = null;
 	
-	private static void initOpenCV()
+	@Override 
+	public void processImageFile(int aSeqNo, File aImageFile)
 	{
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		if(!cvLib.init())
+		Mat matFile = OpenCvUtil.loadImage(aImageFile.getAbsolutePath());
+		System.out.println("11 - "+aImageFile.getName()+" : "+matFile.width()+"x"+matFile.height());
+		
+		if(imgProcessor.processImage(matFile))
 		{
-			throw new RuntimeException("OpenCv is NOT loaded !");
+			String sOutputFileName = fileImageOutput.getAbsolutePath()+"/"+aImageFile.getName();
+			System.out.println(sOutputFileName);
+			OpenCvUtil.saveImageAsFile(matFile, sOutputFileName+"_01.jpg");
 		}
 	}
 	
 	public static void main(String[] args)
 	{
-		File fileImages = new File("./test/images/b01/input");
-		File fileImageOutput = new File("./test/images/b01/output");
-		
-		String sBgFileName = new File("./test/images/b01/background.jpg").getAbsolutePath();
-		
-		fileImageOutput.mkdirs();
-		
 		initOpenCV();
 		
-		long lStart 	= 0;
-		long lElapsed2 	= 0;
+		File fileImages = new File("./test/images/b01/input");
 		
-
-		Mat matBg = OpenCvUtil.loadImage(sBgFileName);
+		fileImageOutput = new File("./test/images/b01/output");
+		fileImageOutput.mkdirs();
 		
-		for(File fImg : fileImages.listFiles())
-		{
-			if(!fImg.isFile())
-				continue;
-			
-			String sFileName = fImg.getName().toLowerCase();
-			if(!(sFileName.endsWith(".jpg") || sFileName.endsWith(".png")))
-			{
-				//NOT image file
-				continue;
-			}
-			
-			BufferedImage img = null;
-			Mat mat = null;
-			
-			try {
-				lStart = System.currentTimeMillis();
-				mat = OpenCvUtil.loadImage(fImg.getAbsolutePath());
-				lElapsed2 = getElapsedMs(lStart);
-				if(mat!=null)
-				{
-					System.out.println("Loaded mat "+fImg.getName()+" "+mat.width()+"x"+mat.height()+" elapsed:"+lElapsed2+"ms");
-				}
-				
-				////////////////
-
-				int iProcWidth = 1080;
-				int iSmallestObjAreaPx = 50;
-				boolean isUseGrayScale = false;
-				
-				Mat matMask = 
-					OpenCvUtil.extractFGMask(mat, matBg, 0.18, iProcWidth, iSmallestObjAreaPx, isUseGrayScale);
-				
-				Mat matOutput = new Mat();
-				Core.copyTo(mat, matOutput, matMask);
-				
-				if(matOutput!=null)
-				{
-					File f = new File(fileImageOutput.getAbsolutePath()+"/"+fImg.getName()+"_output_w"+iProcWidth+"_o"+iSmallestObjAreaPx+(isUseGrayScale?"_gray":"")+".png");
-					OpenCvUtil.saveImageAsFile(matOutput, f.getAbsolutePath());
-					System.out.println(" - Saved "+f.getName());
-					
-					//System.out.println(" matOutput = "+matOutput.width()+"x"+matOutput.height());
-				}
-				
-				
-				
-
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-
-			
-		}
-
+		File fileBgImage = new File("./test/images/b01/background.jpg");
 		
+		Mat matBgRefImage = OpenCvUtil.loadImage(fileBgImage.getAbsolutePath());
 		
-		getElapsedMs(lStart);
+		imgProcessor = new ImageProcessor();
+		imgProcessor.setBackground_ref_mat(matBgRefImage);
+		
+		TestFileBaseProcessor processor = new TestFGMask();
+		
+		processor.processFolder(fileImages);
 	}
 	
 }

@@ -48,10 +48,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
 		System.out.print("#"+aFrameNo+" - "+aFrameMs+"ms "+toDurationStr(aFrameMs));
-		
-		double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame, null, 100);
-		System.out.print(" brightness:"+dBrightnessScore);
-		
+				
 		System.out.println();
 		return matFrame;
 	}
@@ -60,6 +57,9 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms");
 		
+		double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame, null, 100);
+		System.out.print(" brightness:"+dBrightnessScore);
+	
 		System.out.println();
 		return matFrame;
 	}
@@ -80,14 +80,14 @@ public class TestVideoDecoder extends VideoDecoder {
 		long lStartMs = System.currentTimeMillis();
 		
 		File file = new File("./test/videos/nls/XinLai.mp4");
-		//new TestVideoDecoder().processVideo(file);
 		
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		vidDecoder.setBgref_mat(null);
 		vidDecoder.setMin_brightness_skip_threshold(0.0);
 		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		//
-		vidDecoder.processVideo(file, 0, 5000);
+		vidDecoder.processVideo(file, 5000, 12000);
+		
 		System.out.println();
 		System.out.println("Elapsed : "+(System.currentTimeMillis()-lStartMs)+" ms");
 	}

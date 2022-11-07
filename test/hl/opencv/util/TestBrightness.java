@@ -23,140 +23,48 @@
 package hl.opencv.util;
 
 import java.io.File;
-import org.opencv.core.Core;
+
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.Videoio;
 
-import hl.opencv.OpenCvLibLoader;
-
-public class TestBrightness{
+public class TestBrightness extends TestFileBaseProcessor {
 	
-	private static void initOpenCV()
+	@Override 
+	public void processImageFile(int aSeqNo, File aImageFile)
 	{
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		if(!cvLib.init())
-		{
-			throw new RuntimeException("OpenCv is NOT loaded !");
-		}
-	}
-	
-	private static boolean processImage(File f)
-	{
-		boolean isProcessed = false;
-		if(f!=null && f.isFile())
-		{
-			String sFileName = f.getName().toLowerCase();
-			
-			if(sFileName.endsWith(".jpg") || sFileName.endsWith(".png"))
-			{
-				isProcessed = true;
-				System.out.println(f.getName());
-				Mat mat = OpenCvUtil.loadImage(f.getAbsolutePath());
-				double dBrightness = OpenCvUtil.calcBrightness(mat);
-				
-				System.out.println(" - Brightness:"+dBrightness);
-				System.out.println(" - Brightness (excl black):"+OpenCvUtil.calcBrightness(mat, true));
-				
-				Scalar scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
-				Scalar scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
-				System.out.println(" - Brightness2:"+OpenCvUtil.calcBrightness(mat, scalarFrom, scalarTo));
-				
-				System.out.println();
-			}
-		}
-		return isProcessed;
-	}
-	
-	private static boolean processVideo(File f)
-	{
-		boolean isProcessed = false;
-		if(f!=null && f.isFile())
-		{
-			String sFileName = f.getName().toLowerCase();
-			
-			if(sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv"))
-			{
-				isProcessed = true;
-				String sVidFileName = f.getAbsolutePath();
-				
-				System.out.println(sVidFileName);
-				
-				VideoCapture vid = null;
-				
-				try{
-					Mat matFrame = new Mat();
-					vid = new VideoCapture(sVidFileName);
-					if(vid.isOpened())
-					{
-						double dFps = vid.get(Videoio.CAP_PROP_FPS);
-						double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-
-						System.out.println("Total Frames = "+dTotalFrames);
-						System.out.println("FPS = "+dFps);
-						
-						double dDuration = dTotalFrames/dFps;
-						
-						System.out.println("Duration (secs) = "+dDuration);
-						
-						vid.read(matFrame);
-						System.out.println("read WxH = "+matFrame.width()+"x"+matFrame.height());
-						
-					}
-				}finally
-				{
-					vid.release();
-				}
-			}
-		}
-		return isProcessed;
-	}
-	
-	private static int processFiles(File folderImages, boolean isRecursive)
-	{
-		int iCount = 0;
-		for(File f : folderImages.listFiles())
-		{
-			if(f.isFile())
-			{
-				if(processImage(f))
-				{
-					//images
-				}
-				else
-				{
-					// try video
-					processVideo(f);
-				}
-				
-			}
-			else if(isRecursive && f.isDirectory())
-			{
-				iCount += processFiles(f, isRecursive);
-			}
-			
-		}
-		return iCount;
-	}
-	
-	
-	public static void main(String[] args) throws Exception
-	{
-		initOpenCV();
+		Mat matFile = OpenCvUtil.loadImage(aImageFile.getAbsolutePath());
+		System.out.println(aSeqNo+". "+aImageFile.getName()+" ("+matFile.width()+"x"+matFile.height()+")");
+		System.out.println("   - Brightness : "+calcBrightness(matFile, false));
+		System.out.println("   - Brightness (Skins) : "+calcBrightness(matFile, true));
 		System.out.println();
-
-		File folderImages = new File("./test/images/ace");
 		
-		boolean isRecursive = true;
+	}
+	
+	private double calcBrightness(Mat aMatImage, boolean isSkinTonesOnly)
+	{
+		Scalar scalarFrom 	= null;
+		Scalar scalarTo 	= null;
 		
-		int iCount = processFiles(folderImages, isRecursive);
-		
-		if(iCount<=0)
+		if(isSkinTonesOnly)
 		{
-			System.out.println("No files found in "+folderImages.getAbsolutePath());
+			scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
+			scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
 		}
+
+		double dBrightness = OpenCvUtil.calcBrightness(aMatImage, scalarFrom, scalarTo);
+		return dBrightness;
+	}
+	
+	
+	public static void main(String[] args)
+	{
+
+		initOpenCV();
 		
+		File fileImages = new File("./test/images/ace");
+
+		TestBrightness processor = new TestBrightness();
+		processor.processFolder(fileImages);
 	}
 	
 }

@@ -25,7 +25,6 @@ package hl.opencv.video;
 import java.io.File;
 
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
@@ -98,15 +97,19 @@ public class VideoDecoder {
 				if(!isProcessVideo)
 					return 0;
 				
-				long lFrameTimestamp = 0;
-				
 				ImageProcessor imgProcessor = new ImageProcessor();
 				imgProcessor.setMin_brightness_score(this.min_brightness_skip_threshold);
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
 				
 				Mat matSimilarityCompare = null;
+				
+				long lFrameTimestamp = aFrameTimestampFrom;
+				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
 				while(vid.read(matFrame))
 				{
+					if(aFrameTimestampTo!=-1 && lFrameTimestamp>aFrameTimestampTo)
+						break;
+					
 					lProcessed++;
 					boolean isOk = imgProcessor.processImage(matFrame);
 					
@@ -136,14 +139,6 @@ public class VideoDecoder {
 							matSimilarityCompare = matFrame;
 						}
 						
-						lFrameTimestamp = (long)((lProcessed-1)*dFrameMs);
-						
-						if(lFrameTimestamp<aFrameTimestampFrom)
-							continue;
-						
-						if(aFrameTimestampTo!=-1 && lFrameTimestamp>aFrameTimestampTo)
-							break;
-						
 						if(lFrameTimestamp>=aFrameTimestampFrom)
 						{
 							if(lFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
@@ -158,6 +153,8 @@ public class VideoDecoder {
 							break;
 						}
 					}
+					
+					lFrameTimestamp += dFrameMs;
 				}
 			}
 		}finally
