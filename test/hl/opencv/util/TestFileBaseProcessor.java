@@ -87,16 +87,19 @@ public class TestFileBaseProcessor {
 	{
 		VideoDecoder vidDecoder = new VideoDecoder()
 		{
+			@Override 
 			public boolean decodedMetadata(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
 			{
 				return video_decodedMetadata(aVideoFileName, aResWidth, aResHeight, aFps, aTotalFrameCount);
 			}
 			
+			@Override 
 			public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
 			{
 				return video_skippedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);
 			}
 			
+			@Override 
 			public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
 			{
 				return video_decodedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);

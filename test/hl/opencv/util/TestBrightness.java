@@ -47,6 +47,9 @@ public class TestBrightness extends TestFileBaseProcessor {
 		
 		if(isSkinTonesOnly)
 		{
+			//H = 0-30 degree
+			//S = 0-200
+			//V = 20-255
 			scalarFrom = new Scalar( (0 *0.5) , (0.07 *255) , 20);
 			scalarTo = new Scalar( (50 *0.5), (0.80 *255) , 255); 
 		}

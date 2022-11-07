@@ -32,6 +32,7 @@ import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
 	
+	@Override 
 	public boolean decodedMetadata(
 			String aVideoFileName, int aResWidth, int aResHeight, 
 			int aFps, long aTotalFrameCount)
@@ -45,6 +46,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		return true;
 	}
 	
+	@Override 
 	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
 		System.out.print("#"+aFrameNo+" - "+aFrameMs+"ms "+toDurationStr(aFrameMs));
@@ -53,6 +55,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		return matFrame;
 	}
 	
+	@Override 
 	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
 	{
 		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms");
