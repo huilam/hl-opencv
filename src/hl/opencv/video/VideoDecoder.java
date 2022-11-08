@@ -38,9 +38,16 @@ public class VideoDecoder {
 	private static long MINUTE_MS = SECOND_MS * 60;
 	private static long HOUR_MS = MINUTE_MS * 60;
 	
+	private static String EVENT_BRIGHTNESS 		= "BRIGHTNESS";
+	private static String EVENT_SEGMENTATION 	= "SEGMENTATION";
+	private static String EVENT_SIMILARITY 		= "SIMILARITY";
+	
+	private static String EVENT_NULLFRAME 		= "NULL_FRAME";
+	
 	////
 	private double min_similarity_skip_threshold = 0.0;
 	private double min_brightness_skip_threshold = 0.0;
+	private int max_brightness_calc_width	 	 = 0;
 	private int max_similarity_compare_width	 = 0;
 	private Mat bgref_mat = null;
 	
@@ -59,6 +66,12 @@ public class VideoDecoder {
 		this.min_brightness_skip_threshold = min_brightness_score;
 	}
 	////
+	public int getMax_brightness_calc_width() {
+		return max_brightness_calc_width;
+	}
+	public void setMax_brightness_calc_width(int max_brightness_calc_width) {
+		this.max_brightness_calc_width = max_brightness_calc_width;
+	}	////
 	public Mat getBgref_mat() {
 		return bgref_mat;
 	}
@@ -110,7 +123,11 @@ public class VideoDecoder {
 		VideoCapture vid = null;
 		Mat matFrame = null;
 		
+		Mat matPrevDescriptors = null;
+		Mat matCurDescriptors = null;
+		
 		long lProcessed = 0;
+		long lSkipped 	= 0;
 
 		try{
 			matFrame = new Mat();
@@ -132,26 +149,33 @@ public class VideoDecoder {
 					return 0;
 				
 				ImageProcessor imgProcessor = new ImageProcessor();
-				imgProcessor.setMin_brightness_score(this.min_brightness_skip_threshold);
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
-				
-				Mat matPrevKeypoints = new Mat();
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
 				long lFrameTimestamp = aFrameTimestampFrom;
 				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
+				
 				while(vid.read(matFrame))
 				{
 					if(aFrameTimestampTo!=-1 && lFrameTimestamp>aFrameTimestampTo)
 						break;
 					
 					lProcessed++;
-					boolean isOk = imgProcessor.processImage(matFrame);
 					
+					double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
+					if(dBrightness<this.min_brightness_skip_threshold)
+					{
+						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_BRIGHTNESS, dBrightness);
+						lSkipped++;
+						continue;
+					}
+					
+					boolean isOk = imgProcessor.processImage(matFrame);
 					if(!isOk)
 					{
-						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
+						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_SEGMENTATION, 0);
+						lSkipped++;
 						continue;
 					}
 					
@@ -159,34 +183,25 @@ public class VideoDecoder {
 					{
 						if(this.min_similarity_skip_threshold>0)
 						{
-							Mat matCurKeypoint = null;
+							matCurDescriptors = OpenCvUtil.getImageSimilarityDescriptors(
+									matFrame, this.max_similarity_compare_width);
 							
-							try {
-								matCurKeypoint = OpenCvUtil.getSimilarityKeypoints(matFrame, this.max_similarity_compare_width);
-								if(!matPrevKeypoints.empty())
-								{
-									double dSimilarityScore = OpenCvUtil.calcKeypointSimilarity(
-											matCurKeypoint, 
-											matPrevKeypoints);
-									
-									if(dSimilarityScore>=this.min_similarity_skip_threshold)
-									{
-System.out.println("dSimilarityScore="+dSimilarityScore);
-System.out.println("matCurKeypoint="+matCurKeypoint);
-System.out.println("matPrevKeypoints="+matPrevKeypoints);
-										
-										skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
-										continue;
-									}
-								}
-								
-								matCurKeypoint.copyTo(matPrevKeypoints);
-							}
-							finally
+							if(matPrevDescriptors!=null)
 							{
-								if(matCurKeypoint!=null)
-									matCurKeypoint.release();
+								double dSimilarityScore = OpenCvUtil.calcDescriptorSimilarity(
+										matCurDescriptors, 
+										matPrevDescriptors);
+
+								if(dSimilarityScore>=this.min_similarity_skip_threshold)
+								{	
+									skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_SIMILARITY, dSimilarityScore);
+									lSkipped++;
+									continue;
+								}
 							}
+							
+							matPrevDescriptors = matCurDescriptors;
+		
 						}
 						
 						if(lFrameTimestamp>=aFrameTimestampFrom)
@@ -196,24 +211,31 @@ System.out.println("matPrevKeypoints="+matPrevKeypoints);
 								matFrame = decodedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
 							}
 						}
-						
-						if(matFrame==null)
-						{
-							skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
-							break;
-						}
+					}
+					
+					if(matFrame==null)
+					{
+						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_NULLFRAME, 0);
+						lSkipped++;
+						break;
 					}
 					
 					lFrameTimestamp += dFrameMs;
 				}
 				
 				long lElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-				processEnded(aVideoFile.getName(), aFrameTimestampFrom, aFrameTimestampTo, lProcessed, lElapsedMs);
+				processEnded(aVideoFile.getName(), aFrameTimestampFrom, aFrameTimestampTo, lProcessed, lProcessed-lSkipped, lElapsedMs);
 			}
 		}finally
 		{
 			if(vid!=null)
 				vid.release();
+			
+			if(matCurDescriptors!=null)
+				matCurDescriptors.release();
+			
+			if(matPrevDescriptors!=null)
+				matPrevDescriptors.release();
 		}
 		
 		return lProcessed;
@@ -230,11 +252,11 @@ System.out.println("matPrevKeypoints="+matPrevKeypoints);
 		return true;
 	}
 	
-	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrames, long aTotalProcessed, long aElpasedMs)
 	{
 	}
 	
-	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp, String aReasonCode, double aScore)
 	{
 		return matFrame;
 	}

@@ -54,43 +54,44 @@ public class TestVideoDecoder extends VideoDecoder {
 	}
 	
 	@Override 
-	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs)
+	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameMs, String aReasonCode, double aScore)
 	{
-		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms");
-		
+		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms - "+aReasonCode+":"+aScore);
 		System.out.println();
 		return matFrame;
 	}
 	
 	@Override 
-	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrames, long aTotalProcessed, long aElpasedMs)
 	{
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoFileName);
-		double dMsPerFrame = ((double)aElpasedMs) / ((double)aTotalFrameProcessed);
+		double dMsPerFrame = ((double)aElpasedMs) / ((double)aTotalProcessed);
 		long lDurationMs = aToTimeMs - aFromTimeMs;
 		System.out.println(" - Process From/To: "+toDurationStr(aFromTimeMs)+" / "+toDurationStr(aToTimeMs)+" ("+lDurationMs +" ms)");
-		System.out.println(" - Total Elapsed/Processed : "+aElpasedMs+" ms / "+aTotalFrameProcessed+" = "+dMsPerFrame+" ms");
+		System.out.println(" - Total Elapsed/Processed : "+aElpasedMs+" ms / "+aTotalProcessed+" = "+dMsPerFrame+" ms");
+		System.out.println(" - Total Skipped : "+aTotalFrames+" - "+aTotalProcessed+" = "+(aTotalFrames-aTotalProcessed));
 	}
 	
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
 		
-//		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
-		File file = new File("./test/videos/nls/XinLai.mp4");
+		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		
 		System.out.println(vidDecoder.getVideoMetadata(file));
 		
 		vidDecoder.setBgref_mat(null);
-		vidDecoder.setMin_brightness_skip_threshold(0.0);
-		vidDecoder.setMin_similarity_skip_threshold(0.9);
-		vidDecoder.setMax_similarity_compare_width(500);
 		//
+		vidDecoder.setMin_brightness_skip_threshold(0.15);
+		vidDecoder.setMax_brightness_calc_width(0);
+		//
+		vidDecoder.setMin_similarity_skip_threshold(0.95);
+		vidDecoder.setMax_similarity_compare_width(0);
+		//
+	
 		vidDecoder.processVideo(file,0,5000);
-		
-		
 	}
 }

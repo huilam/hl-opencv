@@ -83,7 +83,7 @@ public class TestFileBaseProcessor {
 			}
 			
 			@Override 
-			public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+			public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp, String aReasonCode, double aScore)
 			{
 				return video_skippedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);
 			}
@@ -95,11 +95,11 @@ public class TestFileBaseProcessor {
 			}
 			
 			@Override 
-			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrames, long aTotalProcessed, long aElpasedMs)
 			{
 				System.out.println();
 				System.out.println("[COMPLETED] "+aVideoFileName);
-				System.out.println("Total processed : "+aTotalFrameProcessed);
+				System.out.println("Total processed / total : "+aTotalProcessed+" / "+aTotalFrames);
 				System.out.println("Total elapsed time (ms) : "+aElpasedMs);
 			}
 		};

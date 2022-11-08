@@ -63,6 +63,9 @@ public class OpenCvUtil{
 	
 	private static int BRIGHTNESS_MAX_SAMPLING_WIDTH = 500;
 	
+	private static int ORB_MAX_KEYPOINTS = 100;
+	private static ORB orb = null;
+	
 	public static Mat base64Img2Mat(String aBase64Img)
 	{
 		Mat mat = null;
@@ -282,26 +285,33 @@ public class OpenCvUtil{
 	
 	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio, int aMode)
 	{
-		if(isMainAspectRatio)
+		if(aNewWidth>0 && aNewHeight>0)
 		{
-			double dImageW = (double)aMatImg.width();
-			double dImageH = (double)aMatImg.height();
+			if(isMainAspectRatio)
+			{
+				double dImageW = (double)aMatImg.width();
+				double dImageH = (double)aMatImg.height();
+				
+				double dScaleW 	= (aNewWidth>0)&&(dImageW>0) ? ((double)aNewWidth) / dImageW : 1.0;
+				double dScaleH 	= (aNewHeight>0)&&(dImageH>0) ? ((double)aNewHeight) / dImageH : 1.0;
+				double dScale = dScaleW>dScaleH ? dScaleH : dScaleW;
+				
+				aNewWidth = (int)(dImageW * dScale);
+				aNewHeight =(int)(dImageH * dScale);
+				//System.out.println("dScale="+dScale);
+			}
 			
-			double dScaleW 	= (aNewWidth>0)&&(dImageW>0) ? ((double)aNewWidth) / dImageW : 1.0;
-			double dScaleH 	= (aNewHeight>0)&&(dImageH>0) ? ((double)aNewHeight) / dImageH : 1.0;
-			double dScale = dScaleW>dScaleH ? dScaleH : dScaleW;
-			
-			aNewWidth = (int)(dImageW * dScale);
-			aNewHeight =(int)(dImageH * dScale);
-			//System.out.println("dScale="+dScale);
+			//System.out.println("aNewWidth="+aNewWidth);
+			//System.out.println("aNewHeight="+aNewHeight);
+
+			Mat matSized = new Mat();
+			Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight), aMode);
+			return matSized;
 		}
-		
-		//System.out.println("aNewWidth="+aNewWidth);
-		//System.out.println("aNewHeight="+aNewHeight);
-		
-		Mat matSized = new Mat();
-		Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight), aMode);
-		return matSized;
+		else
+		{
+			return null;
+		}
 	}
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
@@ -623,16 +633,18 @@ public class OpenCvUtil{
 		
 		double dBrightnessScore = 0;
 		
-		Mat mat1 = null;
+		Mat mat1 = aMat1.clone();
 		Mat matHSV1 = null;
 		Mat matMask1 = null;
 		
 		try {
-		
-			if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
-				aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
-			
-			mat1 = OpenCvUtil.resizeByWidth(aMat1.clone(), aSamplingWidth);
+			if(aSamplingWidth>0)
+			{
+				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
+					aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
+
+				mat1 = OpenCvUtil.resizeByWidth(mat1, aSamplingWidth);
+			}
 			
 			Scalar scalar1 = null;
 			
@@ -701,45 +713,46 @@ public class OpenCvUtil{
 
 	public static double calcImageSimilarity(Mat matImage1, Mat matImage2)
 	{
-		Mat mat1 = matImage1.clone();
-		Mat mat2 = matImage2.clone();
-		try {
-			if(mat1.height()!=mat2.height() || mat1.width()!=mat2.width())
-			{
-				mat2 = resize(mat2, mat1.width(), mat1.height(), false);
-			}
-			
-			return calcKeypointSimilarity(mat1, mat2);
-		}
-		finally
+		double similarity = 0.0;
+		
+		if(matImage1!=null && matImage2!=null && matImage1.cols()>0)
 		{
-			if(mat1!=null)
-				mat1.release();
-			if(mat2!=null)
-				mat2.release();
+			Mat matDesc1 = getImageSimilarityDescriptors(matImage1);
+			Mat matDesc2 = getImageSimilarityDescriptors(matImage2);
+			try {
+				similarity = calcDescriptorSimilarity(matDesc1, matDesc2);
+			}
+			finally
+			{
+				if(matDesc1!=null)
+					matDesc1.release();
+				if(matDesc2!=null)
+					matDesc2.release();
+			}
 		}
+		return similarity;
 			
 	}
 	
-	public static Mat getSimilarityKeypoints(Mat aMatImage)
+	public static Mat getImageSimilarityDescriptors(Mat aMatImage)
 	{
-		return getSimilarityKeypoints(aMatImage, 0);
+		return getImageSimilarityDescriptors(aMatImage, 0);
 	}
 	
-	public static Mat getSimilarityKeypoints(Mat aMatImage, int aMaxWidth)
+	public static Mat getImageSimilarityDescriptors(Mat aMatImage, int aMaxWidth)
 	{
-		Mat d1 = null;
-		MatOfKeyPoint kp1 = null;
+		Mat d1 = new Mat();
+		MatOfKeyPoint kp1 = new MatOfKeyPoint();
+		
+		if(orb==null)
+			orb = ORB.create(ORB_MAX_KEYPOINTS);
+		
 		try {
 			
 			if(aMaxWidth>0 && aMatImage.width()>aMaxWidth)
 			{
 				aMatImage = resizeByWidth(aMatImage, aMaxWidth);
 			}
-
-			ORB orb = ORB.create();
-			kp1 = new MatOfKeyPoint();
-			d1 = new Mat();
 			orb.detect(aMatImage, kp1);
 			orb.compute(aMatImage, kp1, d1);
 		}
@@ -752,52 +765,34 @@ public class OpenCvUtil{
 		return d1;
 	}
 	
-	public static double calcKeypointSimilarity(Mat matKeypoint1, Mat matKeypoint2)
+	public static double calcDescriptorSimilarity(Mat d1, Mat d2)
 	{
 	    double similarity = 0.0;
 
-		Mat d1 = null;
-	    Mat d2 = null;
 	    MatOfDMatch matchMatrix = null;
 	    
 	    try {
-	    	d1 = getSimilarityKeypoints(matKeypoint1);
-	    	d2 = getSimilarityKeypoints(matKeypoint2);
 		    	
 		    if (d1.cols() == d2.cols()) {
 		    	
-		    	if(d1.cols()>0)
-		    	{
-			        matchMatrix = new MatOfDMatch();
-			        DescriptorMatcher matcher = 
-			        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
-			        matcher.match(d1, d2, matchMatrix);
-			        DMatch[] matches = matchMatrix.toArray();
-			        
-			        for (DMatch m : matches)
-			        {
-			        	if(m.distance <= 50)
-			        		similarity++;
-			        }
-			        
-			        if(similarity>0)
-				    	similarity = similarity/500;
-		    	}
-		    	else
-		    	{
-		    		//no key points
-		    		similarity = -1;
-		    	}
+		    	matchMatrix = new MatOfDMatch();
+		        DescriptorMatcher matcher = 
+		        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+		        matcher.match(d1, d2, matchMatrix);
+		        DMatch[] matches = matchMatrix.toArray();
+		        
+		        for (DMatch m : matches)
+		        {
+		        	if(m.distance <= 50)
+		        		similarity++;
+		        }
+		        
+		        if(similarity>0)
+			    	similarity = similarity / ORB_MAX_KEYPOINTS;
 		    }
 		    
 	    }finally
 	    {
-	    	if(d1!=null)
-	    		d1.release();
-	    	
-	    	if(d2!=null)
-	    		d2.release();
-	    	
 	    	if(matchMatrix!=null)
 	    		matchMatrix.release();
 	    }
