@@ -24,9 +24,9 @@ package hl.opencv.video;
 
 import java.io.File;
 
+import org.json.JSONObject;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -78,6 +78,33 @@ public class VideoDecoder {
 	}
 	
 	////
+	
+	public JSONObject getVideoMetadata(File aVideoFile)
+	{
+		JSONObject jsonMeta = new JSONObject();
+		
+		VideoCapture vid = null;
+		try {
+			vid = new VideoCapture(aVideoFile.getAbsolutePath());
+			if(vid.isOpened())
+			{
+				jsonMeta.put("CAP_PROP_FPS", vid.get(Videoio.CAP_PROP_FPS));
+				jsonMeta.put("CAP_PROP_BITRATE", vid.get(Videoio.CAP_PROP_BITRATE));
+				//
+				jsonMeta.put("CAP_PROP_FRAME_COUNT", vid.get(Videoio.CAP_PROP_FRAME_COUNT));
+				jsonMeta.put("CAP_PROP_FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+				jsonMeta.put("CAP_PROP_FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+				//
+			}
+		}
+		finally
+		{
+			if(vid!=null)
+				vid.release();
+		}
+		return jsonMeta;
+	}
+	
 	
 	public long processVideo(File aVideoFile, long aFrameTimestamp)
 	{
@@ -138,9 +165,7 @@ public class VideoDecoder {
 						{
 							if(matSimilarityCompare!=null)
 							{
-								double dSimilarityScore = OpenCvUtil.compareSimilarity(
-										matFrame, matSimilarityCompare, 
-										Imgproc.CONTOURS_MATCH_I1, 300);
+								double dSimilarityScore = OpenCvUtil.calcSimilarity(matFrame, matSimilarityCompare, 500);
 								
 								if(dSimilarityScore>=this.min_similarity_skip_threshold)
 								{

@@ -62,7 +62,7 @@ public class TestBrightness extends TestFileBaseProcessor {
 	public static void main(String[] args)
 	{
 
-		initOpenCV();
+		OpenCvUtil.initOpenCV();
 		
 		File fileImages = new File("./test/images/ace");
 

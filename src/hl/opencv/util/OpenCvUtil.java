@@ -40,15 +40,21 @@ import java.nio.ByteBuffer;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
+import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfInt;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.ORB;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+
+import hl.opencv.OpenCvLibLoader;
 
 public class OpenCvUtil{
 	
@@ -208,38 +214,46 @@ public class OpenCvUtil{
 	}
 	
 	public static BufferedImage mat2BufferedImage(Mat aMat){
+		BufferedImage image = null;
 		Mat mat = aMat.clone();
-		int type = BufferedImage.TYPE_BYTE_GRAY;
-		switch(mat.channels())
-		{
-			case 3 : type = BufferedImage.TYPE_3BYTE_BGR; break;
-			case 4 : type = BufferedImage.TYPE_4BYTE_ABGR; 
-			
-				Vector<Mat> vMat = new Vector<>();
-				Core.split(mat, vMat);
-				Mat matAlpha = vMat.remove(vMat.size()-1);
-				vMat.add(0,matAlpha);
-				Core.merge(vMat, mat);
-				break;
-		}
-		int bufferSize = mat.channels()* mat.cols()* mat.rows();
-		byte [] b = new byte[bufferSize];
-		mat.get(0,0,b); // get all the pixels
-		BufferedImage image = new BufferedImage(mat.cols(), mat.rows(), type);
-		final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-		
 		try {
-			System.arraycopy(b, 0, targetPixels, 0, b.length);  
-		}catch(Exception ex)
-		{
-			System.err.println(">>> aMat.rows="+mat.rows());
-			System.err.println(">>> aMat.cols="+mat.cols());
-			System.err.println(">>> aMat.channels="+mat.channels());
-			System.err.println(">>> bufferSize="+bufferSize);
-			System.err.println(">>> b.length="+b.length);
-			System.err.println(">>> targetPixels.length="+targetPixels.length);
 			
-			throw ex;
+			int type = BufferedImage.TYPE_BYTE_GRAY;
+			switch(mat.channels())
+			{
+				case 3 : type = BufferedImage.TYPE_3BYTE_BGR; break;
+				case 4 : type = BufferedImage.TYPE_4BYTE_ABGR; 
+				
+					Vector<Mat> vMat = new Vector<>();
+					Core.split(mat, vMat);
+					Mat matAlpha = vMat.remove(vMat.size()-1);
+					vMat.add(0,matAlpha);
+					Core.merge(vMat, mat);
+					break;
+			}
+			int bufferSize = mat.channels()* mat.cols()* mat.rows();
+			byte [] b = new byte[bufferSize];
+			mat.get(0,0,b); // get all the pixels
+			image = new BufferedImage(mat.cols(), mat.rows(), type);
+			final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+			
+			try {
+				System.arraycopy(b, 0, targetPixels, 0, b.length);  
+			}catch(Exception ex)
+			{
+				System.err.println(">>> aMat.rows="+mat.rows());
+				System.err.println(">>> aMat.cols="+mat.cols());
+				System.err.println(">>> aMat.channels="+mat.channels());
+				System.err.println(">>> bufferSize="+bufferSize);
+				System.err.println(">>> b.length="+b.length);
+				System.err.println(">>> targetPixels.length="+targetPixels.length);
+				
+				throw ex;
+			}
+		}finally
+		{
+			if(mat!=null)
+				mat.release();
 		}
 		
 		return image;
@@ -470,16 +484,14 @@ public class OpenCvUtil{
 	{
 		Mat matMask = new Mat();
 		Imgproc.threshold(aMat, matMask, 5, 255, Imgproc.THRESH_BINARY);
-		return grayscale(matMask, false);
+		return OpenCvFilters.grayscale(matMask, false);
 	}
 	
 	//
 	public static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
 	{
-
 //alpha = 1.5 # Contrast control (1.0-3.0)
 //beta = 0 # Brightness control (0-100)
-
 		if(aBeta<0) aBeta = 0;
 		if(aBeta>1) aBeta = 1;
 		
@@ -686,118 +698,95 @@ public class OpenCvUtil{
 		Imgproc.matchTemplate(matImage, matTempl, matResult, 0);
 		return matResult;
 	}
-	
-	public static double calcBlurriness(Mat matImage)
+
+	public static double calcSimilarity(Mat matImage1, Mat matImage2, int aMaxWidth)
 	{
-		Mat matLaplacian = null;
-		Mat matGray = null;
-		MatOfDouble median = null;
-		MatOfDouble std = null;
-		
+		Mat mat1 = matImage1.clone();
+		Mat mat2 = matImage2.clone();
 		try {
-			matLaplacian = new Mat();
-			matGray = matImage.clone();
+			if(mat1.width()>aMaxWidth)
+			{
+				mat1 = resizeByWidth(mat1, aMaxWidth);
+			}
+			if(mat2.width()>aMaxWidth)
+			{
+				mat2 = resizeByWidth(mat2, aMaxWidth);
+			}
 			
-			Imgproc.Laplacian(matGray, matLaplacian, 3); 
-			median = new MatOfDouble();
-			std= new MatOfDouble();        
-			Core.meanStdDev(matLaplacian, median , std);
-			double dSharpness = Math.pow(std.get(0,0)[0],2);
+			if(mat1.height()!=mat2.height() || mat1.width()!=mat2.width())
+			{
+				mat2 = resize(mat2, mat1.width(), mat1.height(), false);
+			}
 			
-			if(dSharpness>100)
-				dSharpness = 100;
-			
-			return 1-(dSharpness/100);
+			return calcSimilarity(mat1, mat2);
 		}
 		finally
 		{
-			if(matLaplacian!=null)
-				matLaplacian.release();
-			
-			if(matGray!=null)
-				matGray.release();
-			
-			if(median!=null)
-				median.release();
-			
-			if(std!=null)
-				std.release();
+			if(mat1!=null)
+				mat1.release();
+			if(mat2!=null)
+				mat2.release();
 		}
+			
 	}
 	
-	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode)
+	public static double calcSimilarity(Mat matImage1, Mat matImage2)
 	{
-		return compareSimilarity(matImage1, matImage2, iMode, 640);
-	}
+	    double similarity = 0.0;
+
+		Mat d1 = null;
+	    Mat d2 = null;
+	    MatOfKeyPoint kp1 = null;
+	    MatOfKeyPoint kp2 = null;
+	    MatOfDMatch matchMatrix = null;
+	    
+	    try {
+		    ORB orb = ORB.create();
+		    kp1 = new MatOfKeyPoint();
+		    kp2 = new MatOfKeyPoint();
+		    orb.detect(matImage1, kp1);
+		    orb.detect(matImage2, kp2);
 	
-	public static double compareSimilarity(Mat matImage1, Mat matImage2, int iMode, int iProcessWidth)
-	{
-		Mat matResized1 = null;
-		Mat matResized2 = null;
-		Mat matGray1 = null;
-		Mat matGray2 = null;
-		Mat matEdge1 = null;
-		Mat matEdge2 = null;
-		
-		try {
-		
-			matResized1 = matImage1.clone();
-			matResized2 = matImage2.clone();
-					
-			if(matImage1.width()>iProcessWidth)
-			{
-				matResized1 = resizeByWidth(matResized1, iProcessWidth);
-			}
-			
-			if(matImage2.width()!=matResized1.width())
-			{
-				matResized2 = resizeByWidth(matResized2, matResized1.width());
-			}
-			//String sOutputPath = new File("./test/images/output").getAbsolutePath();
-			
-			matGray1 = OpenCvFilters.grayscale(matResized1, false);
-			matGray2 = OpenCvFilters.grayscale(matResized2, false);
-			
-			matGray1 = OpenCvFilters.medianBlur(matGray1, 0.08);
-			matGray2 = OpenCvFilters.medianBlur(matGray2, 0.08);
-			//saveImageAsFile(matGray1, sOutputPath+"/matGray1.jpg");
-			//saveImageAsFile(matGray2, sOutputPath+"/matGray2.jpg");
-			
-			int iEdgeThreshold = 50;
-			matEdge1 = OpenCvFilters.cannyEdge(matGray1, iEdgeThreshold, false);
-			matEdge2 = OpenCvFilters.cannyEdge(matGray2, iEdgeThreshold, false);
-	
-			//saveImageAsFile(matEdge1, sOutputPath+"/matEdge1_"+iEdgeThreshold+".jpg");
-			//saveImageAsFile(matEdge2, sOutputPath+"/matEdge2_"+iEdgeThreshold+".jpg");
-	
-			double dScore1 = Imgproc.matchShapes(
-					matEdge1, matEdge2, iMode, 0);
-			
-			return 1-dScore1;
-		
-		}
-		finally
-		{
-			if(matResized1!=null)
-				matResized1.release();
-			
-			if(matResized2!=null)
-				matResized2.release();
-			
-			if(matGray1!=null)
-				matGray1.release();
-			
-			if(matGray2!=null)
-				matGray2.release();
-			
-			if(matEdge1!=null)
-				matEdge1.release();
-			
-			if(matEdge2!=null)
-				matEdge2.release();
-		}
-		
-	
+		    d1 = new Mat();
+		    d2 = new Mat();
+		    orb.compute(matImage1, kp1, d1);
+		    orb.compute(matImage2, kp2, d2);
+		    	
+		    if (d1.cols() == d2.cols()) {
+		        matchMatrix = new MatOfDMatch();
+		        DescriptorMatcher matcher = 
+		        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+		        matcher.match(d1, d2, matchMatrix);
+		        DMatch[] matches = matchMatrix.toArray();
+		        
+		        for (DMatch m : matches)
+		        {
+		        	if(m.distance <= 50)
+		        		similarity++;
+		        }
+		    }
+		    
+		    if(similarity>0)
+		    	similarity = similarity/500;
+		    
+	    }finally
+	    {
+	    	if(d1!=null)
+	    		d1.release();
+	    	
+	    	if(d2!=null)
+	    		d2.release();
+	    	
+	    	if(kp1!=null)
+	    		kp1.release();
+	    	
+	    	if(kp2!=null)
+	    		kp2.release();
+	    	
+	    	if(matchMatrix!=null)
+	    		matchMatrix.release();
+	    }
+	    return similarity;		
 	}
 	
 	public static Mat addAlphaChannel(Mat matInput)
@@ -910,7 +899,19 @@ public class OpenCvUtil{
 		}
 	}
 	
+	public static void initOpenCV()
+	{
+		initOpenCV("/");
+	}
 	
+	public static void initOpenCV(String aPath)
+	{
+		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,aPath);
+		if(!cvLib.init())
+		{
+			throw new RuntimeException("OpenCv is NOT loaded !");
+		}
+	}
 	//////////////////////////////////////////////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////
 	

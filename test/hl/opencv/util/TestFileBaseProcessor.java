@@ -37,15 +37,6 @@ public class TestFileBaseProcessor {
 	private List<String> listImageExt = new ArrayList<String>();
 	private List<String> listVideoExt = new ArrayList<String>();
 	
-	public static void initOpenCV()
-	{
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		if(!cvLib.init())
-		{
-			throw new RuntimeException("OpenCv is NOT loaded !");
-		}
-	}
-	
 	public void processFolder(File folder)
 	{
 		listImageExt.add(".jpg");
