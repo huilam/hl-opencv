@@ -193,7 +193,8 @@ public class VideoDecoder {
 			}
 		}finally
 		{
-			vid.release();
+			if(vid!=null)
+				vid.release();
 		}
 		
 		return lProcessed;
