@@ -58,9 +58,6 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms");
 		
-		//double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame, null, 100);
-		//System.out.print(" brightness:"+dBrightnessScore);
-	
 		System.out.println();
 		return matFrame;
 	}
