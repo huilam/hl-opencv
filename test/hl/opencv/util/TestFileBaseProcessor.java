@@ -26,10 +26,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
-import hl.opencv.OpenCvLibLoader;
 import hl.opencv.video.VideoDecoder;
 
 public class TestFileBaseProcessor {

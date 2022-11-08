@@ -36,6 +36,7 @@ public class TestBrightness extends TestFileBaseProcessor {
 		System.out.println(aSeqNo+". "+aImageFile.getName()+" ("+matFile.width()+"x"+matFile.height()+")");
 		System.out.println("   - Brightness : "+calcBrightness(matFile, false));
 		System.out.println("   - Brightness (Skins) : "+calcBrightness(matFile, true));
+		System.out.println("   - Similarity : "+OpenCvUtil.calcImageSimilarity(matFile, matFile));
 		System.out.println();
 		
 	}

@@ -699,28 +699,17 @@ public class OpenCvUtil{
 		return matResult;
 	}
 
-	public static double calcSimilarity(Mat matImage1, Mat matImage2, int aMaxWidth)
+	public static double calcImageSimilarity(Mat matImage1, Mat matImage2)
 	{
 		Mat mat1 = matImage1.clone();
 		Mat mat2 = matImage2.clone();
 		try {
-			if(aMaxWidth>0)
-			{
-				if(mat1.width()>aMaxWidth)
-				{
-					mat1 = resizeByWidth(mat1, aMaxWidth);
-				}
-				if(mat2.width()>aMaxWidth)
-				{
-					mat2 = resizeByWidth(mat2, aMaxWidth);
-				}
-			}
 			if(mat1.height()!=mat2.height() || mat1.width()!=mat2.width())
 			{
 				mat2 = resize(mat2, mat1.width(), mat1.height(), false);
 			}
 			
-			return calcSimilarity(mat1, mat2);
+			return calcKeypointSimilarity(mat1, mat2);
 		}
 		finally
 		{
@@ -732,29 +721,38 @@ public class OpenCvUtil{
 			
 	}
 	
-	private static Mat getSimilarityKeypoint(Mat matImage)
+	public static Mat getSimilarityKeypoints(Mat aMatImage)
+	{
+		return getSimilarityKeypoints(aMatImage, 0);
+	}
+	
+	public static Mat getSimilarityKeypoints(Mat aMatImage, int aMaxWidth)
 	{
 		Mat d1 = null;
 		MatOfKeyPoint kp1 = null;
 		try {
+			
+			if(aMaxWidth>0 && aMatImage.width()>aMaxWidth)
+			{
+				aMatImage = resizeByWidth(aMatImage, aMaxWidth);
+			}
+
 			ORB orb = ORB.create();
 			kp1 = new MatOfKeyPoint();
 			d1 = new Mat();
-			orb.detect(matImage, kp1);
-			orb.compute(matImage, kp1, d1);
-			return d1;
+			orb.detect(aMatImage, kp1);
+			orb.compute(aMatImage, kp1, d1);
 		}
 		finally
 		{	
 			if(kp1!=null)
 				kp1.release();
-			
-			if(d1!=null)
-				d1.release();
 		}
+		
+		return d1;
 	}
 	
-	public static double calcSimilarity(Mat matImage1, Mat matImage2)
+	public static double calcKeypointSimilarity(Mat matKeypoint1, Mat matKeypoint2)
 	{
 	    double similarity = 0.0;
 
@@ -763,25 +761,34 @@ public class OpenCvUtil{
 	    MatOfDMatch matchMatrix = null;
 	    
 	    try {
-	    	d1 = getSimilarityKeypoint(matImage1);
-	    	d2 = getSimilarityKeypoint(matImage2);
+	    	d1 = getSimilarityKeypoints(matKeypoint1);
+	    	d2 = getSimilarityKeypoints(matKeypoint2);
 		    	
 		    if (d1.cols() == d2.cols()) {
-		        matchMatrix = new MatOfDMatch();
-		        DescriptorMatcher matcher = 
-		        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
-		        matcher.match(d1, d2, matchMatrix);
-		        DMatch[] matches = matchMatrix.toArray();
-		        
-		        for (DMatch m : matches)
-		        {
-		        	if(m.distance <= 50)
-		        		similarity++;
-		        }
+		    	
+		    	if(d1.cols()>0)
+		    	{
+			        matchMatrix = new MatOfDMatch();
+			        DescriptorMatcher matcher = 
+			        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+			        matcher.match(d1, d2, matchMatrix);
+			        DMatch[] matches = matchMatrix.toArray();
+			        
+			        for (DMatch m : matches)
+			        {
+			        	if(m.distance <= 50)
+			        		similarity++;
+			        }
+			        
+			        if(similarity>0)
+				    	similarity = similarity/500;
+		    	}
+		    	else
+		    	{
+		    		//no key points
+		    		similarity = -1;
+		    	}
 		    }
-		    
-		    if(similarity>0)
-		    	similarity = similarity/500;
 		    
 	    }finally
 	    {

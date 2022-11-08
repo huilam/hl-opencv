@@ -65,7 +65,13 @@ public class VideoDecoder {
 	public void setBgref_mat(Mat bgref_mat) {
 		this.bgref_mat = bgref_mat;
 	}
-	
+	////
+	public int getMax_similarity_compare_width() {
+		return max_similarity_compare_width;
+	}
+	public void setMax_similarity_compare_width(int max_similarity_compare_width) {
+		this.max_similarity_compare_width = max_similarity_compare_width;
+	}
 	////
 	
 	public JSONObject getVideoMetadata(File aVideoFile)
@@ -129,7 +135,7 @@ public class VideoDecoder {
 				imgProcessor.setMin_brightness_score(this.min_brightness_skip_threshold);
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
 				
-				Mat matSimilarityCompare = null;
+				Mat matPrevKeypoints = new Mat();
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
@@ -153,21 +159,34 @@ public class VideoDecoder {
 					{
 						if(this.min_similarity_skip_threshold>0)
 						{
-							if(matSimilarityCompare!=null)
-							{
-								double dSimilarityScore = OpenCvUtil.calcSimilarity(
-										matFrame, 
-										matSimilarityCompare, 
-										max_similarity_compare_width);
-								
-								if(dSimilarityScore>=this.min_similarity_skip_threshold)
-								{
-									skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
-									continue;
-								}
-							}
+							Mat matCurKeypoint = null;
 							
-							matSimilarityCompare = matFrame;
+							try {
+								matCurKeypoint = OpenCvUtil.getSimilarityKeypoints(matFrame, this.max_similarity_compare_width);
+								if(!matPrevKeypoints.empty())
+								{
+									double dSimilarityScore = OpenCvUtil.calcKeypointSimilarity(
+											matCurKeypoint, 
+											matPrevKeypoints);
+									
+									if(dSimilarityScore>=this.min_similarity_skip_threshold)
+									{
+System.out.println("dSimilarityScore="+dSimilarityScore);
+System.out.println("matCurKeypoint="+matCurKeypoint);
+System.out.println("matPrevKeypoints="+matPrevKeypoints);
+										
+										skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
+										continue;
+									}
+								}
+								
+								matCurKeypoint.copyTo(matPrevKeypoints);
+							}
+							finally
+							{
+								if(matCurKeypoint!=null)
+									matCurKeypoint.release();
+							}
 						}
 						
 						if(lFrameTimestamp>=aFrameTimestampFrom)

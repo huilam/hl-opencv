@@ -77,9 +77,8 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		OpenCvUtil.initOpenCV();
 		
-		//File folder = new File("./test/images/ace");
-		
-		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
+//		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
+		File file = new File("./test/videos/nls/XinLai.mp4");
 		
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		
@@ -87,7 +86,8 @@ public class TestVideoDecoder extends VideoDecoder {
 		
 		vidDecoder.setBgref_mat(null);
 		vidDecoder.setMin_brightness_skip_threshold(0.0);
-		vidDecoder.setMin_similarity_skip_threshold(0.0);
+		vidDecoder.setMin_similarity_skip_threshold(0.9);
+		vidDecoder.setMax_similarity_compare_width(500);
 		//
 		vidDecoder.processVideo(file,0,5000);
 		
