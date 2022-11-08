@@ -30,15 +30,16 @@ import hl.opencv.util.OpenCvUtil;
 public class TestVideoDecoder extends VideoDecoder {
 	
 	@Override 
-	public boolean decodedMetadata(
+	public boolean processStarted(
 			String aVideoFileName, int aResWidth, int aResHeight, 
 			int aFps, long aTotalFrameCount)
 	{
 		System.out.println();
-		System.out.println("Resolution : "+aResWidth+"x"+aResHeight);
-		System.out.println("FPS : "+aFps);
-		System.out.println("Total frames : "+aTotalFrameCount);
-		System.out.println("Duration : "+ toDurationStr(aTotalFrameCount/aFps*1000));
+		System.out.println("[START] "+aVideoFileName);
+		System.out.println(" - Resolution : "+aResWidth+"x"+aResHeight);
+		System.out.println(" - FPS : "+aFps);
+		System.out.println(" - Total frames : "+aTotalFrameCount);
+		System.out.println(" - Duration : "+ toDurationStr(aTotalFrameCount/aFps*1000));
 		System.out.println();
 		return true;
 	}
@@ -57,11 +58,22 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms");
 		
-		double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame, null, 100);
-		System.out.print(" brightness:"+dBrightnessScore);
+		//double dBrightnessScore = OpenCvUtil.calcBrightness(matFrame, null, 100);
+		//System.out.print(" brightness:"+dBrightnessScore);
 	
 		System.out.println();
 		return matFrame;
+	}
+	
+	@Override 
+	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+	{
+		System.out.println();
+		System.out.println("[COMPLETED] "+aVideoFileName);
+		double dMsPerFrame = ((double)aElpasedMs) / ((double)aTotalFrameProcessed);
+		long lDurationMs = aToTimeMs - aFromTimeMs;
+		System.out.println(" - Process From/To: "+toDurationStr(aFromTimeMs)+" / "+toDurationStr(aToTimeMs)+" ("+lDurationMs +" ms)");
+		System.out.println(" - Total Elapsed/Processed : "+aElpasedMs+" ms / "+aTotalFrameProcessed+" = "+dMsPerFrame+" ms");
 	}
 	
 	public static void main(String args[]) throws Exception
@@ -70,9 +82,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		
 		//File folder = new File("./test/images/ace");
 		
-		long lStartMs = System.currentTimeMillis();
-		
-		File file = new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
+		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		
@@ -82,10 +92,8 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_brightness_skip_threshold(0.0);
 		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		//
-		vidDecoder.processVideo(file);
+		vidDecoder.processVideo(file,0,5000);
 		
-		System.out.println();
-		System.out.println("Elapsed : "+(System.currentTimeMillis()-lStartMs)+" ms");
 		
 	}
 }

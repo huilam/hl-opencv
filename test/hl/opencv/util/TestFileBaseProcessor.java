@@ -79,7 +79,7 @@ public class TestFileBaseProcessor {
 		VideoDecoder vidDecoder = new VideoDecoder()
 		{
 			@Override 
-			public boolean decodedMetadata(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
+			public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
 			{
 				return video_decodedMetadata(aVideoFileName, aResWidth, aResHeight, aFps, aTotalFrameCount);
 			}
@@ -94,6 +94,15 @@ public class TestFileBaseProcessor {
 			public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
 			{
 				return video_decodedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);
+			}
+			
+			@Override 
+			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+			{
+				System.out.println();
+				System.out.println("[COMPLETED] "+aVideoFileName);
+				System.out.println("Total processed : "+aTotalFrameProcessed);
+				System.out.println("Total elapsed time (ms) : "+aElpasedMs);
 			}
 		};
 		vidDecoder.processVideo(aVideoFile);

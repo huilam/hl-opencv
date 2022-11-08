@@ -25,12 +25,10 @@ package hl.opencv.video;
 import java.io.File;
 
 import org.json.JSONObject;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
-import hl.opencv.OpenCvLibLoader;
 import hl.opencv.image.ImageProcessor;
 import hl.opencv.util.OpenCvUtil;
 
@@ -43,6 +41,7 @@ public class VideoDecoder {
 	////
 	private double min_similarity_skip_threshold = 0.0;
 	private double min_brightness_skip_threshold = 0.0;
+	private int max_similarity_compare_width	 = 0;
 	private Mat bgref_mat = null;
 	
 	////
@@ -65,16 +64,6 @@ public class VideoDecoder {
 	}
 	public void setBgref_mat(Mat bgref_mat) {
 		this.bgref_mat = bgref_mat;
-	}
-	////
-	
-	private static void initOpenCV()
-	{
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,"/");
-		if(!cvLib.init())
-		{
-			throw new RuntimeException("OpenCv is NOT loaded !");
-		}
 	}
 	
 	////
@@ -105,7 +94,6 @@ public class VideoDecoder {
 		return jsonMeta;
 	}
 	
-	
 	public long processVideo(File aVideoFile, long aFrameTimestamp)
 	{
 		return processVideo(aVideoFile, aFrameTimestamp, -1);
@@ -130,7 +118,7 @@ public class VideoDecoder {
 				int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
 				int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
 				
-				boolean isProcessVideo = decodedMetadata(
+				boolean isProcessVideo = processStarted(
 						aVideoFile.getName(), iWidth, iHeight, 
 						(int)dFps, (long)dTotalFrames);
 				
@@ -142,6 +130,8 @@ public class VideoDecoder {
 				imgProcessor.setBackground_ref_mat(this.bgref_mat);
 				
 				Mat matSimilarityCompare = null;
+				
+				long lElapseStartMs = System.currentTimeMillis();
 				
 				long lFrameTimestamp = aFrameTimestampFrom;
 				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
@@ -165,7 +155,10 @@ public class VideoDecoder {
 						{
 							if(matSimilarityCompare!=null)
 							{
-								double dSimilarityScore = OpenCvUtil.calcSimilarity(matFrame, matSimilarityCompare, 500);
+								double dSimilarityScore = OpenCvUtil.calcSimilarity(
+										matFrame, 
+										matSimilarityCompare, 
+										max_similarity_compare_width);
 								
 								if(dSimilarityScore>=this.min_similarity_skip_threshold)
 								{
@@ -194,6 +187,9 @@ public class VideoDecoder {
 					
 					lFrameTimestamp += dFrameMs;
 				}
+				
+				long lElapsedMs = System.currentTimeMillis() - lElapseStartMs;
+				processEnded(aVideoFile.getName(), aFrameTimestampFrom, aFrameTimestampTo, lProcessed, lElapsedMs);
 			}
 		}finally
 		{
@@ -207,6 +203,27 @@ public class VideoDecoder {
 	{
 		return processVideo(fileVideo, 0, -1);
 	}
+	
+	///// 
+	public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
+	{
+		return true;
+	}
+	
+	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrameProcessed, long aElpasedMs)
+	{
+	}
+	
+	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	{
+		return matFrame;
+	}
+	
+	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	{
+		return matFrame;
+	}
+	///// 
 	
 	public static String toDurationStr(long aTimeMs)
 	{
@@ -244,21 +261,6 @@ public class VideoDecoder {
 		sbTimeMs.append(aTimeMs);
 		
 		return sbTimeMs.toString();
-	}
-	
-	public boolean decodedMetadata(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
-	{
-		return true;
-	}
-	
-	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
-	{
-		return matFrame;
-	}
-	
-	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
-	{
-		return matFrame;
 	}
 	
 }

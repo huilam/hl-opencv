@@ -704,15 +704,17 @@ public class OpenCvUtil{
 		Mat mat1 = matImage1.clone();
 		Mat mat2 = matImage2.clone();
 		try {
-			if(mat1.width()>aMaxWidth)
+			if(aMaxWidth>0)
 			{
-				mat1 = resizeByWidth(mat1, aMaxWidth);
+				if(mat1.width()>aMaxWidth)
+				{
+					mat1 = resizeByWidth(mat1, aMaxWidth);
+				}
+				if(mat2.width()>aMaxWidth)
+				{
+					mat2 = resizeByWidth(mat2, aMaxWidth);
+				}
 			}
-			if(mat2.width()>aMaxWidth)
-			{
-				mat2 = resizeByWidth(mat2, aMaxWidth);
-			}
-			
 			if(mat1.height()!=mat2.height() || mat1.width()!=mat2.width())
 			{
 				mat2 = resize(mat2, mat1.width(), mat1.height(), false);
@@ -730,27 +732,39 @@ public class OpenCvUtil{
 			
 	}
 	
+	private static Mat getSimilarityKeypoint(Mat matImage)
+	{
+		Mat d1 = null;
+		MatOfKeyPoint kp1 = null;
+		try {
+			ORB orb = ORB.create();
+			kp1 = new MatOfKeyPoint();
+			d1 = new Mat();
+			orb.detect(matImage, kp1);
+			orb.compute(matImage, kp1, d1);
+			return d1;
+		}
+		finally
+		{	
+			if(kp1!=null)
+				kp1.release();
+			
+			if(d1!=null)
+				d1.release();
+		}
+	}
+	
 	public static double calcSimilarity(Mat matImage1, Mat matImage2)
 	{
 	    double similarity = 0.0;
 
 		Mat d1 = null;
 	    Mat d2 = null;
-	    MatOfKeyPoint kp1 = null;
-	    MatOfKeyPoint kp2 = null;
 	    MatOfDMatch matchMatrix = null;
 	    
 	    try {
-		    ORB orb = ORB.create();
-		    kp1 = new MatOfKeyPoint();
-		    kp2 = new MatOfKeyPoint();
-		    orb.detect(matImage1, kp1);
-		    orb.detect(matImage2, kp2);
-	
-		    d1 = new Mat();
-		    d2 = new Mat();
-		    orb.compute(matImage1, kp1, d1);
-		    orb.compute(matImage2, kp2, d2);
+	    	d1 = getSimilarityKeypoint(matImage1);
+	    	d2 = getSimilarityKeypoint(matImage2);
 		    	
 		    if (d1.cols() == d2.cols()) {
 		        matchMatrix = new MatOfDMatch();
@@ -776,12 +790,6 @@ public class OpenCvUtil{
 	    	
 	    	if(d2!=null)
 	    		d2.release();
-	    	
-	    	if(kp1!=null)
-	    		kp1.release();
-	    	
-	    	if(kp2!=null)
-	    		kp2.release();
 	    	
 	    	if(matchMatrix!=null)
 	    		matchMatrix.release();
