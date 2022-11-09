@@ -77,25 +77,29 @@ public class TestFileBaseProcessor {
 		VideoDecoder vidDecoder = new VideoDecoder()
 		{
 			@Override 
-			public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+			public boolean processStarted(String aVideoFileName, 
+					long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
 					long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 			{
-				return video_processStarted(aVideoFileName, aResWidth, aResHeight, 
+				return video_processStarted(aVideoFileName, 
+						aFrameTimestampFrom, aFrameTimestampTo, aResWidth, aResHeight, 
 						aTotalSelectedFrames, aFps, aSelectedDurationMs);
 			}
 			
 			@Override 
-			public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
-					long aFrameTimestamp, String aReasonCode, double aScore)
+			public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+					long aFrameNo, long aFrameTimestamp, double aProgressPercentage, 
+					String aReasonCode, double aScore)
 			{
-				return video_skippedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp);
+				return video_skippedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp, aProgressPercentage);
 			}
 			
 			@Override 
-			public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
-					long aFrameTimestamp)
+			public Mat decodedVideoFrame(
+					String aVideoFileName, Mat matFrame, 
+					long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
 			{
-				return video_decodedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp);
+				return video_decodedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp, aProgressPercentage);
 			}
 			
 			@Override 
@@ -111,7 +115,8 @@ public class TestFileBaseProcessor {
 		vidDecoder.processVideo(aVideoFile);
 	}
 	
-	protected boolean video_processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+	protected boolean video_processStarted(String aVideoFileName, 
+			long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println(" - "+aVideoFileName+" : "+aResWidth+"x"+aResHeight);
@@ -119,13 +124,13 @@ public class TestFileBaseProcessor {
 	}
 	
 	protected Mat video_decodedVideoFrame(String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameTimestamp)
+			long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
 	{
 		return matFrame;
 	}
 	
 	protected Mat video_skippedVideoFrame(String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameTimestamp)
+			long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
 	{
 		return matFrame;
 	}

@@ -125,7 +125,8 @@ public class VideoDecoder {
 		Mat matPrevDescriptors = null;
 		Mat matCurDescriptors = null;
 		
-		long lActualProcessed 	= 0;
+		long lCurrentFrameNo 	= 0;
+		long lActualProcessed = 0;
 		long lActualSkipped 	= 0;
 
 		try{
@@ -154,6 +155,7 @@ public class VideoDecoder {
 					long lAdjFrameStartMs = 0;
 					while(lAdjFrameStartMs < aFrameTimestampFrom)
 					{
+						lCurrentFrameNo++;
 						lAdjFrameStartMs += dFrameMs;
 					}
 					aFrameTimestampFrom = lAdjFrameStartMs;
@@ -178,12 +180,11 @@ public class VideoDecoder {
 				////////////
 				
 				double dTotalSelectedDurationMs = aFrameTimestampTo - aFrameTimestampFrom;
+				double dTotalSelectedFrames = dTotalSelectedDurationMs / dFrameMs;
 				
-				long lTotalSelectedFrames = (long) ((dTotalSelectedDurationMs/1000) * Math.ceil(dFps));
-
-				boolean isProcessVideo = processStarted( 
-						sVideoFileName, iWidth, iHeight, 
-						lTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
+				boolean isProcessVideo = processStarted( sVideoFileName, 
+						aFrameTimestampFrom, aFrameTimestampTo, iWidth, iHeight, 
+						(long)dTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
 				if(!isProcessVideo)
 					return 0;
@@ -193,22 +194,28 @@ public class VideoDecoder {
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
-				long lCurFrameTimestamp = aFrameTimestampFrom;
+				long lCurFrameTimestamp = aFrameTimestampFrom - (long)dFrameMs;
 				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
 				
+				double dProgressPercentage = 0.0;
 				while(vid.read(matFrame))
 				{
+					lCurFrameTimestamp += dFrameMs;
 					if(lCurFrameTimestamp > aFrameTimestampTo)
 					{
 						break;
 					}
-					
+					lCurrentFrameNo++;
 					lActualProcessed++;
+						
+					dProgressPercentage = Math.round((double)lActualProcessed / (dTotalSelectedFrames+1) * 100.0);
 					
 					double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
 					if(dBrightness<this.min_brightness_skip_threshold)
 					{
-						skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_BRIGHTNESS, dBrightness);
+						skippedVideoFrame(sVideoFileName, matFrame, 
+								lCurrentFrameNo, lCurFrameTimestamp, 
+								dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
 						lActualSkipped++;
 						continue;
 					}
@@ -216,7 +223,9 @@ public class VideoDecoder {
 					boolean isOk = imgProcessor.processImage(matFrame);
 					if(!isOk)
 					{
-						skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_SEGMENTATION, 0);
+						skippedVideoFrame(sVideoFileName, matFrame, 
+								lCurrentFrameNo, lCurFrameTimestamp, 
+								dProgressPercentage, EVENT_SEGMENTATION, 0);
 						lActualSkipped++;
 						continue;
 					}
@@ -236,7 +245,9 @@ public class VideoDecoder {
 
 								if(dSimilarityScore>=this.min_similarity_skip_threshold)
 								{	
-									skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_SIMILARITY, dSimilarityScore);
+									skippedVideoFrame(sVideoFileName, matFrame, 
+											lCurrentFrameNo, lCurFrameTimestamp, 
+											dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
 									lActualSkipped++;
 									continue;
 								}
@@ -250,24 +261,25 @@ public class VideoDecoder {
 						{
 							if(lCurFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
 							{
-								matFrame = decodedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp);
+								matFrame = decodedVideoFrame(
+										sVideoFileName, matFrame, 
+										lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
 							}
 						}
 					}
 					
 					if(matFrame==null)
 					{
-						processAborted(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_NULLFRAME);
+						processAborted(sVideoFileName, matFrame, 
+								lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
 						break;
 					}
-					
-					lCurFrameTimestamp += dFrameMs;
 				}
 				
 				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
 				
 				processEnded(sVideoFileName, aFrameTimestampFrom, aFrameTimestampTo, 
-						lActualProcessed, lActualSkipped, lTotalElapsedMs);
+						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			}
 		}finally
 		{
@@ -281,7 +293,7 @@ public class VideoDecoder {
 				matPrevDescriptors.release();
 		}
 		
-		return lActualProcessed;
+		return (long)lActualProcessed;
 	}
 	
 	public long processVideo(File fileVideo)
@@ -290,7 +302,8 @@ public class VideoDecoder {
 	}
 	
 	///// 
-	public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+	public boolean processStarted(String aVideoFileName, 
+			long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		return true;
@@ -301,19 +314,20 @@ public class VideoDecoder {
 	{
 	}
 	
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
-			long aFrameTimestamp, String aReasonCode, double aScore)
+	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameTimestamp, double aProgressPercentage, String aReasonCode, double aScore)
 	{
 		return matFrame;
 	}
 	
-	public Mat processAborted(String aVideoFileName, Mat matFrame, long aFrameNo, 
-			long aFrameTimestamp, String aReasonCode)
+	public Mat processAborted(String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameTimestamp,  double aProgressPercentage, String aReasonCode)
 	{
 		return matFrame;
 	}
 
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
 	{
 		return matFrame;
 	}

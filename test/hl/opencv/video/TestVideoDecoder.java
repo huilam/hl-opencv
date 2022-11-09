@@ -31,12 +31,13 @@ public class TestVideoDecoder extends VideoDecoder {
 	public File fileOutput = null;
 	
 	@Override 
-	public boolean processStarted(
-			String aVideoFileName, int aResWidth, int aResHeight, 
-			 long aSelectedFrameCount, double aFps, long aSelectedDurationMs)
+	public boolean processStarted( String aVideoFileName, 
+			long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
+			long aSelectedFrameCount, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println();
 		System.out.println("[START] "+aVideoFileName);
+		System.out.println(" - From :"+toDurationStr(aFrameTimestampFrom)+" To :"+toDurationStr(aFrameTimestampTo));
 		System.out.println(" - Resolution : "+aResWidth+"x"+aResHeight);
 		System.out.println(" - FPS : "+aFps);
 		System.out.println(" - Duration : "+ toDurationStr(aSelectedDurationMs));
@@ -47,9 +48,10 @@ public class TestVideoDecoder extends VideoDecoder {
 	
 	@Override 
 	public Mat decodedVideoFrame(
-			String aVideoFileName, Mat matFrame, long aFrameNo, long aFrameMs)
+			String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameMs, double aProgressPercentage)
 	{
-		System.out.print("#"+aFrameNo+" - "+aFrameMs+"ms "+toDurationStr(aFrameMs));
+		System.out.print("#"+aFrameNo+" - "+aFrameMs+"ms "+toDurationStr(aFrameMs)+" ... "+aProgressPercentage+"%");
 				
 		System.out.println();
 		return matFrame;
@@ -57,9 +59,10 @@ public class TestVideoDecoder extends VideoDecoder {
 	
 	@Override 
 	public Mat skippedVideoFrame(
-			String aVideoFileName, Mat matFrame, long aFrameNo, long aFrameMs, String aReasonCode, double aScore)
+			String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameMs, double aProgressPercentage, String aReasonCode, double aScore)
 	{
-		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms - "+aReasonCode+":"+aScore);
+		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms - "+aReasonCode+":"+aScore+" ... "+aProgressPercentage+"%");
 		System.out.println();
 		
 		if(fileOutput!=null)
@@ -103,7 +106,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_similarity_skip_threshold(0.98);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideo(file, 1000, 5000);
+		vidDecoder.processVideo(file, 0, 60000);
 	}
 		
 }

@@ -36,7 +36,7 @@ public class TestFGMask extends TestFileBaseProcessor {
 	public void processImageFile(int aSeqNo, File aImageFile)
 	{
 		Mat matFile = OpenCvUtil.loadImage(aImageFile.getAbsolutePath());
-		System.out.println("11 - "+aImageFile.getName()+" : "+matFile.width()+"x"+matFile.height());
+		System.out.println(" - "+aImageFile.getName()+" : "+matFile.width()+"x"+matFile.height());
 		
 		if(imgProcessor.processImage(matFile))
 		{
