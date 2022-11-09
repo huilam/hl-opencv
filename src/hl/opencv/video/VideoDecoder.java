@@ -34,9 +34,9 @@ import hl.opencv.util.OpenCvUtil;
 
 public class VideoDecoder {
 	
-	private static long SECOND_MS = 1000;
-	private static long MINUTE_MS = SECOND_MS * 60;
-	private static long HOUR_MS = MINUTE_MS * 60;
+	private static long SECOND_MS 	= 1000;
+	private static long MINUTE_MS 	= SECOND_MS * 60;
+	private static long HOUR_MS 	= MINUTE_MS * 60;
 	
 	private static String EVENT_BRIGHTNESS 		= "BRIGHTNESS";
 	private static String EVENT_SEGMENTATION 	= "SEGMENTATION";
@@ -125,24 +125,54 @@ public class VideoDecoder {
 		Mat matPrevDescriptors = null;
 		Mat matCurDescriptors = null;
 		
-		long lProcessed = 0;
-		long lSkipped 	= 0;
+		long lActualProcessed 	= 0;
+		long lActualSkipped 	= 0;
 
 		try{
 			matFrame = new Mat();
 			vid = new VideoCapture(aVideoFile.getAbsolutePath());
 			if(vid.isOpened())
 			{
-				double dFps = vid.get(Videoio.CAP_PROP_FPS);
+				String sVideoFileName = aVideoFile.getName();
+				double dFps = Math.floor(vid.get(Videoio.CAP_PROP_FPS)*1000.0)/1000.0;
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-				double dFrameMs = 1000.0 / dFps;
-				
+				double dTotalDurationMs = Math.floor((dTotalFrames / dFps)*1000);
+				//
+				double dFrameMs = Math.floor(dTotalDurationMs / dTotalFrames);
+				//
 				int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
 				int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
 				
-				boolean isProcessVideo = processStarted(
-						aVideoFile.getName(), iWidth, iHeight, 
-						(int)dFps, (long)dTotalFrames);
+				if(aFrameTimestampTo > dTotalDurationMs)
+				{
+					aFrameTimestampTo = (long) dTotalDurationMs;
+				}
+				
+				double dTotalSelectedDurationMs = 0;
+				
+				if(aFrameTimestampTo<0)
+				{
+					aFrameTimestampTo = (long)dTotalDurationMs;
+				}
+				
+				if(aFrameTimestampFrom>0)
+				{
+					long lFrameStartMs = 0;
+					
+					while(lFrameStartMs < aFrameTimestampFrom)
+					{
+						lFrameStartMs += dFrameMs;
+					}
+					aFrameTimestampFrom = lFrameStartMs;
+				}
+				
+				dTotalSelectedDurationMs = aFrameTimestampTo - aFrameTimestampFrom;
+				
+				long lTotalSelectedFrames = (long) ((dTotalSelectedDurationMs/1000) * Math.ceil(dFps));
+
+				boolean isProcessVideo = processStarted( 
+						sVideoFileName, iWidth, iHeight, 
+						lTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
 				if(!isProcessVideo)
 					return 0;
@@ -152,29 +182,31 @@ public class VideoDecoder {
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
-				long lFrameTimestamp = aFrameTimestampFrom;
+				long lCurFrameTimestamp = aFrameTimestampFrom;
 				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
 				
 				while(vid.read(matFrame))
 				{
-					if(aFrameTimestampTo!=-1 && lFrameTimestamp>aFrameTimestampTo)
+					if(lCurFrameTimestamp > aFrameTimestampTo)
+					{
 						break;
+					}
 					
-					lProcessed++;
+					lActualProcessed++;
 					
 					double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
 					if(dBrightness<this.min_brightness_skip_threshold)
 					{
-						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_BRIGHTNESS, dBrightness);
-						lSkipped++;
+						skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_BRIGHTNESS, dBrightness);
+						lActualSkipped++;
 						continue;
 					}
 					
 					boolean isOk = imgProcessor.processImage(matFrame);
 					if(!isOk)
 					{
-						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_SEGMENTATION, 0);
-						lSkipped++;
+						skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_SEGMENTATION, 0);
+						lActualSkipped++;
 						continue;
 					}
 					
@@ -193,8 +225,8 @@ public class VideoDecoder {
 
 								if(dSimilarityScore>=this.min_similarity_skip_threshold)
 								{	
-									skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_SIMILARITY, dSimilarityScore);
-									lSkipped++;
+									skippedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_SIMILARITY, dSimilarityScore);
+									lActualSkipped++;
 									continue;
 								}
 							}
@@ -203,27 +235,28 @@ public class VideoDecoder {
 		
 						}
 						
-						if(lFrameTimestamp>=aFrameTimestampFrom)
+						if(lCurFrameTimestamp>=aFrameTimestampFrom)
 						{
-							if(lFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
+							if(lCurFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
 							{
-								matFrame = decodedVideoFrame(matFrame, lProcessed, lFrameTimestamp);
+								matFrame = decodedVideoFrame(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp);
 							}
 						}
 					}
 					
 					if(matFrame==null)
 					{
-						skippedVideoFrame(matFrame, lProcessed, lFrameTimestamp, EVENT_NULLFRAME, 0);
-						lSkipped++;
+						processAborted(sVideoFileName, matFrame, lActualProcessed, lCurFrameTimestamp, EVENT_NULLFRAME);
 						break;
 					}
 					
-					lFrameTimestamp += dFrameMs;
+					lCurFrameTimestamp += dFrameMs;
 				}
 				
-				long lElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-				processEnded(aVideoFile.getName(), aFrameTimestampFrom, aFrameTimestampTo, lProcessed, lProcessed-lSkipped, lElapsedMs);
+				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
+				
+				processEnded(sVideoFileName, aFrameTimestampFrom, aFrameTimestampTo, 
+						lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			}
 		}finally
 		{
@@ -237,7 +270,7 @@ public class VideoDecoder {
 				matPrevDescriptors.release();
 		}
 		
-		return lProcessed;
+		return lActualProcessed;
 	}
 	
 	public long processVideo(File fileVideo)
@@ -246,24 +279,34 @@ public class VideoDecoder {
 	}
 	
 	///// 
-	public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
+	public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		return true;
 	}
 	
-	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrames, long aTotalProcessed, long aElpasedMs)
+	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
+			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
 	}
 	
-	public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp, String aReasonCode, double aScore)
+	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
+			long aFrameTimestamp, String aReasonCode, double aScore)
 	{
 		return matFrame;
 	}
 	
-	public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	public Mat processAborted(String aVideoFileName, Mat matFrame, long aFrameNo, 
+			long aFrameTimestamp, String aReasonCode)
 	{
 		return matFrame;
 	}
+
+	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	{
+		return matFrame;
+	}
+
 	///// 
 	
 	public static String toDurationStr(long aTimeMs)

@@ -24,13 +24,8 @@ package hl.opencv.util;
 
 import java.io.File;
 
-import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.features2d.ORB;
 
 public class TestBrightness extends TestFileBaseProcessor {
 	

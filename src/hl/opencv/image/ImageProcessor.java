@@ -29,10 +29,12 @@ import hl.opencv.util.OpenCvUtil;
 
 public class ImageProcessor {
 	
-	private double min_brightness_score = 0.0;
 	//
-	private Mat background_ref_mat 		= null;
-	private double min_bgref_threshold 	= 0.18;
+	private double min_brightness_score 	= 0.0;
+	private int max_brightness_calc_width 	= 100;
+	//
+	private Mat background_ref_mat 			= null;
+	private double min_bgref_threshold 		= 0.18;
 	//
 	
 	public ImageProcessor()
@@ -79,7 +81,8 @@ public class ImageProcessor {
 		{
 			if(this.min_brightness_score>0 && this.min_brightness_score<=1.0)
 			{
-				double dBrightness = OpenCvUtil.calcBrightness(aMatImage, null, 100);
+				double dBrightness = OpenCvUtil.calcBrightness(
+						aMatImage, null, this.max_brightness_calc_width);
 				if(dBrightness<this.min_brightness_score)
 				{
 					return false;

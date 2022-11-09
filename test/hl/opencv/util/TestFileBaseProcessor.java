@@ -77,25 +77,30 @@ public class TestFileBaseProcessor {
 		VideoDecoder vidDecoder = new VideoDecoder()
 		{
 			@Override 
-			public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
+			public boolean processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+					long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 			{
-				return video_decodedMetadata(aVideoFileName, aResWidth, aResHeight, aFps, aTotalFrameCount);
+				return video_processStarted(aVideoFileName, aResWidth, aResHeight, 
+						aTotalSelectedFrames, aFps, aSelectedDurationMs);
 			}
 			
 			@Override 
-			public Mat skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp, String aReasonCode, double aScore)
+			public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
+					long aFrameTimestamp, String aReasonCode, double aScore)
 			{
-				return video_skippedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);
+				return video_skippedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp);
 			}
 			
 			@Override 
-			public Mat decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+			public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aFrameNo, 
+					long aFrameTimestamp)
 			{
-				return video_decodedVideoFrame(matFrame, aFrameNo, aFrameTimestamp);
+				return video_decodedVideoFrame(aVideoFileName, matFrame, aFrameNo, aFrameTimestamp);
 			}
 			
 			@Override 
-			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, long aTotalFrames, long aTotalProcessed, long aElpasedMs)
+			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
+					long aTotalFrames, long aTotalProcessed, long aElpasedMs)
 			{
 				System.out.println();
 				System.out.println("[COMPLETED] "+aVideoFileName);
@@ -106,18 +111,21 @@ public class TestFileBaseProcessor {
 		vidDecoder.processVideo(aVideoFile);
 	}
 	
-	protected boolean video_decodedMetadata(String aVideoFileName, int aResWidth, int aResHeight, int aFps, long aTotalFrameCount)
+	protected boolean video_processStarted(String aVideoFileName, int aResWidth, int aResHeight, 
+			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println(" - "+aVideoFileName+" : "+aResWidth+"x"+aResHeight);
 		return false;
 	}
 	
-	protected Mat video_decodedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	protected Mat video_decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameTimestamp)
 	{
 		return matFrame;
 	}
 	
-	protected Mat video_skippedVideoFrame(Mat matFrame, long aFrameNo, long aFrameTimestamp)
+	protected Mat video_skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aFrameNo, long aFrameTimestamp)
 	{
 		return matFrame;
 	}
