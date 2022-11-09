@@ -148,25 +148,36 @@ public class VideoDecoder {
 					aFrameTimestampTo = (long) dTotalDurationMs;
 				}
 				
-				double dTotalSelectedDurationMs = 0;
-				
-				if(aFrameTimestampTo<0)
+				// Adjust
+				if(aFrameTimestampFrom>0)
+				{
+					long lAdjFrameStartMs = 0;
+					while(lAdjFrameStartMs < aFrameTimestampFrom)
+					{
+						lAdjFrameStartMs += dFrameMs;
+					}
+					aFrameTimestampFrom = lAdjFrameStartMs;
+				}
+				if(aFrameTimestampTo>0)
+				{
+					long lAdjFrameEndMs = 0;
+					while(lAdjFrameEndMs < aFrameTimestampTo)
+					{
+						lAdjFrameEndMs += dFrameMs;
+					}
+					if(lAdjFrameEndMs>aFrameTimestampTo)
+					{
+						lAdjFrameEndMs -= dFrameMs;
+					}
+					aFrameTimestampTo = lAdjFrameEndMs;
+				}
+				else
 				{
 					aFrameTimestampTo = (long)dTotalDurationMs;
 				}
+				////////////
 				
-				if(aFrameTimestampFrom>0)
-				{
-					long lFrameStartMs = 0;
-					
-					while(lFrameStartMs < aFrameTimestampFrom)
-					{
-						lFrameStartMs += dFrameMs;
-					}
-					aFrameTimestampFrom = lFrameStartMs;
-				}
-				
-				dTotalSelectedDurationMs = aFrameTimestampTo - aFrameTimestampFrom;
+				double dTotalSelectedDurationMs = aFrameTimestampTo - aFrameTimestampFrom;
 				
 				long lTotalSelectedFrames = (long) ((dTotalSelectedDurationMs/1000) * Math.ceil(dFps));
 

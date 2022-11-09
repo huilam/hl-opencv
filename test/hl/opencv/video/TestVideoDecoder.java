@@ -103,7 +103,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_similarity_skip_threshold(0.98);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideo(file, 2000, 5000);
+		vidDecoder.processVideo(file, 1000, 5000);
 	}
 		
 }
