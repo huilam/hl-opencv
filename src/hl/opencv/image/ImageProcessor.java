@@ -97,12 +97,15 @@ public class ImageProcessor {
 										this.background_ref_mat, 
 										this.min_bgref_threshold);
 						
-						matOutput = new Mat();
-						Core.copyTo(aMatImage, matOutput, matMask);
-						
-						if(matOutput!=null)
+						if(matMask!=null)
 						{
-							matOutput.copyTo(aMatImage);
+							matOutput = new Mat();
+							Core.copyTo(aMatImage, matOutput, matMask);
+							
+							if(matOutput!=null)
+							{
+								matOutput.copyTo(aMatImage);
+							}
 						}
 					}
 					finally

@@ -41,7 +41,6 @@ public class VideoDecoder {
 	private static String EVENT_BRIGHTNESS 		= "BRIGHTNESS";
 	private static String EVENT_SEGMENTATION 	= "SEGMENTATION";
 	private static String EVENT_SIMILARITY 		= "SIMILARITY";
-	
 	private static String EVENT_NULLFRAME 		= "NULL_FRAME";
 	
 	////

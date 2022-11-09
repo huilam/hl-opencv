@@ -335,6 +335,8 @@ public class OpenCvUtil{
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
 			int aProcessWidth, int minContourPixelSize, boolean isGrayscale) throws Exception
 	{
+		if(matBackground==null || matBackground.empty())
+			return null;
 		
 		Mat matMask = null;
 		Mat matBgResized = null;
@@ -382,7 +384,10 @@ public class OpenCvUtil{
 					matInResized = OpenCvFilters.grayscale(matInResized);
 				}
 				
-				Core.absdiff(matBgResized, matInResized, matMask);
+				if(!matBgResized.empty())
+				{
+					Core.absdiff(matBgResized, matInResized, matMask);
+				}
 			}
 			catch(Throwable t)
 			{

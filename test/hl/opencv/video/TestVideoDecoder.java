@@ -83,13 +83,13 @@ public class TestVideoDecoder extends VideoDecoder {
 		
 		System.out.println(vidDecoder.getVideoMetadata(file));
 		
-		vidDecoder.setBgref_mat(null);
+		vidDecoder.setBgref_mat(new Mat());
 		//
 		vidDecoder.setMin_brightness_skip_threshold(0.15);
-		vidDecoder.setMax_brightness_calc_width(0);
+		vidDecoder.setMax_brightness_calc_width(200);
 		//
 		vidDecoder.setMin_similarity_skip_threshold(0.95);
-		vidDecoder.setMax_similarity_compare_width(0);
+		vidDecoder.setMax_similarity_compare_width(500);
 		//
 	
 		vidDecoder.processVideo(file,0,5000);
