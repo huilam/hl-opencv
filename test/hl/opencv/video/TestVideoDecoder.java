@@ -31,59 +31,64 @@ public class TestVideoDecoder extends VideoDecoder {
 	public File fileOutput = null;
 	
 	@Override 
-	public boolean processStarted( String aVideoFileName, 
-			long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
-			long aSelectedFrameCount, double aFps, long aSelectedDurationMs)
+	public boolean processStarted(String aVideoFileName, 
+			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
+			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println();
 		System.out.println("[START] "+aVideoFileName);
-		System.out.println(" - From :"+toDurationStr(aFrameTimestampFrom)+" To :"+toDurationStr(aFrameTimestampTo));
+		System.out.println(" - From :"+toDurationStr(aAdjSelFrameMsFrom)+" To :"+toDurationStr(aAdjSelFrameMsTo));
 		System.out.println(" - Resolution : "+aResWidth+"x"+aResHeight);
 		System.out.println(" - FPS : "+aFps);
 		System.out.println(" - Duration : "+ toDurationStr(aSelectedDurationMs));
-		System.out.println(" - Est. TotalFrames : "+ aSelectedFrameCount);
+		System.out.println(" - Est. TotalFrames : "+ aTotalSelectedFrames);
 		System.out.println();
 		return true;
 	}
 	
 	@Override 
-	public Mat decodedVideoFrame(
-			String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameMs, double aProgressPercentage)
+	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
 	{
-		System.out.print("#"+aFrameNo+" - "+aFrameMs+"ms "+toDurationStr(aFrameMs)+" ... "+aProgressPercentage+"%");
+		System.out.print("#"+aCurFrameNo+" - "+aCurFrameMs+"ms "+toDurationStr(aCurFrameMs)+" ... "+aProgressPercentage+"%");
 				
 		System.out.println();
 		return matFrame;
 	}
 	
 	@Override 
-	public Mat skippedVideoFrame(
-			String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameMs, double aProgressPercentage, String aReasonCode, double aScore)
+	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore)
 	{
-		System.out.print("[SKIPPED] #"+aFrameNo+" - "+aFrameMs+"ms - "+aReasonCode+":"+aScore+" ... "+aProgressPercentage+"%");
+		System.out.print("[SKIPPED] #"+aCurFrameNo+" - "+aCurFrameMs+"ms - "+aReason+":"+aScore+" ... "+aProgressPercentage+"%");
 		System.out.println();
 		
 		if(fileOutput!=null)
 		{
-			String sOutputPath = fileOutput.getAbsolutePath()+"/skipped/"+aReasonCode+"/";
+			String sOutputPath = fileOutput.getAbsolutePath()+"/skipped/"+aReason+"/";
 			new File(sOutputPath).mkdirs();
-			OpenCvUtil.saveImageAsFile(matFrame, sOutputPath+aVideoFileName+"_"+aFrameNo+"_skipped.jpg");
+			OpenCvUtil.saveImageAsFile(matFrame, sOutputPath+aVideoFileName+"_"+aCurFrameNo+"_skipped.jpg");
 		}
 		
 		return matFrame;
 	}
 	
 	@Override 
-	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
+	public Mat processAborted(String aVideoFileName, Mat matFrame, 
+			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason)
+	{
+		return matFrame;
+	}
+	
+	@Override 
+	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoFileName);
 		double dMsPerFrame = ((double)aElpasedMs) / ((double)aTotalProcessed);
-		long lDurationMs = aToTimeMs - aFromTimeMs;
-		System.out.println(" - Process From/To: "+toDurationStr(aFromTimeMs)+" / "+toDurationStr(aToTimeMs)+" ("+lDurationMs +" ms)");
+		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
+		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
 		System.out.println(" - Total Elapsed/Processed : "+aElpasedMs+" ms / "+aTotalProcessed+" = "+dMsPerFrame+" ms");
 		System.out.println(" - Total Skipped : "+aTotalSkipped);
 	}
@@ -92,6 +97,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		OpenCvUtil.initOpenCV();
 		
+//		File file = new File("./test/videos/nls/XinLai.mp4");
 		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		vidDecoder.fileOutput = null; //new File("./test/videos/bdd100k/output");
@@ -100,13 +106,13 @@ public class TestVideoDecoder extends VideoDecoder {
 		//
 		vidDecoder.setBgref_mat(null);
 		//
-		vidDecoder.setMin_brightness_skip_threshold(0.15);
+		vidDecoder.setMin_brightness_skip_threshold(0.0);
 		vidDecoder.setMax_brightness_calc_width(200);
 		//
-		vidDecoder.setMin_similarity_skip_threshold(0.98);
+		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideo(file, 0, 60000);
+		vidDecoder.processVideo(file, 0, 0);
 	}
 		
 }

@@ -112,22 +112,25 @@ public class VideoDecoder {
 		return jsonMeta;
 	}
 	
-	public long processVideo(File aVideoFile, long aFrameTimestamp)
+	public long processVideo(File aVideoFile, final long aFrameTimestamp)
 	{
 		return processVideo(aVideoFile, aFrameTimestamp, -1);
 	}
 	
-	public long processVideo(File aVideoFile, long aFrameTimestampFrom, long aFrameTimestampTo)
+	public long processVideo(File aVideoFile, final long aFrameTimestampFrom, final long aFrameTimestampTo)
 	{
 		VideoCapture vid = null;
 		Mat matFrame = null;
 		
-		Mat matPrevDescriptors = null;
-		Mat matCurDescriptors = null;
+		Mat matPrevDescriptors 	= null;
+		Mat matCurDescriptors 	= null;
 		
 		long lCurrentFrameNo 	= 0;
-		long lActualProcessed = 0;
+		long lActualProcessed 	= 0;
 		long lActualSkipped 	= 0;
+		
+		long lAdjSelFrameMsFrom	= aFrameTimestampFrom;
+		long lAdjSelFrameMsTo	= aFrameTimestampTo;
 
 		try{
 			matFrame = new Mat();
@@ -144,46 +147,46 @@ public class VideoDecoder {
 				int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
 				int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
 				
-				if(aFrameTimestampTo > dTotalDurationMs)
+				if(lAdjSelFrameMsTo > dTotalDurationMs)
 				{
-					aFrameTimestampTo = (long) dTotalDurationMs;
+					lAdjSelFrameMsFrom = (long) dTotalDurationMs;
 				}
 				
 				// Adjust
-				if(aFrameTimestampFrom>0)
+				if(lAdjSelFrameMsFrom>0)
 				{
 					long lAdjFrameStartMs = 0;
-					while(lAdjFrameStartMs < aFrameTimestampFrom)
+					while(lAdjFrameStartMs < lAdjSelFrameMsFrom)
 					{
 						lCurrentFrameNo++;
 						lAdjFrameStartMs += dFrameMs;
 					}
-					aFrameTimestampFrom = lAdjFrameStartMs;
+					lAdjSelFrameMsFrom = lAdjFrameStartMs;
 				}
-				if(aFrameTimestampTo>0)
+				if(lAdjSelFrameMsTo>0)
 				{
 					long lAdjFrameEndMs = 0;
-					while(lAdjFrameEndMs < aFrameTimestampTo)
+					while(lAdjFrameEndMs < lAdjSelFrameMsTo)
 					{
 						lAdjFrameEndMs += dFrameMs;
 					}
-					if(lAdjFrameEndMs>aFrameTimestampTo)
+					if(lAdjFrameEndMs>lAdjSelFrameMsTo)
 					{
 						lAdjFrameEndMs -= dFrameMs;
 					}
-					aFrameTimestampTo = lAdjFrameEndMs;
+					lAdjSelFrameMsTo = lAdjFrameEndMs;
 				}
 				else
 				{
-					aFrameTimestampTo = (long)dTotalDurationMs;
+					lAdjSelFrameMsTo = (long)dTotalDurationMs;
 				}
 				////////////
 				
-				double dTotalSelectedDurationMs = aFrameTimestampTo - aFrameTimestampFrom;
+				double dTotalSelectedDurationMs = lAdjSelFrameMsTo - lAdjSelFrameMsFrom;
 				double dTotalSelectedFrames = dTotalSelectedDurationMs / dFrameMs;
 				
 				boolean isProcessVideo = processStarted( sVideoFileName, 
-						aFrameTimestampFrom, aFrameTimestampTo, iWidth, iHeight, 
+						lAdjSelFrameMsFrom, lAdjSelFrameMsTo, iWidth, iHeight, 
 						(long)dTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
 				if(!isProcessVideo)
@@ -194,21 +197,21 @@ public class VideoDecoder {
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
-				long lCurFrameTimestamp = aFrameTimestampFrom - (long)dFrameMs;
-				vid.set(Videoio.CAP_PROP_POS_MSEC, aFrameTimestampFrom);
+				long lCurFrameTimestamp = lAdjSelFrameMsFrom - (long)dFrameMs;
+				vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
 				
 				double dProgressPercentage = 0.0;
 				while(vid.read(matFrame))
 				{
 					lCurFrameTimestamp += dFrameMs;
-					if(lCurFrameTimestamp > aFrameTimestampTo)
+					if(lCurFrameTimestamp > lAdjSelFrameMsTo)
 					{
 						break;
 					}
 					lCurrentFrameNo++;
 					lActualProcessed++;
 						
-					dProgressPercentage = Math.round((double)lActualProcessed / (dTotalSelectedFrames+1) * 100.0);
+					dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
 					
 					double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
 					if(dBrightness<this.min_brightness_skip_threshold)
@@ -257,9 +260,9 @@ public class VideoDecoder {
 		
 						}
 						
-						if(lCurFrameTimestamp>=aFrameTimestampFrom)
+						if(lCurFrameTimestamp>=lAdjSelFrameMsFrom)
 						{
-							if(lCurFrameTimestamp<=aFrameTimestampTo || aFrameTimestampTo==-1)
+							if(lCurFrameTimestamp<=lAdjSelFrameMsTo || lAdjSelFrameMsTo==-1)
 							{
 								matFrame = decodedVideoFrame(
 										sVideoFileName, matFrame, 
@@ -278,7 +281,7 @@ public class VideoDecoder {
 				
 				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
 				
-				processEnded(sVideoFileName, aFrameTimestampFrom, aFrameTimestampTo, 
+				processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
 						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			}
 		}finally
@@ -303,31 +306,32 @@ public class VideoDecoder {
 	
 	///// 
 	public boolean processStarted(String aVideoFileName, 
-			long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
+			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		return true;
 	}
 	
-	public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
+	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
+		
 	}
 	
 	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameTimestamp, double aProgressPercentage, String aReasonCode, double aScore)
+			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore)
 	{
 		return matFrame;
 	}
 	
 	public Mat processAborted(String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameTimestamp,  double aProgressPercentage, String aReasonCode)
+			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason)
 	{
 		return matFrame;
 	}
 
 	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
-			long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
+			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
 	{
 		return matFrame;
 	}
