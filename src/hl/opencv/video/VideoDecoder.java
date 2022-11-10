@@ -23,6 +23,8 @@
 package hl.opencv.video;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
@@ -33,6 +35,8 @@ import hl.opencv.image.ImageProcessor;
 import hl.opencv.util.OpenCvUtil;
 
 public class VideoDecoder {
+	
+	private static Logger logger = Logger.getLogger(VideoDecoder.class.getName());
 	
 	private static long SECOND_MS 	= 1000;
 	private static long MINUTE_MS 	= SECOND_MS * 60;
@@ -90,35 +94,75 @@ public class VideoDecoder {
 	{
 		JSONObject jsonMeta = new JSONObject();
 		
-		VideoCapture vid = null;
-		try {
-			vid = new VideoCapture(aVideoFile.getAbsolutePath());
-			if(vid.isOpened())
-			{
-				jsonMeta.put("CAP_PROP_FPS", vid.get(Videoio.CAP_PROP_FPS));
-				jsonMeta.put("CAP_PROP_BITRATE", vid.get(Videoio.CAP_PROP_BITRATE));
-				//
-				jsonMeta.put("CAP_PROP_FRAME_COUNT", vid.get(Videoio.CAP_PROP_FRAME_COUNT));
-				jsonMeta.put("CAP_PROP_FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
-				jsonMeta.put("CAP_PROP_FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
-				//
-			}
-		}
-		finally
+		if(validateInput(aVideoFile,0,0))
 		{
-			if(vid!=null)
-				vid.release();
+			VideoCapture vid = null;
+			try {
+				vid = new VideoCapture(aVideoFile.getAbsolutePath());
+				if(vid.isOpened())
+				{
+					jsonMeta.put("CAP_PROP_FPS", vid.get(Videoio.CAP_PROP_FPS));
+					jsonMeta.put("CAP_PROP_BITRATE", vid.get(Videoio.CAP_PROP_BITRATE));
+					//
+					jsonMeta.put("CAP_PROP_FRAME_COUNT", vid.get(Videoio.CAP_PROP_FRAME_COUNT));
+					jsonMeta.put("CAP_PROP_FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+					jsonMeta.put("CAP_PROP_FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+					//
+				}
+			}
+			finally
+			{
+				if(vid!=null)
+					vid.release();
+			}
 		}
 		return jsonMeta;
 	}
 	
-	public long processVideo(File aVideoFile, final long aFrameTimestamp)
+	private boolean validateInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
-		return processVideo(aVideoFile, aFrameTimestamp, -1);
+		boolean isOk = true;
+		if(aVideoFile==null || !aVideoFile.isFile())
+		{
+			isOk = false;
+			logger.log(Level.SEVERE, "Please make sure input file is a valid video file.");
+		}
+		else
+		{
+			String sFileName = aVideoFile.getName().toLowerCase();
+			isOk = (sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv") || sFileName.endsWith(".avi"));
+		}
+		
+		if(!isOk)
+		{
+			logger.log(Level.SEVERE, "Please make sure input file is a valid video file.");
+		}
+		///////////////////////
+		
+		if(isOk && aSelectedTimestampFrom >-1 && aSelectedTimestampTo >-1)
+		{
+			if(aSelectedTimestampFrom > aSelectedTimestampTo)
+			{
+				isOk = false;
+				logger.log(Level.SEVERE, "Please make sure 'to' is greater than 'from' timestamp.");
+			}
+		}
+		
+		return isOk;
 	}
 	
-	public long processVideo(File aVideoFile, final long aFrameTimestampFrom, final long aFrameTimestampTo)
+	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom) 
 	{
+		return processVideo(aVideoFile, aSelectedTimestampFrom, -1);
+	}
+	
+	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	{
+		if(!validateInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo))
+		{
+			return -1;
+		}
+		
 		VideoCapture vid = null;
 		Mat matFrame = null;
 		
@@ -129,8 +173,11 @@ public class VideoDecoder {
 		long lActualProcessed 	= 0;
 		long lActualSkipped 	= 0;
 		
-		long lAdjSelFrameMsFrom	= aFrameTimestampFrom;
-		long lAdjSelFrameMsTo	= aFrameTimestampTo;
+		long lAdjSelFrameMsFrom	= aSelectedTimestampFrom;
+		long lAdjSelFrameMsTo	= aSelectedTimestampTo;
+		
+		if(lAdjSelFrameMsFrom<0)
+			lAdjSelFrameMsFrom = 0;
 
 		try{
 			matFrame = new Mat();
@@ -149,7 +196,7 @@ public class VideoDecoder {
 				
 				if(lAdjSelFrameMsTo > dTotalDurationMs)
 				{
-					lAdjSelFrameMsFrom = (long) dTotalDurationMs;
+					lAdjSelFrameMsTo = (long) dTotalDurationMs;
 				}
 				
 				// Adjust
@@ -163,7 +210,19 @@ public class VideoDecoder {
 					}
 					lAdjSelFrameMsFrom = lAdjFrameStartMs;
 				}
-				if(lAdjSelFrameMsTo>0)
+				
+				if(aSelectedTimestampFrom == aSelectedTimestampTo)
+				{
+					if(lAdjSelFrameMsFrom != aSelectedTimestampFrom)
+					{
+						if(lAdjSelFrameMsFrom > aSelectedTimestampTo)
+						{
+							lAdjSelFrameMsFrom = 0;
+						}
+					}
+				}
+						
+				if(lAdjSelFrameMsTo>=0)
 				{
 					long lAdjFrameEndMs = 0;
 					while(lAdjFrameEndMs < lAdjSelFrameMsTo)
@@ -180,10 +239,17 @@ public class VideoDecoder {
 				{
 					lAdjSelFrameMsTo = (long)dTotalDurationMs;
 				}
+				
 				////////////
 				
+				
 				double dTotalSelectedDurationMs = lAdjSelFrameMsTo - lAdjSelFrameMsFrom;
-				double dTotalSelectedFrames = dTotalSelectedDurationMs / dFrameMs;
+				double dTotalSelectedFrames = (dTotalSelectedDurationMs / dFrameMs);
+				
+				if(dFrameMs%10>0)
+				{
+					dTotalSelectedFrames++;
+				}
 				
 				boolean isProcessVideo = processStarted( sVideoFileName, 
 						lAdjSelFrameMsFrom, lAdjSelFrameMsTo, iWidth, iHeight, 
@@ -299,7 +365,7 @@ public class VideoDecoder {
 		return (long)lActualProcessed;
 	}
 	
-	public long processVideo(File fileVideo)
+	public long processVideo(File fileVideo) throws Exception
 	{
 		return processVideo(fileVideo, 0, -1);
 	}
