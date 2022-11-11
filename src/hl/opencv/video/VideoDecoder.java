@@ -365,7 +365,7 @@ public class VideoDecoder {
 		return (long)lActualProcessed;
 	}
 	
-	public long processVideo(File fileVideo) throws Exception
+	public long processVideo(File fileVideo)
 	{
 		return processVideo(fileVideo, 0, -1);
 	}
