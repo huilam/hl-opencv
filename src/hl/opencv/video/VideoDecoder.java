@@ -244,7 +244,7 @@ public class VideoDecoder {
 				
 				
 				double dTotalSelectedDurationMs = lAdjSelFrameMsTo - lAdjSelFrameMsFrom;
-				double dTotalSelectedFrames = (dTotalSelectedDurationMs / dFrameMs);
+				double dTotalSelectedFrames = Math.ceil(dTotalSelectedDurationMs/1000 * dFps);
 				
 				if(dFrameMs%10>0)
 				{

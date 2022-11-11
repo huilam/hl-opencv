@@ -33,7 +33,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	@Override 
 	public boolean processStarted(String aVideoFileName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
-			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
+			long aTotalEstSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println();
 		System.out.println("[START] "+aVideoFileName);
@@ -41,7 +41,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		System.out.println(" - Resolution : "+aResWidth+"x"+aResHeight);
 		System.out.println(" - FPS : "+aFps);
 		System.out.println(" - Duration : "+ toDurationStr(aSelectedDurationMs));
-		System.out.println(" - Est. TotalFrames : "+ aTotalSelectedFrames);
+		System.out.println(" - Est. TotalFrames : "+ aTotalEstSelectedFrames);
 		System.out.println();
 		return true;
 	}
@@ -111,7 +111,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideo(file, -1, 500000);
+		vidDecoder.processVideo(file);
 	}
 		
 }
