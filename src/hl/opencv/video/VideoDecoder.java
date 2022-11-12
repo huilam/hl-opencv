@@ -284,14 +284,17 @@ public class VideoDecoder {
 						
 					dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
 					
-					double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
-					if(dBrightness<this.min_brightness_skip_threshold)
+					if(this.min_brightness_skip_threshold>0)
 					{
-						skippedVideoFrame(sVideoFileName, matFrame, 
-								lCurrentFrameNo, lCurFrameTimestamp, 
-								dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
-						lActualSkipped++;
-						continue;
+						double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
+						if(dBrightness < this.min_brightness_skip_threshold)
+						{
+							skippedVideoFrame(sVideoFileName, matFrame, 
+									lCurrentFrameNo, lCurFrameTimestamp, 
+									dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
+							lActualSkipped++;
+							continue;
+						}
 					}
 					
 					if(this.bgref_mat!=null)
