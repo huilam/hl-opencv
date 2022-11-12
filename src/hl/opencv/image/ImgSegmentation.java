@@ -22,33 +22,28 @@
 
 package hl.opencv.image;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import hl.opencv.util.OpenCvUtil;
 
-public class ImageProcessor {
+public class ImgSegmentation {
 	
-	//
-	private double min_brightness_score 	= 0.0;
-	private int max_brightness_calc_width 	= 100;
+	private static Logger logger = Logger.getLogger(ImgSegmentation.class.getName());
+	
 	//
 	private Mat background_ref_mat 			= null;
 	private double min_bgref_threshold 		= 0.18;
 	//
 	
-	public ImageProcessor()
+	public ImgSegmentation()
 	{
 		this.background_ref_mat = null;
 	}
-	////
-	public double getMin_brightness_score() {
-		return min_brightness_score;
-	}
-	public void setMin_brightness_score(double min_brightness_score) {
-		this.min_brightness_score = min_brightness_score;
-	}
-	////
+	
 	public Mat getBackground_ref_mat() {
 		return background_ref_mat;
 	}
@@ -64,36 +59,17 @@ public class ImageProcessor {
 	}
 	////
 	
-	public ImageProcessor(Mat aMatBackgroundRef)
+	public Mat extractForeground(Mat aMatImage)
 	{
-		if(aMatBackgroundRef!=null)
-		{
-			if(!aMatBackgroundRef.empty())
-			{
-				this.background_ref_mat = aMatBackgroundRef;
-			}
-		}
-	}
-	
-	public boolean processImage(Mat aMatImage)
-	{
+		Mat matForeground 	= aMatImage;
+		
 		if(aMatImage!=null)
 		{
-			if(this.min_brightness_score>0 && this.min_brightness_score<=1.0)
-			{
-				double dBrightness = OpenCvUtil.calcBrightness(
-						aMatImage, null, this.max_brightness_calc_width);
-				if(dBrightness<this.min_brightness_score)
-				{
-					return false;
-				}
-			}
-			
-			if(this.background_ref_mat!=null)
+			if(this.background_ref_mat!=null && !this.background_ref_mat.empty())
 			{
 				try {
 					Mat matMask 	= null;
-					Mat matOutput 	= null;
+					
 					try {
 						matMask = OpenCvUtil.extractFGMask(
 										aMatImage, 
@@ -102,33 +78,22 @@ public class ImageProcessor {
 						
 						if(matMask!=null)
 						{
-							matOutput = new Mat();
-							Core.copyTo(aMatImage, matOutput, matMask);
-							
-							if(matOutput!=null)
-							{
-								matOutput.copyTo(aMatImage);
-							}
+							matForeground = new Mat();
+							Core.copyTo(aMatImage, matForeground, matMask);
 						}
 					}
 					finally
 					{
 						if(matMask!=null)
 							matMask.release();
-						
-						if(matOutput!=null)
-							matOutput.release();
 					}
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return false;
+					logger.log(Level.SEVERE, e.getMessage());
+					return null;
 				}
 			}
 		}
-		
-		
-		return true;
+		return matForeground;
 	}
 	
 }

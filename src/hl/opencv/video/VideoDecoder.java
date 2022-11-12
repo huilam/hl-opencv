@@ -31,7 +31,7 @@ import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
-import hl.opencv.image.ImageProcessor;
+import hl.opencv.image.ImgSegmentation;
 import hl.opencv.util.OpenCvUtil;
 
 public class VideoDecoder {
@@ -43,7 +43,6 @@ public class VideoDecoder {
 	private static long HOUR_MS 	= MINUTE_MS * 60;
 	
 	private static String EVENT_BRIGHTNESS 		= "BRIGHTNESS";
-	private static String EVENT_SEGMENTATION 	= "SEGMENTATION";
 	private static String EVENT_SIMILARITY 		= "SIMILARITY";
 	private static String EVENT_NULLFRAME 		= "NULL_FRAME";
 	
@@ -94,7 +93,7 @@ public class VideoDecoder {
 	{
 		JSONObject jsonMeta = new JSONObject();
 		
-		if(validateInput(aVideoFile,0,0))
+		if(validateInput(aVideoFile,0,0)==0)
 		{
 			VideoCapture vid = null;
 			try {
@@ -119,36 +118,41 @@ public class VideoDecoder {
 		return jsonMeta;
 	}
 	
-	private boolean validateInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	private int validateInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
-		boolean isOk = true;
+		int iErrCode = 0;
 		if(aVideoFile==null || !aVideoFile.isFile())
 		{
-			isOk = false;
+			iErrCode = -1;
 			logger.log(Level.SEVERE, "Please make sure input file is a valid video file.");
 		}
 		else
 		{
 			String sFileName = aVideoFile.getName().toLowerCase();
-			isOk = (sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv") || sFileName.endsWith(".avi"));
+			if(sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv") || sFileName.endsWith(".avi"))
+			{
+			}else
+			{
+				iErrCode = -2;
+			}
 		}
 		
-		if(!isOk)
+		if(iErrCode<0)
 		{
 			logger.log(Level.SEVERE, "Please make sure input file is a valid video file.");
 		}
 		///////////////////////
 		
-		if(isOk && aSelectedTimestampFrom >-1 && aSelectedTimestampTo >-1)
+		if(iErrCode==0 && aSelectedTimestampFrom >-1 && aSelectedTimestampTo >-1)
 		{
 			if(aSelectedTimestampFrom > aSelectedTimestampTo)
 			{
-				isOk = false;
+				iErrCode = -3;
 				logger.log(Level.SEVERE, "Please make sure 'to' is greater than 'from' timestamp.");
 			}
 		}
 		
-		return isOk;
+		return iErrCode;
 	}
 	
 	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom) 
@@ -158,9 +162,10 @@ public class VideoDecoder {
 	
 	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
-		if(!validateInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo))
+		int iErrCode = validateInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo);
+		if(iErrCode<0)
 		{
-			return -1;
+			return iErrCode;
 		}
 		
 		VideoCapture vid = null;
@@ -258,8 +263,8 @@ public class VideoDecoder {
 				if(!isProcessVideo)
 					return 0;
 				
-				ImageProcessor imgProcessor = new ImageProcessor();
-				imgProcessor.setBackground_ref_mat(this.bgref_mat);
+				ImgSegmentation imgSegment = new ImgSegmentation();
+				imgSegment.setBackground_ref_mat(this.bgref_mat);
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
@@ -289,14 +294,9 @@ public class VideoDecoder {
 						continue;
 					}
 					
-					boolean isOk = imgProcessor.processImage(matFrame);
-					if(!isOk)
+					if(this.bgref_mat!=null)
 					{
-						skippedVideoFrame(sVideoFileName, matFrame, 
-								lCurrentFrameNo, lCurFrameTimestamp, 
-								dProgressPercentage, EVENT_SEGMENTATION, 0);
-						lActualSkipped++;
-						continue;
+						matFrame = imgSegment.extractForeground(matFrame);
 					}
 					
 					if(matFrame!=null)
