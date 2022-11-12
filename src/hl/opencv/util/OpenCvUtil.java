@@ -310,7 +310,7 @@ public class OpenCvUtil{
 		}
 		else
 		{
-			return null;
+			return aMatImg;
 		}
 	}
 	
@@ -643,7 +643,7 @@ public class OpenCvUtil{
 		Mat matMask1 = null;
 		
 		try {
-			if(aSamplingWidth>0)
+			if(aSamplingWidth>0 && mat1.width()>0)
 			{
 				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
 					aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
@@ -655,12 +655,12 @@ public class OpenCvUtil{
 			
 			if(aBgMat!=null && !aBgMat.empty())
 			{
-				if(aBgMat.width()!=mat1.width())
+				if(aBgMat.width()!=mat1.width() && mat1.width()>0)
 				{
 					aBgMat = OpenCvUtil.resize(aBgMat, mat1.width(), mat1.height(), false);
 				}
 				
-				if(aBgMat.channels()==1)
+				if(aBgMat!=null && aBgMat.channels()==1)
 				{
 					matMask1 = aBgMat;
 				}
