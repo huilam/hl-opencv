@@ -111,12 +111,15 @@ public class VideoDecoder {
 				vid = new VideoCapture(aVideoFile.getAbsolutePath());
 				if(vid.isOpened())
 				{
-					int iTotalFrameCount = (int)vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+					double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 					double dFps = vid.get(Videoio.CAP_PROP_FPS);
+					
+					double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
 					//
 					jsonMeta.put("FPS", dFps);
+					jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
 					//
-					jsonMeta.put("FRAME_COUNT", iTotalFrameCount);
+					jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
 					jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
 					jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
 					//
@@ -153,7 +156,7 @@ public class VideoDecoder {
 									}
 								}
 								iSearchFrame += Math.ceil(dFps);
-								if(iSearchFrame>iTotalFrameCount)
+								if(iSearchFrame>dTotalFrameCount)
 								{
 									break;
 								}
