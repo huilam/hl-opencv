@@ -91,6 +91,17 @@ public class VideoDecoder {
 	
 	public JSONObject getVideoMetadata(File aVideoFile)
 	{
+		return getVideoMetadata(aVideoFile, false);
+	}
+	
+	public JSONObject getVideoMetadata(File aVideoFile, boolean isShowPreview)
+	{
+		return getVideoMetadata(aVideoFile, isShowPreview, 200);
+	}
+	
+	
+	public JSONObject getVideoMetadata(File aVideoFile, boolean isShowPreview, int aPreviewWidth)
+	{
 		JSONObject jsonMeta = new JSONObject();
 		
 		if(validateInput(aVideoFile,0,0)==0)
@@ -100,13 +111,63 @@ public class VideoDecoder {
 				vid = new VideoCapture(aVideoFile.getAbsolutePath());
 				if(vid.isOpened())
 				{
-					jsonMeta.put("CAP_PROP_FPS", vid.get(Videoio.CAP_PROP_FPS));
-					jsonMeta.put("CAP_PROP_BITRATE", vid.get(Videoio.CAP_PROP_BITRATE));
+					int iTotalFrameCount = (int)vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+					double dFps = vid.get(Videoio.CAP_PROP_FPS);
 					//
-					jsonMeta.put("CAP_PROP_FRAME_COUNT", vid.get(Videoio.CAP_PROP_FRAME_COUNT));
-					jsonMeta.put("CAP_PROP_FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
-					jsonMeta.put("CAP_PROP_FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+					jsonMeta.put("FPS", dFps);
 					//
+					jsonMeta.put("FRAME_COUNT", iTotalFrameCount);
+					jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+					jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+					//
+					jsonMeta.put("FILE_SIZE", aVideoFile.length());
+					jsonMeta.put("FILE_LAST_MODIFIED", aVideoFile.lastModified());
+					//
+					
+					if(isShowPreview)
+					{
+						JSONObject jsonSampling = new JSONObject();
+						String sJpgBase64 = null;
+						Mat matSample = new Mat();
+						try {
+						
+							int iSearchFrame = 2;
+							double dBrightness = 0.0;
+							
+							vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
+							while(vid.read(matSample)) 
+							{	
+								if(!matSample.empty())
+								{
+									dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
+									if(dBrightness>0.15)
+									{
+										if(aPreviewWidth>0)
+										{
+											matSample = OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
+										}
+										sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
+										jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
+										
+										break;
+									}
+								}
+								iSearchFrame += Math.ceil(dFps);
+								if(iSearchFrame>iTotalFrameCount)
+								{
+									break;
+								}
+								vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
+							}
+						}
+						finally
+						{
+							if(matSample!=null)
+								matSample.release();
+						}
+						jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
+					}
+					
 				}
 			}
 			finally
