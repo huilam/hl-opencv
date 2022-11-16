@@ -24,12 +24,11 @@ package hl.opencv.util;
 
 import java.io.File;
 import org.opencv.core.Mat;
-
-import hl.opencv.image.ImageProcessor;
+import hl.opencv.image.ImgSegmentation;
 
 public class TestFGMask extends TestFileBaseProcessor {
 	
-	private static ImageProcessor imgProcessor = null;
+	private static ImgSegmentation imgSegment = null;
 	private static File fileImageOutput = null;
 	
 	@Override 
@@ -38,7 +37,8 @@ public class TestFGMask extends TestFileBaseProcessor {
 		Mat matFile = OpenCvUtil.loadImage(aImageFile.getAbsolutePath());
 		System.out.println(" - "+aImageFile.getName()+" : "+matFile.width()+"x"+matFile.height());
 		
-		if(imgProcessor.processImage(matFile))
+		matFile = imgSegment.extractForeground(matFile);
+		if(matFile!=null)
 		{
 			String sOutputFileName = fileImageOutput.getAbsolutePath()+"/"+aImageFile.getName();
 			System.out.println(sOutputFileName);
@@ -59,8 +59,8 @@ public class TestFGMask extends TestFileBaseProcessor {
 		
 		Mat matBgRefImage = OpenCvUtil.loadImage(fileBgImage.getAbsolutePath());
 		
-		imgProcessor = new ImageProcessor();
-		imgProcessor.setBackground_ref_mat(matBgRefImage);
+		imgSegment = new ImgSegmentation();
+		imgSegment.setBackground_ref_mat(matBgRefImage);
 		
 		TestFileBaseProcessor processor = new TestFGMask();
 		
