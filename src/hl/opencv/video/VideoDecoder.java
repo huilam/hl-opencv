@@ -234,7 +234,6 @@ public class VideoDecoder {
 		
 		VideoCapture vid = null;
 		Mat matFrame 		= new Mat();
-		Mat matNextFrame 	= new Mat();
 		
 		Mat matPrevDescriptors 	= null;
 		Mat matCurDescriptors 	= null;
@@ -336,14 +335,11 @@ public class VideoDecoder {
 				vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
 				
 				double dProgressPercentage = 0.0;
-				
-				if(vid.read(matFrame))
+			
+				if(vid.grab())
 				{
-					boolean hasMoreFrames = true;
-					while(hasMoreFrames)
+					while(vid.retrieve(matFrame))
 					{
-						hasMoreFrames = vid.read(matNextFrame);
-						
 						lCurFrameTimestamp += dFrameMs;
 						if(lCurFrameTimestamp > lAdjSelFrameMsTo)
 						{
@@ -352,7 +348,7 @@ public class VideoDecoder {
 						lCurrentFrameNo++;
 						lActualProcessed++;
 							
-						if(hasMoreFrames)
+						if(vid.grab())
 						{
 							dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
 						}
@@ -424,14 +420,13 @@ public class VideoDecoder {
 							break;
 						}
 					}
-					
-					long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-					
-					processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
-							(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
-					
-					matFrame = matNextFrame;
 				}
+				
+				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
+				
+				processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
+				
 			}
 		}finally
 		{
@@ -440,9 +435,6 @@ public class VideoDecoder {
 			
 			if(matFrame!=null)
 				matFrame.release();
-			
-			if(matNextFrame!=null)
-				matNextFrame.release();
 			
 			if(matCurDescriptors!=null)
 				matCurDescriptors.release();
