@@ -97,7 +97,8 @@ public class TestVideoDecoder extends VideoDecoder {
 	{
 		OpenCvUtil.initOpenCV();
 		
-		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
+		File file = new File("./test/videos/crl/trimmed_10sec.mkv");
+		//File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		vidDecoder.fileOutput = null; //new File("./test/videos/bdd100k/output");
 		//
@@ -111,7 +112,7 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_similarity_skip_threshold(0.0);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		//vidDecoder.processVideo(file);
+		vidDecoder.processVideo(file);
 	}
 		
 }

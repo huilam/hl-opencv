@@ -233,7 +233,8 @@ public class VideoDecoder {
 		}
 		
 		VideoCapture vid = null;
-		Mat matFrame = null;
+		Mat matFrame 		= new Mat();
+		Mat matNextFrame 	= new Mat();
 		
 		Mat matPrevDescriptors 	= null;
 		Mat matCurDescriptors 	= null;
@@ -249,7 +250,6 @@ public class VideoDecoder {
 			lAdjSelFrameMsFrom = 0;
 
 		try{
-			matFrame = new Mat();
 			vid = new VideoCapture(aVideoFile.getAbsolutePath());
 			if(vid.isOpened())
 			{
@@ -336,91 +336,113 @@ public class VideoDecoder {
 				vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
 				
 				double dProgressPercentage = 0.0;
-				while(vid.read(matFrame))
+				
+				if(vid.read(matFrame))
 				{
-					lCurFrameTimestamp += dFrameMs;
-					if(lCurFrameTimestamp > lAdjSelFrameMsTo)
+					boolean hasMoreFrames = true;
+					while(hasMoreFrames)
 					{
-						break;
-					}
-					lCurrentFrameNo++;
-					lActualProcessed++;
+						hasMoreFrames = vid.read(matNextFrame);
 						
-					dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
-					
-					if(this.min_brightness_skip_threshold>0)
-					{
-						double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
-						if(dBrightness < this.min_brightness_skip_threshold)
+						lCurFrameTimestamp += dFrameMs;
+						if(lCurFrameTimestamp > lAdjSelFrameMsTo)
 						{
-							skippedVideoFrame(sVideoFileName, matFrame, 
-									lCurrentFrameNo, lCurFrameTimestamp, 
-									dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
-							lActualSkipped++;
-							continue;
+							break;
 						}
-					}
-					
-					if(this.bgref_mat!=null)
-					{
-						matFrame = imgSegment.extractForeground(matFrame);
-					}
-					
-					if(matFrame!=null)
-					{
-						if(this.min_similarity_skip_threshold>0)
-						{
-							matCurDescriptors = OpenCvUtil.getImageSimilarityDescriptors(
-									matFrame, this.max_similarity_compare_width);
+						lCurrentFrameNo++;
+						lActualProcessed++;
 							
-							if(matPrevDescriptors!=null)
+						if(hasMoreFrames)
+						{
+							dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
+						}
+						else
+						{
+							dProgressPercentage = 100.0;
+						}
+						
+						if(this.min_brightness_skip_threshold>0)
+						{
+							double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
+							if(dBrightness < this.min_brightness_skip_threshold)
 							{
-								double dSimilarityScore = OpenCvUtil.calcDescriptorSimilarity(
-										matCurDescriptors, 
-										matPrevDescriptors);
-
-								if(dSimilarityScore>=this.min_similarity_skip_threshold)
-								{	
-									skippedVideoFrame(sVideoFileName, matFrame, 
-											lCurrentFrameNo, lCurFrameTimestamp, 
-											dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
-									lActualSkipped++;
-									continue;
+								skippedVideoFrame(sVideoFileName, matFrame, 
+										lCurrentFrameNo, lCurFrameTimestamp, 
+										dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
+								lActualSkipped++;
+								continue;
+							}
+						}
+						
+						if(this.bgref_mat!=null)
+						{
+							matFrame = imgSegment.extractForeground(matFrame);
+						}
+						
+						if(matFrame!=null)
+						{
+							if(this.min_similarity_skip_threshold>0)
+							{
+								matCurDescriptors = OpenCvUtil.getImageSimilarityDescriptors(
+										matFrame, this.max_similarity_compare_width);
+								
+								if(matPrevDescriptors!=null)
+								{
+									double dSimilarityScore = OpenCvUtil.calcDescriptorSimilarity(
+											matCurDescriptors, 
+											matPrevDescriptors);
+	
+									if(dSimilarityScore>=this.min_similarity_skip_threshold)
+									{	
+										skippedVideoFrame(sVideoFileName, matFrame, 
+												lCurrentFrameNo, lCurFrameTimestamp, 
+												dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
+										lActualSkipped++;
+										continue;
+									}
+								}
+								
+								matPrevDescriptors = matCurDescriptors;
+			
+							}
+							
+							if(lCurFrameTimestamp>=lAdjSelFrameMsFrom)
+							{
+								if(lCurFrameTimestamp<=lAdjSelFrameMsTo || lAdjSelFrameMsTo==-1)
+								{
+									matFrame = decodedVideoFrame(
+											sVideoFileName, matFrame, 
+											lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
 								}
 							}
-							
-							matPrevDescriptors = matCurDescriptors;
-		
 						}
 						
-						if(lCurFrameTimestamp>=lAdjSelFrameMsFrom)
+						if(matFrame==null)
 						{
-							if(lCurFrameTimestamp<=lAdjSelFrameMsTo || lAdjSelFrameMsTo==-1)
-							{
-								matFrame = decodedVideoFrame(
-										sVideoFileName, matFrame, 
-										lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
-							}
+							processAborted(sVideoFileName, matFrame, 
+									lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
+							break;
 						}
 					}
 					
-					if(matFrame==null)
-					{
-						processAborted(sVideoFileName, matFrame, 
-								lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
-						break;
-					}
+					long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
+					
+					processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+							(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
+					
+					matFrame = matNextFrame;
 				}
-				
-				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-				
-				processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
-						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			}
 		}finally
 		{
 			if(vid!=null)
 				vid.release();
+			
+			if(matFrame!=null)
+				matFrame.release();
+			
+			if(matNextFrame!=null)
+				matNextFrame.release();
 			
 			if(matCurDescriptors!=null)
 				matCurDescriptors.release();
