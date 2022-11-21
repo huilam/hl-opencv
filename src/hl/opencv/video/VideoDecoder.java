@@ -31,6 +31,7 @@ import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import hl.opencv.image.ImgROI;
 import hl.opencv.image.ImgSegmentation;
 import hl.opencv.util.OpenCvUtil;
 
@@ -49,9 +50,13 @@ public class VideoDecoder {
 	////
 	private double min_similarity_skip_threshold = 0.0;
 	private double min_brightness_skip_threshold = 0.0;
+	
 	private int max_brightness_calc_width	 	 = 0;
 	private int max_similarity_compare_width	 = 0;
-	private Mat bgref_mat = null;
+	
+	private Mat mat_roi_mask 	= null;
+	
+	private Mat mat_seg_bgref 	= null;
 	
 	////
 	public double getMin_similarity_skip_threshold() {
@@ -74,11 +79,18 @@ public class VideoDecoder {
 	public void setMax_brightness_calc_width(int max_brightness_calc_width) {
 		this.max_brightness_calc_width = max_brightness_calc_width;
 	}	////
+	public Mat getROI_mat() {
+		return mat_roi_mask;
+	}
+	public void setROI_mat(Mat roi_mat) {
+		this.mat_roi_mask = roi_mat;
+	}
+	////
 	public Mat getBgref_mat() {
-		return bgref_mat;
+		return mat_seg_bgref;
 	}
 	public void setBgref_mat(Mat bgref_mat) {
-		this.bgref_mat = bgref_mat;
+		this.mat_seg_bgref = bgref_mat;
 	}
 	////
 	public int getMax_similarity_compare_width() {
@@ -327,7 +339,10 @@ public class VideoDecoder {
 					return 0;
 				
 				ImgSegmentation imgSegment = new ImgSegmentation();
-				imgSegment.setBackground_ref_mat(this.bgref_mat);
+				imgSegment.setBackground_ref_mat(this.mat_seg_bgref);
+				
+				ImgROI imgROI = new ImgROI();
+				imgROI.setROI_mask(this.mat_roi_mask);
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
@@ -368,11 +383,18 @@ public class VideoDecoder {
 								lActualSkipped++;
 								continue;
 							}
+							
+							
 						}
 						
-						if(this.bgref_mat!=null)
+						if(this.mat_seg_bgref!=null)
 						{
 							matFrame = imgSegment.extractForeground(matFrame);
+						}
+						
+						if(this.mat_roi_mask!=null)
+						{
+							matFrame = imgROI.getImageROI(matFrame);
 						}
 						
 						if(matFrame!=null)
@@ -399,7 +421,6 @@ public class VideoDecoder {
 								}
 								
 								matPrevDescriptors = matCurDescriptors;
-			
 							}
 							
 							if(lCurFrameTimestamp>=lAdjSelFrameMsFrom)

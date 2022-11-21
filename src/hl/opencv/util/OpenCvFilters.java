@@ -37,26 +37,37 @@ public class OpenCvFilters{
 	
 	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
 	{
-		Mat matGray = aMat.clone();
-		int iOrigChannel = aMat.channels();
-		
-		switch(iOrigChannel)
+		if(aMat!=null)
 		{
-			case 3 :  
-				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY);
-				break;
-			case 4 :  
-				Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY);
-				break;
+			Mat matGray = aMat.clone();
+			int iOrigChannel = aMat.channels();
+			
+			switch(iOrigChannel)
+			{
+				case 3 :  
+					Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY);
+					break;
+				case 4 :  
+					Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY);
+					break;
+			}
+			
+			if(isConvertBackOrigType)
+			{
+				matGray = grayToMultiChannel(matGray, iOrigChannel);
+			}
+			
+			return matGray;
 		}
-		
-		if(isConvertBackOrigType)
+		else
 		{
-			matGray = grayToMultiChannel(matGray, iOrigChannel);
+			return null;
 		}
-		
-		//System.out.println("grayscale.channels="+matGray.channels());
-		return matGray;
+	}
+	
+	public static Mat toMask(Mat aMat)
+	{
+		return grayscale(aMat, false);
 	}
 	
 	private static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
