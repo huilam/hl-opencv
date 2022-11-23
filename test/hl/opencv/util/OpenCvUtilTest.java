@@ -93,7 +93,7 @@ public class OpenCvUtilTest{
 				
 				
 				lStart = System.currentTimeMillis();
-				mat = OpenCvUtil.addAlphaChannel(mat);
+				OpenCvUtil.addAlphaChannel(mat);
 				lElapsed2 = getElapsedMs(lStart);
 				System.out.println("  OpenCvUtil.addAlphaChannel() "+" elapsed:"+lElapsed2+"ms");
 				
