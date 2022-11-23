@@ -159,7 +159,7 @@ public class VideoDecoder {
 									{
 										if(aPreviewWidth>0)
 										{
-											matSample = OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
+											OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
 										}
 										sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
 										jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
@@ -394,7 +394,7 @@ public class VideoDecoder {
 						
 						if(this.mat_roi_mask!=null)
 						{
-							matFrame = imgROI.getImageROI(matFrame);
+							imgROI.extractImageROI(matFrame);
 						}
 						
 						if(matFrame!=null)

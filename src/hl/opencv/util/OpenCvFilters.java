@@ -210,19 +210,10 @@ public class OpenCvFilters{
 		if(iNewHeight<=0)
 			iNewHeight = 1;
 		
-		Mat matReturn = null;
-		Mat matPixelated = null;
-		try {
-			
-			matPixelated = OpenCvUtil.resize(aMat.clone(), iNewWidth, iNewHeight, false, Imgproc.INTER_LINEAR_EXACT);
-			matReturn = OpenCvUtil.resize(matPixelated, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST );
-		}
-		finally
-		{
-			if(matPixelated!=null)
-				matPixelated.release();
-		}
-		return matReturn;
+		Mat mat1 = aMat.clone();
+		OpenCvUtil.resize(mat1, iNewWidth, iNewHeight, false, Imgproc.INTER_LINEAR_EXACT);
+		OpenCvUtil.resize(mat1, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST );
+		return mat1;
 	}
 	
 	//

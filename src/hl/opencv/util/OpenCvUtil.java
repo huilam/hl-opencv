@@ -209,6 +209,14 @@ public class OpenCvUtil{
 				{
 					if(matAlpha!=null)
 						matAlpha.release();
+					
+					if(vMat!=null)
+					{
+						for(Mat m : vMat)
+						{
+							m.release();
+						}
+					}
 				}
 			}
 			
@@ -226,12 +234,22 @@ public class OpenCvUtil{
 			{
 				case 3 : type = BufferedImage.TYPE_3BYTE_BGR; break;
 				case 4 : type = BufferedImage.TYPE_4BYTE_ABGR; 
-				
 					Vector<Mat> vMat = new Vector<>();
-					Core.split(mat, vMat);
-					Mat matAlpha = vMat.remove(vMat.size()-1);
-					vMat.add(0,matAlpha);
-					Core.merge(vMat, mat);
+					try {
+						Core.split(mat, vMat);
+						Mat matAlpha = vMat.remove(vMat.size()-1);
+						vMat.add(0,matAlpha);
+						Core.merge(vMat, mat);
+					}finally
+					{
+						if(vMat!=null)
+						{
+							for(Mat m : vMat)
+							{
+								m.release();
+							}
+						}
+					}
 					break;
 			}
 			int bufferSize = mat.channels()* mat.cols()* mat.rows();
@@ -262,12 +280,12 @@ public class OpenCvUtil{
 		return image;
 	}
 	
-	public static Mat resizeByWidth(final Mat aMatImg, int aNewWidth)
+	public static void resizeByWidth(Mat aMatImg, int aNewWidth)
 	{
-		return resizeByWidth(aMatImg, aNewWidth, Imgproc.INTER_LINEAR);
+		resizeByWidth(aMatImg, aNewWidth, Imgproc.INTER_LINEAR);
 	}
 	
-	public static Mat resizeByWidth(final Mat aMatImg, int aNewWidth, int aMode)
+	public static void resizeByWidth(Mat aMatImg, int aNewWidth, int aMode)
 	{
 		double dImageW = (double)aMatImg.width();
 		double dImageH = (double)aMatImg.height();
@@ -275,15 +293,15 @@ public class OpenCvUtil{
 		double dScaleW 	= aNewWidth>0 ? ((double)aNewWidth) / dImageW : 1.0;
 		int iNewHeight =(int)(dImageH * dScaleW);
 
-		return resize(aMatImg, aNewWidth, iNewHeight, false, aMode);
+		resize(aMatImg, aNewWidth, iNewHeight, false, aMode);
 	}
 	
-	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio)
+	public static void resize(Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio)
 	{
-		return resize(aMatImg, aNewWidth, aNewHeight, isMainAspectRatio, Imgproc.INTER_LINEAR);
+		resize(aMatImg, aNewWidth, aNewHeight, isMainAspectRatio, Imgproc.INTER_LINEAR);
 	}
 	
-	public static Mat resize(final Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio, int aMode)
+	public static void resize(Mat aMatImg, int aNewWidth, int aNewHeight, boolean isMainAspectRatio, int aMode)
 	{
 		if(aNewWidth>0 && aNewHeight>0)
 		{
@@ -298,19 +316,8 @@ public class OpenCvUtil{
 				
 				aNewWidth = (int)(dImageW * dScale);
 				aNewHeight =(int)(dImageH * dScale);
-				//System.out.println("dScale="+dScale);
 			}
-			
-			//System.out.println("aNewWidth="+aNewWidth);
-			//System.out.println("aNewHeight="+aNewHeight);
-
-			Mat matSized = new Mat();
-			Imgproc.resize(aMatImg, matSized, new Size(aNewWidth, aNewHeight), aMode);
-			return matSized;
-		}
-		else
-		{
-			return aMatImg;
+			Imgproc.resize(aMatImg, aMatImg, new Size(aNewWidth, aNewHeight), aMode);
 		}
 	}
 	
@@ -339,8 +346,8 @@ public class OpenCvUtil{
 			return null;
 		
 		Mat matMask = null;
-		Mat matBgResized = null;
-		Mat matInResized = null;
+		Mat matBgResized = matBackground.clone();
+		Mat matInResized = matInput.clone();
 		
 		try {
 			if(aDiffThreshold<0 || aDiffThreshold>1)
@@ -354,20 +361,18 @@ public class OpenCvUtil{
 			if(aProcessWidth>0)
 				iProcessWidth = aProcessWidth;
 			
-			matInResized = matInput;
-			if(matInput.width()>iProcessWidth)
+			if(matInResized.width()>iProcessWidth)
 			{
-				matInResized = resizeByWidth(matInput, iProcessWidth);
+				resizeByWidth(matInResized, iProcessWidth);
 			}
 			else
 			{
 				iProcessWidth = matInResized.width();
 			}
 			
-			matBgResized = matBackground;
-			if(matBackground.width()!=iProcessWidth)
+			if(matBgResized.width()!=iProcessWidth)
 			{
-				matBgResized = resizeByWidth(matBackground, iProcessWidth);
+				resizeByWidth(matBgResized, iProcessWidth);
 			}
 			
 			//
@@ -417,7 +422,7 @@ public class OpenCvUtil{
 						matMask = removeMaskContourAreas(matMask,minContourPixelSize,0);
 					}
 					
-					matMask = resize(matMask, matInput.width(), matInput.height(), false);
+					resize(matMask, matInput.width(), matInput.height(), false);
 				}
 			}
 		}
@@ -601,7 +606,7 @@ public class OpenCvUtil{
 		return calcBrightness(aMat1, matMask, aMat1.width());
 	}
 	
-	public static Mat getMask(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	public static Mat getMask(final Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
 	{
 		Mat matMask = null;
 		
@@ -627,11 +632,22 @@ public class OpenCvUtil{
 	
 	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
 	{
+		double dBrightnessScore = 0;
+		
 		Mat matMask = getMask(aMat1, aFromScalar, aToScalar);
-		return calcBrightness(aMat1, matMask, aMat1.width());
+		try {
+			dBrightnessScore = calcBrightness(aMat1, matMask, aMat1.width());
+		}
+		finally
+		{
+			if(matMask!=null)
+				matMask.release();
+		}
+		
+		return dBrightnessScore;
 	}
 	
-	public static double calcBrightness(Mat aMat1, Mat aBgMat, int aSamplingWidth)
+	public static double calcBrightness(final Mat aMat1, final Mat aBgMat, int aSamplingWidth)
 	{
 		if(aMat1==null)
 			return 0;
@@ -639,6 +655,8 @@ public class OpenCvUtil{
 		double dBrightnessScore = 0;
 		
 		Mat mat1 = aMat1.clone();
+		Mat matBg = aBgMat.clone();
+		
 		Mat matHSV1 = null;
 		Mat matMask1 = null;
 		
@@ -648,26 +666,26 @@ public class OpenCvUtil{
 				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
 					aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
 
-				mat1 = OpenCvUtil.resizeByWidth(mat1, aSamplingWidth);
+				OpenCvUtil.resizeByWidth(mat1, aSamplingWidth);	
 			}
 			
 			Scalar scalar1 = null;
 			
-			if(aBgMat!=null && !aBgMat.empty())
+			if(matBg!=null && !matBg.empty())
 			{
-				if(aBgMat.width()!=mat1.width() && mat1.width()>0)
+				if(matBg.width()!=mat1.width() && mat1.width()>0)
 				{
-					aBgMat = OpenCvUtil.resize(aBgMat, mat1.width(), mat1.height(), false);
+					OpenCvUtil.resize(matBg, mat1.width(), mat1.height(), false);
 				}
 				
-				if(aBgMat!=null && aBgMat.channels()==1)
+				if(matBg!=null && matBg.channels()==1)
 				{
-					matMask1 = aBgMat;
+					matMask1 = matBg;
 				}
 				else
 				{
 					try {
-						matMask1 = extractFGMask(aMat1, aBgMat, 0.18);
+						matMask1 = extractFGMask(mat1, matBg, 0.18);
 					} catch (Exception e) {
 						matMask1 = null;
 						e.printStackTrace();
@@ -704,6 +722,9 @@ public class OpenCvUtil{
 			
 			if(matMask1!=null)
 				matMask1.release();
+			
+			if(matBg!=null)
+				matBg.release();
 		}
 		
 		return dBrightnessScore;
@@ -744,8 +765,9 @@ public class OpenCvUtil{
 		return getImageSimilarityDescriptors(aMatImage, 0);
 	}
 	
-	public static Mat getImageSimilarityDescriptors(Mat aMatImage, int aMaxWidth)
+	public static Mat getImageSimilarityDescriptors(final Mat aMatImage, int aMaxWidth)
 	{
+		Mat matImage = aMatImage.clone();
 		Mat d1 = new Mat();
 		MatOfKeyPoint kp1 = new MatOfKeyPoint();
 		
@@ -754,17 +776,21 @@ public class OpenCvUtil{
 		
 		try {
 			
-			if(aMaxWidth>0 && aMatImage.width()>aMaxWidth)
+			if(aMaxWidth>0 && matImage.width()>aMaxWidth)
 			{
-				aMatImage = resizeByWidth(aMatImage, aMaxWidth);
+				resizeByWidth(matImage, aMaxWidth);
 			}
-			orb.detect(aMatImage, kp1);
-			orb.compute(aMatImage, kp1, d1);
+			
+			orb.detect(matImage, kp1);
+			orb.compute(matImage, kp1, d1);
 		}
 		finally
 		{	
 			if(kp1!=null)
 				kp1.release();
+			
+			if(matImage!=null)
+				matImage.release();
 		}
 		
 		return d1;
@@ -804,38 +830,36 @@ public class OpenCvUtil{
 	    return similarity;		
 	}
 	
-	public static Mat addAlphaChannel(Mat matInput)
+	public static void addAlphaChannel(Mat matInput)
 	{
 		if(matInput==null || matInput.empty() || matInput.channels()==4)
 		{
-			return matInput;
+			return;
 		}
 		
-		Mat matWithAlpha = matInput.clone();
 		switch(matInput.channels())
 		{
 			case 1:
-				Imgproc.cvtColor(matInput, matWithAlpha, Imgproc.COLOR_GRAY2BGRA);
+				Imgproc.cvtColor(matInput, matInput, Imgproc.COLOR_GRAY2BGRA);
 				break;
 			case 3:
-				Imgproc.cvtColor(matInput, matWithAlpha, Imgproc.COLOR_BGR2BGRA);
+				Imgproc.cvtColor(matInput, matInput, Imgproc.COLOR_BGR2BGRA);
 				break;
 		}
 		
-		return matWithAlpha;
+		return;
 	}
 	
-	public static Mat removeAlphaChannel(Mat matInput)
+	public static void removeAlphaChannel(Mat matInput)
 	{
 		if(matInput!=null && !matInput.empty() && matInput.channels()==4)
 		{
-			Mat matReturn = matInput.clone();
 			Vector<Mat> vRgba = null;
 			try {
 				vRgba = new Vector<Mat>();
-				Core.split(matReturn, vRgba);
+				Core.split(matInput, vRgba);
 				vRgba.remove(vRgba.size()-1);
-				Core.merge(vRgba, matReturn);
+				Core.merge(vRgba, matInput);
 			}
 			finally
 			{
@@ -848,9 +872,7 @@ public class OpenCvUtil{
 					}
 				}
 			}
-			return matReturn;
 		}
-		return matInput;
 	}
 	
 	
@@ -885,10 +907,10 @@ public class OpenCvUtil{
 	{
 		MatOfInt matOfInt = null;
 		try {
-			matOfInt = new MatOfInt();
 			
 			if(mapImageParams!=null && mapImageParams.size()>0)
 			{
+				matOfInt = new MatOfInt();
 				List<Integer> list = new ArrayList<Integer> ();
 				Iterator<Integer> iter = mapImageParams.keySet().iterator();
 				while(iter.hasNext())
@@ -905,7 +927,10 @@ public class OpenCvUtil{
 				matOfInt.fromList(list);
 			}
 			
-			Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
+			if(matOfInt!=null)
+			{
+				Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
+			}
 		}
 		finally
 		{

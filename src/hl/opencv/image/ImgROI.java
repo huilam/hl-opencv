@@ -62,9 +62,8 @@ public class ImgROI {
 
 	///
 	
-	public Mat getImageROI(Mat aMatImage)
+	public void extractImageROI(Mat aMatImage)
 	{
-		Mat matROI = null;
 		if(aMatImage!=null)
 		{
 			if(this.mat_roi_mask!=null && !this.mat_roi_mask.empty())
@@ -74,24 +73,18 @@ public class ImgROI {
 					if(this.mat_roi_mask.width() != aMatImage.width()
 					|| this.mat_roi_mask.height() != aMatImage.height())
 					{
-						this.mat_roi_mask = OpenCvUtil.resize(
+						OpenCvUtil.resize(
 								this.mat_roi_mask, aMatImage.width(), aMatImage.height(), 
 								false);
 					}
+					Core.copyTo(aMatImage, aMatImage, this.mat_roi_mask);
 					
-					matROI = new Mat();
-					Core.copyTo(aMatImage, matROI, this.mat_roi_mask);
 				} catch (Exception e) {
 					logger.log(Level.SEVERE, e.getMessage());
-					return aMatImage;
 				}
 			}
 		}
 		
-		if(matROI!=null)
-			return matROI;
-		else
-			return aMatImage;
 	}
 	
 }

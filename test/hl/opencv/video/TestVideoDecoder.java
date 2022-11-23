@@ -112,10 +112,10 @@ public class TestVideoDecoder extends VideoDecoder {
 		Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
 		vidDecoder.setROI_mat(matROImask);
 		//
-		vidDecoder.setMin_brightness_skip_threshold(0.20);
+		vidDecoder.setMin_brightness_skip_threshold(0);
 		vidDecoder.setMax_brightness_calc_width(200);
 		//
-		vidDecoder.setMin_similarity_skip_threshold(0.99);
+		vidDecoder.setMin_similarity_skip_threshold(0);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
 		vidDecoder.processVideo(file);
