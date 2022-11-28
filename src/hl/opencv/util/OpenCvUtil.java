@@ -649,13 +649,18 @@ public class OpenCvUtil{
 	
 	public static double calcBrightness(final Mat aMat1, final Mat aBgMat, int aSamplingWidth)
 	{
+		double dBrightnessScore = 0;
+
 		if(aMat1==null)
 			return 0;
 		
-		double dBrightnessScore = 0;
-		
 		Mat mat1 = aMat1.clone();
-		Mat matBg = aBgMat.clone();
+		
+		Mat matBg = null;
+		if(aBgMat!=null)
+		{
+			matBg = aBgMat.clone();
+		}
 		
 		Mat matHSV1 = null;
 		Mat matMask1 = null;
@@ -767,6 +772,11 @@ public class OpenCvUtil{
 	
 	public static Mat getImageSimilarityDescriptors(final Mat aMatImage, int aMaxWidth)
 	{
+		if(aMatImage==null)
+		{
+			return null;
+		}
+		
 		Mat matImage = aMatImage.clone();
 		Mat d1 = new Mat();
 		MatOfKeyPoint kp1 = new MatOfKeyPoint();
@@ -798,6 +808,9 @@ public class OpenCvUtil{
 	
 	public static double calcDescriptorSimilarity(Mat d1, Mat d2)
 	{
+		if(d1==null || d2==null)
+			return -1;
+		
 	    double similarity = 0.0;
 
 	    MatOfDMatch matchMatrix = null;
@@ -895,7 +908,7 @@ public class OpenCvUtil{
 	{
 		Map<Integer, Integer> mapImageParams = new HashMap<Integer, Integer>();
 		
-		if(aFileName.toLowerCase().endsWith(".jpg"))
+		if(aFileName!=null && aFileName.toLowerCase().endsWith(".jpg"))
 		{
 			mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
 		}
@@ -947,60 +960,10 @@ public class OpenCvUtil{
 	public static void initOpenCV(String aPath)
 	{
 		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,aPath);
-		if(!cvLib.init())
+		if(cvLib!=null && !cvLib.init())
 		{
 			throw new RuntimeException("OpenCv is NOT loaded !");
 		}
-	}
-	//////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////
-	
-	@Deprecated
-	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
-	{
-		return OpenCvFilters.cannyEdge(aMat, aThreshold, isinvert);
-	}
-	
-	@Deprecated
-	public static Mat pixelate(Mat aMat, double aPixelateScale)
-	{
-		return OpenCvFilters.pixelate(aMat, aPixelateScale);
-	}
-	
-	@Deprecated
-	public static Mat solidfill(Mat aMat, Scalar aScalar)
-	{
-		return OpenCvFilters.solidfill(aMat, aScalar);
-	}
-	
-	@Deprecated
-	public static Mat medianBlur(Mat aMat, double aBlurScale)
-	{
-		return OpenCvFilters.medianBlur(aMat, aBlurScale);
-	}
-	
-	@Deprecated
-	public static Mat blur(Mat aMat, double aBlurScale)
-	{
-		return OpenCvFilters.blur(aMat, aBlurScale);
-	}
-	
-	@Deprecated
-	public static Mat gaussianBlur(Mat aMat, double aBlurScale)
-	{
-		return OpenCvFilters.gaussianBlur(aMat, aBlurScale);
-	}
-	
-	@Deprecated
-	public static Mat grayscale(Mat aMat)
-	{
-		return OpenCvFilters.grayscale(aMat, true);
-	}
-	
-	@Deprecated 
-	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
-	{
-		return OpenCvFilters.grayscale(aMat, isConvertBackOrigType);
 	}
 	
 }
