@@ -129,19 +129,19 @@ public class OpenCvUtilTest{
 				double iPixelate = .6; 
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur1 = OpenCvUtil.blur(mat, iBlur);
+				Mat matBlur1 = OpenCvFilters.blur(mat, iBlur);
 				lElapsed1 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur2 = OpenCvUtil.medianBlur(mat, iBlur);
+				Mat matBlur2 = OpenCvFilters.medianBlur(mat, iBlur);
 				lElapsed2 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur3 = OpenCvUtil.gaussianBlur(mat, iBlur);
+				Mat matBlur3 = OpenCvFilters.gaussianBlur(mat, iBlur);
 				long lElapsed3 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matPixelate = OpenCvUtil.pixelate(mat, iPixelate);
+				Mat matPixelate = OpenCvFilters.pixelate(mat, iPixelate);
 				long lElapsed4 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
