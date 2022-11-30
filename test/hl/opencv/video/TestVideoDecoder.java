@@ -24,6 +24,8 @@ package hl.opencv.video;
 
 import java.io.File;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
+
 import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
@@ -50,7 +52,7 @@ public class TestVideoDecoder extends VideoDecoder {
 	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
 	{
-		System.out.print("#"+aCurFrameNo+" - "+aCurFrameMs+"ms "+toDurationStr(aCurFrameMs)+" ... "+aProgressPercentage+"%");
+		System.out.print("#"+aCurFrameNo+" - "+matFrame.width()+"x"+matFrame.height()+" "+aCurFrameMs+"ms "+toDurationStr(aCurFrameMs)+" ... "+aProgressPercentage+"%");
 				
 		System.out.println();
 		return matFrame;
@@ -111,11 +113,13 @@ public class TestVideoDecoder extends VideoDecoder {
 		File fileROIMask = new File(file.getParentFile().getAbsolutePath()+"/mask-test.jpg");
 		Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
 		vidDecoder.setROI_mat(matROImask);
+		
+		vidDecoder.setCrop_ROI_rect(new Rect(100,100,10,10));
 		//
-		vidDecoder.setMin_brightness_skip_threshold(0);
+		vidDecoder.setMin_brightness_skip_threshold(0.1);
 		vidDecoder.setMax_brightness_calc_width(200);
 		//
-		vidDecoder.setMin_similarity_skip_threshold(0);
+		vidDecoder.setMin_similarity_skip_threshold(0.98);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
 		vidDecoder.processVideo(file);

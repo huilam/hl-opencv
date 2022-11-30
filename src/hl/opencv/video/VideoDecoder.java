@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
@@ -55,6 +56,7 @@ public class VideoDecoder {
 	private int max_similarity_compare_width	 = 0;
 	
 	private Mat mat_roi_mask 	= null;
+	private Rect rect_crop_roi 	= null;
 	
 	private Mat mat_seg_bgref 	= null;
 	
@@ -84,6 +86,13 @@ public class VideoDecoder {
 	}
 	public void setROI_mat(Mat roi_mat) {
 		this.mat_roi_mask = roi_mat;
+	}
+	////
+	public Rect getCrop_ROI_rect() {
+		return rect_crop_roi;
+	}
+	public void setCrop_ROI_rect(Rect crop_roi_rect) {
+		this.rect_crop_roi = crop_roi_rect;
 	}
 	////
 	public Mat getBgref_mat() {
@@ -343,6 +352,7 @@ public class VideoDecoder {
 				
 				ImgROI imgROI = new ImgROI();
 				imgROI.setROI_mask(this.mat_roi_mask);
+				imgROI.setCrop_ROI_rect(this.rect_crop_roi);
 				
 				long lElapseStartMs = System.currentTimeMillis();
 				
@@ -392,7 +402,7 @@ public class VideoDecoder {
 							matFrame = imgSegment.extractForeground(matFrame);
 						}
 						
-						if(this.mat_roi_mask!=null)
+						if(this.mat_roi_mask!=null || this.rect_crop_roi!=null)
 						{
 							imgROI.extractImageROI(matFrame);
 						}

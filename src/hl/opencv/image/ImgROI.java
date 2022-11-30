@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 
 import hl.opencv.util.OpenCvFilters;
 import hl.opencv.util.OpenCvUtil;
@@ -36,6 +37,7 @@ public class ImgROI {
 	private static Logger logger = Logger.getLogger(ImgSegmentation.class.getName());
 	
 	//
+	private Rect rect_crop_roi 	= null;
 	private Mat mat_roi_mask = null;
 	//
 	
@@ -58,6 +60,15 @@ public class ImgROI {
 			
 			this.mat_roi_mask = aROIMask;
 		}
+	}
+	
+	public Rect getCrop_ROI_rect() {
+		return this.rect_crop_roi;
+	}
+	
+	public void setCrop_ROI_rect(Rect aCropROIRect) {
+		
+		this.rect_crop_roi = aCropROIRect;
 	}
 
 	///
@@ -83,6 +94,21 @@ public class ImgROI {
 					logger.log(Level.SEVERE, e.getMessage());
 				}
 			}
+			
+			if(this.rect_crop_roi!=null)
+			{
+				Mat matsub = null;
+				try {
+					matsub = aMatImage.submat(rect_crop_roi);
+					Core.copyTo(matsub, aMatImage, new Mat());
+				}
+				finally
+				{
+					if(matsub!=null)
+						matsub.release();
+				}
+			}
+			
 		}
 		
 	}
