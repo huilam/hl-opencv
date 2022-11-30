@@ -242,10 +242,10 @@ public class VideoDecoder {
 	
 	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom) 
 	{
-		return processVideo(aVideoFile, aSelectedTimestampFrom, -1);
+		return processVideoFile(aVideoFile, aSelectedTimestampFrom, -1);
 	}
 	
-	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	public long processVideoFile(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		int iErrCode = validateInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo);
 		if(iErrCode<0)
@@ -254,6 +254,41 @@ public class VideoDecoder {
 		}
 		
 		VideoCapture vid = null;
+		try{
+			String sFileName = aVideoFile.getName();
+			vid = new VideoCapture(aVideoFile.getAbsolutePath());
+			return processVideoCap(vid, sFileName, aSelectedTimestampFrom, aSelectedTimestampTo);
+		}
+		finally
+		{
+			if(vid!=null)
+				vid.release();
+		}
+	}
+	
+	public long processCamera(int aCamID)
+	{
+		return processCamera(aCamID, -1);
+	}
+	
+	public long processCamera(int aCamID, final long aSelectedTimestampTo)
+	{
+		VideoCapture vid = null;
+		try{
+			vid = new VideoCapture(aCamID);
+			return processVideoCap(vid, String.valueOf(aCamID), 0, aSelectedTimestampTo);
+		}
+		finally
+		{
+			if(vid!=null)
+				vid.release();
+		}
+	}
+	
+	public long processVideoCap(VideoCapture aVideoCapture, String aVidCapName,
+			final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	{
+		VideoCapture vid 	= null;
 		Mat matFrame 		= new Mat();
 		
 		Mat matPrevDescriptors 	= null;
@@ -270,10 +305,10 @@ public class VideoDecoder {
 			lAdjSelFrameMsFrom = 0;
 
 		try{
-			vid = new VideoCapture(aVideoFile.getAbsolutePath());
+			
+			vid = aVideoCapture;
 			if(vid.isOpened())
 			{
-				String sVideoFileName = aVideoFile.getName();
 				double dFps = Math.floor(vid.get(Videoio.CAP_PROP_FPS)*1000.0)/1000.0;
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 				double dTotalDurationMs = Math.floor((dTotalFrames / dFps)*1000);
@@ -340,7 +375,7 @@ public class VideoDecoder {
 					dTotalSelectedFrames++;
 				}
 				
-				boolean isProcessVideo = processStarted( sVideoFileName, 
+				boolean isProcessVideo = processStarted( aVidCapName, 
 						lAdjSelFrameMsFrom, lAdjSelFrameMsTo, iWidth, iHeight, 
 						(long)dTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
@@ -387,7 +422,7 @@ public class VideoDecoder {
 							double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
 							if(dBrightness < this.min_brightness_skip_threshold)
 							{
-								skippedVideoFrame(sVideoFileName, matFrame, 
+								skippedVideoFrame(aVidCapName, matFrame, 
 										lCurrentFrameNo, lCurFrameTimestamp, 
 										dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
 								lActualSkipped++;
@@ -422,7 +457,7 @@ public class VideoDecoder {
 	
 									if(dSimilarityScore>=this.min_similarity_skip_threshold)
 									{	
-										skippedVideoFrame(sVideoFileName, matFrame, 
+										skippedVideoFrame(aVidCapName, matFrame, 
 												lCurrentFrameNo, lCurFrameTimestamp, 
 												dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
 										lActualSkipped++;
@@ -438,7 +473,7 @@ public class VideoDecoder {
 								if(lCurFrameTimestamp<=lAdjSelFrameMsTo || lAdjSelFrameMsTo==-1)
 								{
 									matFrame = decodedVideoFrame(
-											sVideoFileName, matFrame, 
+											aVidCapName, matFrame, 
 											lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
 								}
 							}
@@ -446,7 +481,7 @@ public class VideoDecoder {
 						
 						if(matFrame==null)
 						{
-							processAborted(sVideoFileName, matFrame, 
+							processAborted(aVidCapName, matFrame, 
 									lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
 							break;
 						}
@@ -455,7 +490,7 @@ public class VideoDecoder {
 				
 				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
 				
-				processEnded(sVideoFileName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+				processEnded(aVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
 						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 				
 			}
@@ -479,7 +514,7 @@ public class VideoDecoder {
 	
 	public long processVideo(File fileVideo)
 	{
-		return processVideo(fileVideo, 0, -1);
+		return processVideoFile(fileVideo, 0, -1);
 	}
 	
 	///// 
