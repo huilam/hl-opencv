@@ -112,7 +112,7 @@ public class TestFileBaseProcessor {
 				System.out.println("Total elapsed time (ms) : "+aElpasedMs);
 			}
 		};
-		vidDecoder.processVideo(aVideoFile);
+		vidDecoder.processVideoFile(aVideoFile);
 	}
 	
 	protected boolean video_processStarted(String aVideoFileName, 
