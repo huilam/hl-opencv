@@ -273,6 +273,11 @@ public class VideoDecoder {
 		return iErrCode;
 	}
 	
+	public long processVideoFile(File fileVideo)
+	{
+		return processVideoFile(fileVideo, 0, -1);
+	}
+	
 	public long processVideoFile(File aVideoFile, final long aSelectedTimestampFrom) 
 	{
 		return processVideoFile(aVideoFile, aSelectedTimestampFrom, -1);
@@ -318,7 +323,7 @@ public class VideoDecoder {
 		}
 	}
 	
-	public long processVideoCap(VideoCapture aVideoCapture, String aVidCapName,
+	private long processVideoCap(VideoCapture aVideoCapture, String aVidCapName,
 			final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		boolean isLiveCam 	= true;
@@ -572,11 +577,6 @@ public class VideoDecoder {
 		}
 		
 		return (long)lActualProcessed;
-	}
-	
-	public long processVideo(File fileVideo)
-	{
-		return processVideoFile(fileVideo, 0, -1);
 	}
 	
 	///// 
