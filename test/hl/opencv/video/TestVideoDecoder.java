@@ -25,6 +25,7 @@ package hl.opencv.video;
 import java.io.File;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
+import org.opencv.videoio.VideoCapture;
 
 import hl.opencv.util.OpenCvUtil;
 
@@ -105,7 +106,6 @@ public class TestVideoDecoder extends VideoDecoder {
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
 		vidDecoder.fileOutput = new File(file.getParentFile().getAbsolutePath()+"/output");
 		//
-		System.out.println(vidDecoder.getVideoMetadata(file, false));
 		//
 		vidDecoder.setBgref_mat(null);
 		
@@ -122,7 +122,10 @@ public class TestVideoDecoder extends VideoDecoder {
 		vidDecoder.setMin_similarity_skip_threshold(0.98);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideo(file);
+		//vidDecoder.processVideoFile(file, 0, -1);
+		
+		System.out.println(vidDecoder.getCameraMetadata(0));
+		vidDecoder.processCamera(0);
 	}
 		
 }

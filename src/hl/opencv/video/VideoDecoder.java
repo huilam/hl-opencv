@@ -110,100 +110,133 @@ public class VideoDecoder {
 	}
 	////
 	
-	public JSONObject getVideoMetadata(File aVideoFile)
+	public JSONObject getVideoFileMetadata(File aVideoFile)
 	{
-		return getVideoMetadata(aVideoFile, false);
+		return getVideoFileMetadata(aVideoFile, false);
 	}
 	
-	public JSONObject getVideoMetadata(File aVideoFile, boolean isShowPreview)
+	public JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview)
 	{
-		return getVideoMetadata(aVideoFile, isShowPreview, 200);
+		return getVideoFileMetadata(aVideoFile, isShowPreview, 200);
 	}
 	
-	
-	public JSONObject getVideoMetadata(File aVideoFile, boolean isShowPreview, int aPreviewWidth)
+	public JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview, int aPreviewWidth)
 	{
 		JSONObject jsonMeta = new JSONObject();
-		
-		if(validateInput(aVideoFile,0,0)==0)
+		if(validateFileInput(aVideoFile,0,0)==0)
 		{
-			VideoCapture vid = null;
-			try {
-				vid = new VideoCapture(aVideoFile.getAbsolutePath());
-				if(vid.isOpened())
+			VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
+			jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
+			//
+			jsonMeta.put("FILE_SIZE", aVideoFile.length());
+			jsonMeta.put("FILE_LAST_MODIFIED", aVideoFile.lastModified());
+		}
+		
+		return jsonMeta;
+	}
+	
+	
+	public JSONObject getCameraMetadata(int aCapDeviceID)
+	{
+		return getCameraMetadata(aCapDeviceID, false, 0);
+	}
+	
+	public JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview)
+	{
+		return getCameraMetadata(aCapDeviceID, isShowPreview, 0);
+	}
+	
+	public JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview, int aPreviewWidth)
+	{
+		JSONObject jsonMeta = new JSONObject();
+		if(aCapDeviceID>=0)
+		{
+			VideoCapture vid = new VideoCapture(aCapDeviceID);
+			jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
+			//
+			jsonMeta.put("CAPTURE_DEVICE_ID", aCapDeviceID);
+		}
+		
+		return jsonMeta;
+	}
+	
+	public JSONObject getVidCapMetadata(VideoCapture aVideoCap, boolean isShowPreview, int aPreviewWidth)
+	{
+		JSONObject jsonMeta = new JSONObject();
+
+		VideoCapture vid = null;
+		try {
+			vid = aVideoCap;
+			if(vid.isOpened())
+			{
+				double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+				double dFps = vid.get(Videoio.CAP_PROP_FPS);
+				
+				double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
+				//
+				jsonMeta.put("FPS", dFps);
+				jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
+				//
+				jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
+				jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+				jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+				//
+				
+				if(isShowPreview)
 				{
-					double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-					double dFps = vid.get(Videoio.CAP_PROP_FPS);
+					JSONObject jsonSampling = new JSONObject();
+					String sJpgBase64 = null;
+					Mat matSample = new Mat();
+					try {
 					
-					double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
-					//
-					jsonMeta.put("FPS", dFps);
-					jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
-					//
-					jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
-					jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
-					jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
-					//
-					jsonMeta.put("FILE_SIZE", aVideoFile.length());
-					jsonMeta.put("FILE_LAST_MODIFIED", aVideoFile.lastModified());
-					//
-					
-					if(isShowPreview)
-					{
-						JSONObject jsonSampling = new JSONObject();
-						String sJpgBase64 = null;
-						Mat matSample = new Mat();
-						try {
+						int iSearchFrame = 2;
+						double dBrightness = 0.0;
 						
-							int iSearchFrame = 2;
-							double dBrightness = 0.0;
-							
-							vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
-							while(vid.read(matSample)) 
-							{	
-								if(!matSample.empty())
+						vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
+						while(vid.read(matSample)) 
+						{	
+							if(!matSample.empty())
+							{
+								dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
+								if(dBrightness>0.15)
 								{
-									dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
-									if(dBrightness>0.15)
+									if(aPreviewWidth>0)
 									{
-										if(aPreviewWidth>0)
-										{
-											OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
-										}
-										sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
-										jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
-										
-										break;
+										OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
 									}
-								}
-								iSearchFrame += Math.ceil(dFps);
-								if(iSearchFrame>dTotalFrameCount)
-								{
+									sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
+									jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
+									
 									break;
 								}
-								vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 							}
+							iSearchFrame += Math.ceil(dFps);
+							if(iSearchFrame>dTotalFrameCount)
+							{
+								break;
+							}
+							vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 						}
-						finally
-						{
-							if(matSample!=null)
-								matSample.release();
-						}
-						jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 					}
-					
+					finally
+					{
+						if(matSample!=null)
+							matSample.release();
+					}
+					jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 				}
+				
 			}
-			finally
-			{
-				if(vid!=null)
-					vid.release();
-			}
+		}
+		finally
+		{
+			if(vid!=null)
+				vid.release();
 		}
 		return jsonMeta;
 	}
 	
-	private int validateInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	private int validateFileInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		int iErrCode = 0;
 		if(aVideoFile==null || !aVideoFile.isFile())
@@ -240,14 +273,14 @@ public class VideoDecoder {
 		return iErrCode;
 	}
 	
-	public long processVideo(File aVideoFile, final long aSelectedTimestampFrom) 
+	public long processVideoFile(File aVideoFile, final long aSelectedTimestampFrom) 
 	{
 		return processVideoFile(aVideoFile, aSelectedTimestampFrom, -1);
 	}
 	
 	public long processVideoFile(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
-		int iErrCode = validateInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo);
+		int iErrCode = validateFileInput(aVideoFile, aSelectedTimestampFrom, aSelectedTimestampTo);
 		if(iErrCode<0)
 		{
 			return iErrCode;
@@ -288,6 +321,8 @@ public class VideoDecoder {
 	public long processVideoCap(VideoCapture aVideoCapture, String aVidCapName,
 			final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
+		boolean isLiveCam 	= true;
+		
 		VideoCapture vid 	= null;
 		Mat matFrame 		= new Mat();
 		
@@ -304,6 +339,9 @@ public class VideoDecoder {
 		if(lAdjSelFrameMsFrom<0)
 			lAdjSelFrameMsFrom = 0;
 
+		long lElapseStartMs 	= System.currentTimeMillis();
+		long lCurFrameTimestamp = 0;
+		
 		try{
 			
 			vid = aVideoCapture;
@@ -311,59 +349,68 @@ public class VideoDecoder {
 			{
 				double dFps = Math.floor(vid.get(Videoio.CAP_PROP_FPS)*1000.0)/1000.0;
 				double dTotalFrames = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-				double dTotalDurationMs = Math.floor((dTotalFrames / dFps)*1000);
-				//
-				double dFrameMs = Math.floor(dTotalDurationMs / dTotalFrames);
-				//
 				int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
 				int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
 				
-				if(lAdjSelFrameMsTo > dTotalDurationMs)
+				double dFrameMs = dFps/1000;
+						
+				if(dTotalFrames>0)
 				{
-					lAdjSelFrameMsTo = (long) dTotalDurationMs;
-				}
-				
-				// Adjust
-				if(lAdjSelFrameMsFrom>0)
-				{
-					long lAdjFrameStartMs = 0;
-					while(lAdjFrameStartMs < lAdjSelFrameMsFrom)
+					isLiveCam = false;
+					
+					double dTotalDurationMs = Math.floor((dTotalFrames / dFps)*1000);
+					//
+					dFrameMs = Math.floor(dTotalDurationMs / dTotalFrames);
+					//
+	
+					
+					if(lAdjSelFrameMsTo > dTotalDurationMs)
 					{
-						lCurrentFrameNo++;
-						lAdjFrameStartMs += dFrameMs;
+						lAdjSelFrameMsTo = (long) dTotalDurationMs;
 					}
-					lAdjSelFrameMsFrom = lAdjFrameStartMs;
-				}
-				
-				if(aSelectedTimestampFrom == aSelectedTimestampTo)
-				{
-					if(lAdjSelFrameMsFrom != aSelectedTimestampFrom)
+					
+					// Adjust
+					if(lAdjSelFrameMsFrom>0)
 					{
-						if(lAdjSelFrameMsFrom > aSelectedTimestampTo)
+						long lAdjFrameStartMs = 0;
+						while(lAdjFrameStartMs < lAdjSelFrameMsFrom)
 						{
-							lAdjSelFrameMsFrom = 0;
+							lCurrentFrameNo++;
+							lAdjFrameStartMs += dFrameMs;
+						}
+						lAdjSelFrameMsFrom = lAdjFrameStartMs;
+					}
+					
+					if(aSelectedTimestampFrom == aSelectedTimestampTo)
+					{
+						if(lAdjSelFrameMsFrom != aSelectedTimestampFrom)
+						{
+							if(lAdjSelFrameMsFrom > aSelectedTimestampTo)
+							{
+								lAdjSelFrameMsFrom = 0;
+							}
 						}
 					}
-				}
-						
-				if(lAdjSelFrameMsTo>=0)
-				{
-					long lAdjFrameEndMs = 0;
-					while(lAdjFrameEndMs < lAdjSelFrameMsTo)
+							
+					if(lAdjSelFrameMsTo>=0)
 					{
-						lAdjFrameEndMs += dFrameMs;
+						long lAdjFrameEndMs = 0;
+						while(lAdjFrameEndMs < lAdjSelFrameMsTo)
+						{
+							lAdjFrameEndMs += dFrameMs;
+						}
+						if(lAdjFrameEndMs>lAdjSelFrameMsTo)
+						{
+							lAdjFrameEndMs -= dFrameMs;
+						}
+						lAdjSelFrameMsTo = lAdjFrameEndMs;
 					}
-					if(lAdjFrameEndMs>lAdjSelFrameMsTo)
+					else
 					{
-						lAdjFrameEndMs -= dFrameMs;
+						lAdjSelFrameMsTo = (long)dTotalDurationMs;
 					}
-					lAdjSelFrameMsTo = lAdjFrameEndMs;
-				}
-				else
-				{
-					lAdjSelFrameMsTo = (long)dTotalDurationMs;
-				}
 				
+				}
 				////////////
 				
 				
@@ -389,28 +436,44 @@ public class VideoDecoder {
 				imgROI.setROI_mask(this.mat_roi_mask);
 				imgROI.setCrop_ROI_rect(this.rect_crop_roi);
 				
-				long lElapseStartMs = System.currentTimeMillis();
-				
-				long lCurFrameTimestamp = lAdjSelFrameMsFrom - (long)dFrameMs;
-				vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
-				
 				double dProgressPercentage = 0.0;
-			
+				
+				if(!isLiveCam && lAdjSelFrameMsFrom>0)
+				{
+					//Jump video to 'from' 
+					vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
+				}
+				
+				lElapseStartMs = System.currentTimeMillis();
 				if(vid.grab())
 				{
 					while(vid.retrieve(matFrame))
 					{
-						lCurFrameTimestamp += dFrameMs;
-						if(lCurFrameTimestamp > lAdjSelFrameMsTo)
+						if(isLiveCam)
 						{
-							break;
+							lCurFrameTimestamp = System.currentTimeMillis() - lElapseStartMs;
+						}
+						else
+						{
+							lCurFrameTimestamp += dFrameMs;
+							if(lCurFrameTimestamp > lAdjSelFrameMsTo)
+							{
+								break;
+							}
 						}
 						lCurrentFrameNo++;
 						lActualProcessed++;
 							
 						if(vid.grab())
 						{
-							dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
+							if(isLiveCam)
+							{
+								dProgressPercentage = 1.0;
+							}
+							else
+							{
+								dProgressPercentage = Math.ceil((double)lActualProcessed * 10000.00 / dTotalSelectedFrames) / 100 ;
+							}
 						}
 						else
 						{
@@ -428,8 +491,6 @@ public class VideoDecoder {
 								lActualSkipped++;
 								continue;
 							}
-							
-							
 						}
 						
 						if(this.mat_seg_bgref!=null)
@@ -488,14 +549,15 @@ public class VideoDecoder {
 					}
 				}
 				
-				long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
 				
-				processEnded(aVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
-						(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 				
 			}
 		}finally
 		{
+			long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
+			processEnded(aVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+					(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
+			
 			if(vid!=null)
 				vid.release();
 			
