@@ -23,6 +23,8 @@
 package hl.opencv.video;
 
 import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -110,6 +112,47 @@ public class VideoDecoder {
 	}
 	////
 	
+	protected JSONObject listCameras()
+	{
+		JSONObject jsonCameras = new JSONObject();
+		
+		VideoCapture vid = null;
+		for(int i=0; i<50; i++)
+		{
+			try {
+				vid = new VideoCapture(i);
+				if(vid.isOpened())
+				{
+					int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
+					int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
+					int iFps 	= (int) vid.get(Videoio.CAP_PROP_FPS);
+					vid.release();
+					
+					JSONObject jsonCam = new JSONObject();
+					jsonCam.put("channel", i);
+					jsonCam.put("width", iWidth);
+					jsonCam.put("height", iHeight);
+					jsonCam.put("fps", iFps);
+					System.out.println(i+" - "+iFps+"  "+iWidth+"x"+iHeight);					
+					jsonCameras.put(String.valueOf(i), jsonCam);
+				}
+				else
+				{
+					break;
+				}
+			}
+			finally
+			{
+				if(vid!=null)
+					vid.release();
+			}
+		}
+			
+
+		
+		return jsonCameras;
+	}
+	
 	public JSONObject getVideoFileMetadata(File aVideoFile)
 	{
 		return getVideoFileMetadata(aVideoFile, false);
@@ -160,7 +203,7 @@ public class VideoDecoder {
 		return jsonMeta;
 	}
 	
-	public JSONObject getVidCapMetadata(VideoCapture aVideoCap, boolean isShowPreview, int aPreviewWidth)
+	private JSONObject getVidCapMetadata(VideoCapture aVideoCap, boolean isShowPreview, int aPreviewWidth)
 	{
 		JSONObject jsonMeta = new JSONObject();
 
@@ -304,6 +347,57 @@ public class VideoDecoder {
 		}
 	}
 	
+	public Map<Long,Mat> getFramesByIndex(File aVideoFile, long aIndexes[])
+	{
+		return getVideoFileFrames(aVideoFile, Videoio.CAP_PROP_POS_FRAMES, aIndexes);
+	}
+	
+	public Map<Long,Mat> getFramesByTimestamp(File aVideoFile, long aTimestamp[])
+	{
+		return getVideoFileFrames(aVideoFile, Videoio.CAP_PROP_POS_MSEC, aTimestamp);
+	}
+	
+	private Map<Long,Mat> getVideoFileFrames(File aVideoFile, int aPosType, long aPosValue[])
+	{
+		if(aVideoFile.isFile() && aPosValue.length>0)
+		{
+			VideoCapture vid 	= null;
+			try{
+				vid = new VideoCapture(aVideoFile.getAbsolutePath());
+				return getVideoCapFrames(vid, aPosType, aPosValue);
+			}finally
+			{
+				if(vid!=null)
+					vid.release();
+			}
+		}
+		return new LinkedHashMap<Long,Mat>();
+	}
+	
+	private Map<Long,Mat> getVideoCapFrames(final VideoCapture aVideoCap, int aPosType, long aPosValue[])
+	{
+		Map<Long,Mat> mapFrames = new LinkedHashMap<Long,Mat>();
+		if(aVideoCap!=null && aPosValue.length>0)
+		{
+			for(long lFramePos : aPosValue)
+			{
+				aVideoCap.set(aPosType, lFramePos);
+				if(aVideoCap.isOpened())
+				{
+					Mat matFrame = new Mat();
+					if(aVideoCap.read(matFrame))
+					{
+						mapFrames.put(lFramePos, matFrame);
+					}
+					if(matFrame.width()==0)
+						matFrame.release();
+				}
+			}
+
+		}
+		return mapFrames;
+	}
+	
 	public long processCamera(int aCamID)
 	{
 		return processCamera(aCamID, -1);
@@ -368,7 +462,6 @@ public class VideoDecoder {
 					dFrameMs = Math.floor(dTotalDurationMs / dTotalFrames);
 					//
 	
-					
 					if(lAdjSelFrameMsTo > dTotalDurationMs)
 					{
 						lAdjSelFrameMsTo = (long) dTotalDurationMs;
