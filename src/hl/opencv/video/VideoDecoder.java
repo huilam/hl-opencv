@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -112,29 +113,40 @@ public class VideoDecoder {
 	}
 	////
 	
-	protected JSONObject listCameras()
+	protected JSONArray listCameras(boolean isIncludeSampleBase64)
 	{
-		JSONObject jsonCameras = new JSONObject();
-		
-		VideoCapture vid = null;
+		JSONArray jsonArrCams 	= new JSONArray();
+		VideoCapture vid 		= null;
+		Mat matSample			= null;
 		for(int i=0; i<50; i++)
 		{
 			try {
+				if(isIncludeSampleBase64)
+				{
+					matSample = new Mat();
+				}
 				vid = new VideoCapture(i);
 				if(vid.isOpened())
 				{
 					int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
 					int iHeight = (int) vid.get(Videoio.CAP_PROP_FRAME_HEIGHT);
 					int iFps 	= (int) vid.get(Videoio.CAP_PROP_FPS);
+					if(matSample!=null)
+					{
+						vid.retrieve(matSample);
+					}
 					vid.release();
 					
 					JSONObject jsonCam = new JSONObject();
-					jsonCam.put("channel", i);
+					jsonCam.put("id", i);
 					jsonCam.put("width", iWidth);
 					jsonCam.put("height", iHeight);
 					jsonCam.put("fps", iFps);
-					System.out.println(i+" - "+iFps+"  "+iWidth+"x"+iHeight);					
-					jsonCameras.put(String.valueOf(i), jsonCam);
+					if(matSample!=null)
+					{
+						jsonCam.put("base64", OpenCvUtil.mat2base64Img(matSample, "JPG"));
+					}
+					jsonArrCams.put(jsonCam);
 				}
 				else
 				{
@@ -145,12 +157,15 @@ public class VideoDecoder {
 			{
 				if(vid!=null)
 					vid.release();
+				
+				if(matSample!=null)
+					matSample.release();
 			}
 		}
 			
 
 		
-		return jsonCameras;
+		return jsonArrCams;
 	}
 	
 	public JSONObject getVideoFileMetadata(File aVideoFile)

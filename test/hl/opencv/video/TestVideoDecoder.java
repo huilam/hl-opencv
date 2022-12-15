@@ -23,10 +23,7 @@
 package hl.opencv.video;
 
 import java.io.File;
-import java.util.Map;
-
 import org.opencv.core.Mat;
-
 import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
@@ -96,43 +93,5 @@ public class TestVideoDecoder extends VideoDecoder {
 		System.out.println(" - Total Skipped : "+aTotalSkipped);
 	}
 	
-	public static void main(String args[]) throws Exception
-	{
-		OpenCvUtil.initOpenCV();
-		//System.out.println(vidDecoder.listCameras());
-		
-		//File file = new File("./test/videos/crl/trimmed_10sec.mp4");
-		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
-		//File file = new File("./test/videos/nls/Sunn.mp4");
-		TestVideoDecoder vidDecoder = new TestVideoDecoder();
-		vidDecoder.fileOutput = new File(file.getParentFile().getAbsolutePath()+"/output");
-		//
-		//
-		vidDecoder.setBgref_mat(null);
-		
-		//
-		File fileROIMask = new File(file.getParentFile().getAbsolutePath()+"/mask-test.jpg");
-		Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
-		vidDecoder.setROI_mat(matROImask);
-		
-		//vidDecoder.setCrop_ROI_rect(new org.opencv.core.Rect(100,100,10,10));
-		//
-		vidDecoder.setMin_brightness_skip_threshold(0);
-		vidDecoder.setMax_brightness_calc_width(200);
-		//
-		vidDecoder.setMin_similarity_skip_threshold(0);
-		vidDecoder.setMax_similarity_compare_width(500);
-		//
-		//vidDecoder.processVideoFile(file, 0, -1);
-		
-		Map<Long, Mat> mapFrames = vidDecoder.getFramesByIndex(file, new long[]{0,99,5000,2000});
-		
-		for(Long lTimestamp : mapFrames.keySet())
-		{
-			Mat matFrame = mapFrames.get(lTimestamp);
-			System.out.println(lTimestamp+" : "+matFrame.width()+"x"+matFrame.height());
-		}
-		
-	}
 		
 }
