@@ -24,6 +24,7 @@ package hl.opencv.util;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -193,26 +194,41 @@ public class OpenCvFilters{
 		return matEdges;
 	}
 	
-	public static Mat pixelate(Mat aMat, double aPixelateScale)
+	public static Mat pixelate(final Mat aMat, double aPixelateScale)
 	{
 		if(aPixelateScale>1)
 			aPixelateScale = 1;
 		
-		if(aPixelateScale<0)
-			aPixelateScale = 0.001;
-		
-		int iNewWidth = (int)((1.0 - aPixelateScale) * (aMat.width()*0.15));
-		int iNewHeight = (int)((1.0 - aPixelateScale) * (aMat.height()*0.15));
-		
-		if(iNewWidth<=0)
-			iNewWidth = 1;
-		
-		if(iNewHeight<=0)
-			iNewHeight = 1;
-		
+		if(aPixelateScale<=0)
+			aPixelateScale = 0.1;
+
 		Mat mat1 = aMat.clone();
-		OpenCvUtil.resize(mat1, iNewWidth, iNewHeight, false, Imgproc.INTER_LINEAR_EXACT);
-		OpenCvUtil.resize(mat1, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST );
+		if(mat1.width()>960)
+		{
+			OpenCvUtil.resizeByWidth(mat1, 960);
+		}
+		
+		double dRatio = (double)mat1.width() / (double)aMat.width();
+		double dBlockScale = Math.round(6 * aPixelateScale);
+		if(dBlockScale<1)
+			dBlockScale = 1;
+		double dBlockSize = (10 + dBlockScale) * dRatio;
+		
+		for(int iX=0; iX<mat1.width(); iX+=dBlockSize)
+		{
+			for(int iY=0; iY<mat1.height(); iY+=dBlockSize)
+			{
+				Imgproc.rectangle(mat1, 
+						new Rect(iX, iY, (int)dBlockSize, (int)dBlockSize), 
+						new Scalar(mat1.get(iY, iX)), 
+						-1);
+			}
+		}
+		
+		if(mat1.width()!= aMat.width())
+		{
+			OpenCvUtil.resize(mat1, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST); 
+		}
 		return mat1;
 	}
 	
