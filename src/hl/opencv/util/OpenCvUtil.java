@@ -47,6 +47,7 @@ import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.features2d.DescriptorMatcher;
@@ -319,6 +320,85 @@ public class OpenCvUtil{
 			}
 			Imgproc.resize(aMatImg, aMatImg, new Size(aNewWidth, aNewHeight), aMode);
 		}
+	}
+	
+	public static Mat grabcutFG(final Mat aMatInput, Rect aRect)
+	{
+		return grabcut(aMatInput, aRect, 1, true);
+	}
+	
+	public static Mat grabcutBG(final Mat aMatInput, Rect aRect)
+	{
+		return grabcut(aMatInput, aRect, 1, false);
+	}
+	
+	private static Mat grabcut(final Mat aMatInput, Rect aRect, int aIterCount, boolean isForeground)
+	{
+		Mat matOutMask 	= null;
+		Mat matGrabcutOutput = null;
+		
+		Mat matTmpInput = aMatInput.clone();
+		try {
+			matOutMask 	= new Mat();
+			Mat matFg 	= null;
+			Mat matbg 	= null;
+			try {
+				matFg = new Mat();
+				matbg = new Mat();
+				
+				/**
+				if(matTmpInput.width()>720)
+				{
+					OpenCvUtil.resizeByWidth(matTmpInput, 720);
+				}
+				**/
+				
+				if(aRect==null || (aRect.width==0 && aRect.height==0))
+					aRect = new Rect(0, 0, matTmpInput.width()-1, matTmpInput.height()-1);
+				
+				Imgproc.grabCut(matTmpInput, matOutMask, aRect, matbg, matFg, aIterCount, Imgproc.GC_INIT_WITH_RECT);
+			} finally
+			{
+				if(matFg!=null)
+					matFg.release();
+				
+				if(matbg!=null)
+					matbg.release();
+			}
+			
+			Mat matSegMask	= null;
+			try {
+				//2 = Background Mask
+				//3 = Foreground Mask
+				int iSegVal = isForeground ? 3:2;
+				matSegMask = new Mat(1, 1, CvType.CV_8U, new Scalar(iSegVal));
+				Core.compare(matOutMask, matSegMask, matOutMask, Core.CMP_EQ);
+			
+				if(matOutMask.size()!=aMatInput.size())
+				{
+					OpenCvUtil.resize(matOutMask, aMatInput.width(), aMatInput.height(), false);
+				}
+				
+				matGrabcutOutput = new Mat(aMatInput.size(), CvType.CV_8UC3, new Scalar(255, 255, 255));
+				aMatInput.copyTo(matGrabcutOutput, matOutMask);
+				
+			}
+			finally
+			{
+				if(matSegMask!=null)
+					matSegMask.release();
+			}
+		}
+		finally
+		{
+			if(matOutMask!=null)
+				matOutMask.release();
+			
+			if(matTmpInput!=null)
+				matTmpInput.release();
+		}
+		
+		return matGrabcutOutput;
 	}
 	
 	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
