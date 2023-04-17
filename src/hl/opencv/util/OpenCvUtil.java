@@ -282,7 +282,7 @@ public class OpenCvUtil{
 		return image;
 	}
 	
-	public static Mat bytesToMat(byte[] aImageBytes)
+	public static Mat bytes2Mat(byte[] aImageBytes)
 	{
 		MatOfByte matBytes = null;
 		try{
@@ -298,14 +298,20 @@ public class OpenCvUtil{
 		}
 	}
 	
-	public static byte[] matToBytes(Mat aMatImage, String aImageFormat) throws IOException
+	public static byte[] mat2Bytes(Mat aMatImage, String aImageFormat) throws IOException
 	{
 		MatOfByte matBytes = null;
 		byte[] byteData = null;
 		try{
 			matBytes = new MatOfByte();
-			Imgcodecs.imencode(aImageFormat, aMatImage, matBytes);
-			byteData = matBytes.toArray();
+			
+			if(aImageFormat!=null && !aImageFormat.startsWith("."))
+				aImageFormat = "."+aImageFormat;
+			
+			if(Imgcodecs.imencode(aImageFormat, aMatImage, matBytes))
+			{
+				byteData = matBytes.toArray();
+			}
 		}
 		finally
 		{
