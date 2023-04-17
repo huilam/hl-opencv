@@ -36,6 +36,7 @@ import java.util.Vector;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.opencv.core.Core;
@@ -279,6 +280,41 @@ public class OpenCvUtil{
 		}
 		
 		return image;
+	}
+	
+	public static Mat bytesToMat(byte[] aImageBytes)
+	{
+		MatOfByte matBytes = null;
+		try{
+			matBytes = new MatOfByte(aImageBytes);
+			return Imgcodecs.imdecode(matBytes, Imgcodecs.IMREAD_UNCHANGED);
+		}
+		finally
+		{
+			if(matBytes!=null)
+			{
+				matBytes.release();
+			}
+		}
+	}
+	
+	public static byte[] matToBytes(Mat aMatImage, String aImageFormat) throws IOException
+	{
+		MatOfByte matBytes = null;
+		byte[] byteData = null;
+		try{
+			matBytes = new MatOfByte();
+			Imgcodecs.imencode(aImageFormat, aMatImage, matBytes);
+			byteData = matBytes.toArray();
+		}
+		finally
+		{
+			if(matBytes!=null)
+			{
+				matBytes.release();
+			}
+		}
+		return byteData;
 	}
 	
 	public static void resizeByWidth(Mat aMatImg, int aNewWidth)
