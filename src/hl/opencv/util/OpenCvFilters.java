@@ -173,8 +173,24 @@ public class OpenCvFilters{
 	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
 	{
+		return cannyEdge(aMat, aThreshold, 3, isinvert);
+	}
+	
+	public static Mat cannyEdge(Mat aMat, int aThreshold, int aKernelSize, boolean isinvert)
+	{
+		return cannyEdge(aMat, aThreshold, aThreshold*3, aKernelSize, isinvert);
+	}
+	
+	private static Mat cannyEdge(Mat aMat, int aThreshold1, int aThreshold2, int aKernelSize, boolean isinvert)
+	{
+		
+		if(aKernelSize<3)
+			aKernelSize = 3;
+		else if(aKernelSize>7)
+			aKernelSize = 7;
+		
 		Mat matEdges = new Mat();
-		Imgproc.Canny(aMat, matEdges, aThreshold, aThreshold*2, 3, false);
+		Imgproc.Canny(aMat, matEdges, aThreshold1, aThreshold2, aKernelSize, false);
 		
 		if(isinvert)
 		{

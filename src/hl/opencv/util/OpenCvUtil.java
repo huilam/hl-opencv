@@ -364,17 +364,22 @@ public class OpenCvUtil{
 		}
 	}
 	
-	public static Mat grabcutFG(final Mat aMatInput, Rect aRect)
+	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
 	{
-		return grabcut(aMatInput, aRect, 1, true);
+		return grabcut(aMatInput, aRect, aBlurThreshold, 1, true);
 	}
 	
-	public static Mat grabcutBG(final Mat aMatInput, Rect aRect)
+	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount)
 	{
-		return grabcut(aMatInput, aRect, 1, false);
+		return grabcut(aMatInput, aRect, aBlurThreshold, aIterCount, true);
 	}
 	
-	private static Mat grabcut(final Mat aMatInput, Rect aRect, int aIterCount, boolean isForeground)
+	public static Mat grabcutBG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
+	{
+		return grabcut(aMatInput, aRect, aBlurThreshold, 1, false);
+	}
+	
+	private static Mat grabcut(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount, boolean isForeground)
 	{
 		Mat matOutMask 	= null;
 		Mat matGrabcutOutput = null;
@@ -387,13 +392,18 @@ public class OpenCvUtil{
 			try {
 				matFg = new Mat();
 				matbg = new Mat();
-				
 				/**
 				if(matTmpInput.width()>720)
 				{
 					OpenCvUtil.resizeByWidth(matTmpInput, 720);
 				}
 				**/
+				
+				if(aBlurThreshold>0)
+				{
+					//aBlurThreshold = 0.0 - 1.0
+					matTmpInput = OpenCvFilters.medianBlur(matTmpInput, aBlurThreshold);
+				}
 				
 				if(aRect==null || (aRect.width==0 && aRect.height==0))
 					aRect = new Rect(0, 0, matTmpInput.width()-1, matTmpInput.height()-1);
