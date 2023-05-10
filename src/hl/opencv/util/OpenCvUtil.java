@@ -1092,7 +1092,22 @@ public class OpenCvUtil{
 	
 	public static void initOpenCV()
 	{
-		OpenCvLibLoader cvLib = OpenCvLibLoader.getMasterInstance();
+		initOpenCV(null);
+	}
+	
+	public static void initOpenCV(String aCustomLibPath)
+	{
+		OpenCvLibLoader cvLib = null;
+		
+		if(aCustomLibPath==null || aCustomLibPath.trim().length()==0 || aCustomLibPath.equals("/"))
+		{
+			cvLib = OpenCvLibLoader.getMasterInstance();
+		}
+		else
+		{
+			cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "/");
+		}
+		
 		if(!cvLib.init())
 		{
 			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME);
