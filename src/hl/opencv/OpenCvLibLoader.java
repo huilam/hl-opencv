@@ -40,6 +40,23 @@ public class OpenCvLibLoader{
 	private boolean loaded 			= false;
 	private Exception errInit		= null;
 	private String opencv_version	= null;
+	
+	private static OpenCvLibLoader instance = null;
+	private static Object synObj = new Object();
+	private static Object synInitObj = new Object();
+	
+	public static OpenCvLibLoader getMasterInstance()
+	{
+		if(instance==null)
+		{
+			synchronized(synObj) 
+			{
+				instance = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "");
+				instance.init();
+			}
+		}
+		return instance;
+	}
 
 	public OpenCvLibLoader(String NativeLibName, String NativeLibPath)
 	{
@@ -87,32 +104,41 @@ public class OpenCvLibLoader{
 	//
 	public boolean init()
 	{
+		if(this.loaded)
+			return true;
+		
 		try {
-			this.errInit= null;
-			this.loaded = FileUtil.loadNativeLib(this.native_libname, this.native_libpath);
-			
-			ClassLoader cl = OpenCvLibLoader.class.getClassLoader();
-			
-			if(getOpencv_jarpath()!=null)
+			if(!this.loaded)
 			{
-				File fileJar = new File(getOpencv_jarpath());
-				if(fileJar.isFile())
+				synchronized(synInitObj)
 				{
-					cl = new URLClassLoader(new URL[]{ new URL(fileJar.getCanonicalPath())});
-				}
-				else
-				{
-					throw new Exception("File NOT found ! - "+getOpencv_jarpath());
-				}
-			}
-			
-			Class<?> classCV = cl.loadClass("org.opencv.core.Core");
-			if(classCV!=null)
-			{
-				Field f = classCV.getDeclaredField("VERSION");
-				if(f!=null)
-				{
-					this.opencv_version = (String) f.get(null);
+					this.errInit= null;
+					this.loaded = FileUtil.loadNativeLib(this.native_libname, this.native_libpath);
+					
+					ClassLoader cl = OpenCvLibLoader.class.getClassLoader();
+					
+					if(getOpencv_jarpath()!=null)
+					{
+						File fileJar = new File(getOpencv_jarpath());
+						if(fileJar.isFile())
+						{
+							cl = new URLClassLoader(new URL[]{ new URL(fileJar.getCanonicalPath())});
+						}
+						else
+						{
+							throw new Exception("File NOT found ! - "+getOpencv_jarpath());
+						}
+					}
+					
+					Class<?> classCV = cl.loadClass("org.opencv.core.Core");
+					if(classCV!=null)
+					{
+						Field f = classCV.getDeclaredField("VERSION");
+						if(f!=null)
+						{
+							this.opencv_version = (String) f.get(null);
+						}
+					}
 				}
 			}
 			
@@ -124,9 +150,9 @@ public class OpenCvLibLoader{
 		return this.loaded;
 	}
 	
-	public static OpenCvLibLoader testLoadCvLib()
+	private static OpenCvLibLoader testLoadCvLib()
 	{
-		File curDir = new File("./lib/opencv/4.4.0");
+		File curDir = new File("./lib/opencv/4.6.0");
 		//
 		String sNativeLibPath = curDir.getAbsolutePath();
 		String sNativeLibName = Core.NATIVE_LIBRARY_NAME;

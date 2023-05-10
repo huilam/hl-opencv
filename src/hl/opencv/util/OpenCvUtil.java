@@ -632,10 +632,16 @@ public class OpenCvUtil{
 	}
 	
 	//
-	public static Mat colorToWhiteMask(Mat aMat)
+	
+	public static Mat colorToMask(Mat aMat)
+	{
+		return colorToMask(aMat, 50);
+	}
+	
+	public static Mat colorToMask(Mat aMat, int aThreshold)
 	{
 		Mat matMask = new Mat();
-		Imgproc.threshold(aMat, matMask, 5, 255, Imgproc.THRESH_BINARY);
+		Imgproc.threshold(aMat, matMask, aThreshold, 255, Imgproc.THRESH_BINARY);
 		return OpenCvFilters.grayscale(matMask, false);
 	}
 	
@@ -1086,15 +1092,10 @@ public class OpenCvUtil{
 	
 	public static void initOpenCV()
 	{
-		initOpenCV("/");
-	}
-	
-	public static void initOpenCV(String aPath)
-	{
-		OpenCvLibLoader cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME,aPath);
-		if(cvLib!=null && !cvLib.init())
+		OpenCvLibLoader cvLib = OpenCvLibLoader.getMasterInstance();
+		if(!cvLib.init())
 		{
-			throw new RuntimeException("OpenCv is NOT loaded !");
+			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME);
 		}
 	}
 	

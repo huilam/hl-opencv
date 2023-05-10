@@ -92,7 +92,7 @@ public class OpenCvFilters{
 		Mat matMask = null;
 		try {
 			matSolid = new Mat(aMat.size(), aMat.type(), aScalar);
-			matMask = OpenCvUtil.colorToWhiteMask(aMat);
+			matMask = OpenCvUtil.colorToMask(aMat, 5);
 			Core.copyTo(matSolid, matReturn, matMask);
 		}
 		finally
