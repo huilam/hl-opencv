@@ -1099,18 +1099,21 @@ public class OpenCvUtil{
 	{
 		OpenCvLibLoader cvLib = null;
 		
-		if(aCustomLibPath==null || aCustomLibPath.trim().length()==0 || aCustomLibPath.equals("/"))
+		if(aCustomLibPath==null||aCustomLibPath.trim().length()==0)
+			aCustomLibPath = "/";
+		
+		if(aCustomLibPath.equals("/"))
 		{
 			cvLib = OpenCvLibLoader.getMasterInstance();
 		}
 		else
 		{
-			cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "/");
+			cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, aCustomLibPath);
 		}
 		
 		if(!cvLib.init())
 		{
-			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME);
+			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME+" path:"+aCustomLibPath);
 		}
 		
 		return cvLib;
