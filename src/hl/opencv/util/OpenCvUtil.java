@@ -1095,7 +1095,7 @@ public class OpenCvUtil{
 		initOpenCV(null);
 	}
 	
-	public static void initOpenCV(String aCustomLibPath)
+	public static OpenCvLibLoader initOpenCV(String aCustomLibPath)
 	{
 		OpenCvLibLoader cvLib = null;
 		
@@ -1112,6 +1112,8 @@ public class OpenCvUtil{
 		{
 			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME);
 		}
+		
+		return cvLib;
 	}
 	
 }
