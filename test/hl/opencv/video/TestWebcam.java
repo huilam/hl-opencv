@@ -24,7 +24,6 @@ package hl.opencv.video;
 
 import java.io.File;
 import java.util.Map;
-
 import org.opencv.core.Mat;
 
 import hl.opencv.util.OpenCvUtil;

@@ -13,10 +13,7 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="hl-opencv/lib/opencv/4.6.0"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/opencv/4.6.0/opencv-460-jdk11.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="hl-opencv/lib/opencv/4.6.0"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="lib/opencv/4.6.0/opencv-460-jdk11.jar"/>
+	<classpathentry kind="lib" path="lib/opencv/4.6.0/x86_64"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

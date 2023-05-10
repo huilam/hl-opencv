@@ -24,6 +24,8 @@ package hl.opencv.video;
 
 import java.io.File;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+
 import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
@@ -93,5 +95,17 @@ public class TestVideoDecoder extends VideoDecoder {
 		System.out.println(" - Total Skipped : "+aTotalSkipped);
 	}
 	
+	
+	public static void main(String args[]) throws Exception
+	{
+		OpenCvUtil.initOpenCV();
+		File fileVid = new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
 		
+		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
+		
+		TestVideoDecoder test = new TestVideoDecoder();
+		
+		test.processVideoFile(fileVid);
+		
+	}
 }

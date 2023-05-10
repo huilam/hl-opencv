@@ -51,7 +51,7 @@ public class OpenCvLibLoader{
 		{
 			synchronized(synObj) 
 			{
-				instance = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "");
+				instance = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "/");
 				instance.init();
 			}
 		}
