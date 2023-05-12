@@ -66,6 +66,9 @@ public class OpenCvUtilTest{
 			BufferedImage img = null;
 			Mat mat = null;
 			
+
+			boolean saved = false;
+			
 			try {
 				lStart = System.currentTimeMillis();
 				img = ImgUtil.loadImage(fImg.getAbsolutePath());
@@ -99,7 +102,7 @@ public class OpenCvUtilTest{
 				
 				////////////////
 				System.out.println();
-				String sImgExt = "jpg";
+				String sImgExt = "png";
 				
 				lStart = System.currentTimeMillis();
 				String sBase64_1 = ImgUtil.imageToBase64(img,sImgExt);
@@ -107,9 +110,10 @@ public class OpenCvUtilTest{
 				System.out.println("  ImgUtil.imageToBase64() "+sBase64_1.length()+" elapsed:"+lElapsed1+"ms");
 				
 				String sSaveFileName1 = "imageToBase64."+sImgExt;
-				ImgUtil.saveAsFile(img, new File(fileImageOutput.getAbsolutePath()+"/"+sSaveFileName1));
+				System.out.print("Saving "+sSaveFileName1+" ... ");
+				saved = ImgUtil.saveAsFile(img, new File(fileImageOutput.getAbsolutePath()+"/"+sSaveFileName1));
 				File fBase64_1 = new File(fileImageOutput.getAbsolutePath()+"/"+sSaveFileName1);
-				System.out.println("  Saved "+sSaveFileName1+" - "+fBase64_1.length());
+				System.out.println(saved+" - "+fBase64_1.length());
 				
 				System.out.println();
 				lStart = System.currentTimeMillis();
@@ -118,9 +122,11 @@ public class OpenCvUtilTest{
 				System.out.println("  ImgUtil.mat2base64Img() "+sBase64_2.length()+" elapsed:"+lElapsed2+"ms");
 				
 				String sSaveFileName2 = "mat2base64Img."+sImgExt;
-				OpenCvUtil.saveImageAsFile(mat, fileImageOutput.getAbsolutePath()+"/"+sSaveFileName2);
+				System.out.print("  Saving "+sSaveFileName2+" ... ");
+				saved = OpenCvUtil.saveImageAsFile(mat, fileImageOutput.getAbsolutePath()+"/"+sSaveFileName2);
 				File fBase64_2 = new File(fileImageOutput.getAbsolutePath()+"/"+sSaveFileName2);
-				System.out.println("  Saved "+sSaveFileName2+" - "+fBase64_2.length());
+				System.out.println(saved+" - "+fBase64_2.length());
+
 				
 				
 				////////////////
@@ -144,30 +150,26 @@ public class OpenCvUtilTest{
 				Mat matPixelate = OpenCvFilters.pixelate(mat, iPixelate);
 				long lElapsed4 = getElapsedMs(lStart);
 				
-				lStart = System.currentTimeMillis();
-				BufferedImage imgPixelate = ImgUtil.pixelize(img, (float)iPixelate);
-				long lElapsed5 = getElapsedMs(lStart);
-				
 				File f = new File(fileImageOutput.getAbsolutePath()+"/blur."+sImgExt);
-				OpenCvUtil.saveImageAsFile(matBlur1, f.getAbsolutePath());
-				System.out.println("  Saved "+f.getName()+" - "+lElapsed1+" ms");
+				System.out.print("  Saving "+f.getName()+" ... ");
+				saved = OpenCvUtil.saveImageAsFile(matBlur1, f.getAbsolutePath());
+				System.out.println(saved+"  - "+lElapsed1+" ms");
 				
 				f = new File(fileImageOutput.getAbsolutePath()+"/medianBlur."+sImgExt);
+				System.out.print("  Saving "+f.getName()+" ... ");
 				OpenCvUtil.saveImageAsFile(matBlur2, f.getAbsolutePath());
-				System.out.println("  Saved "+f.getName()+" - "+lElapsed2+" ms");
+				System.out.println(saved+"  - "+lElapsed2+" ms");
 				
 				f = new File(fileImageOutput.getAbsolutePath()+"/gaussianBlur."+sImgExt);
+				System.out.print("  Saving "+f.getName()+" ... ");
 				OpenCvUtil.saveImageAsFile(matBlur3, f.getAbsolutePath());
-				System.out.println("  Saved "+f.getName()+" - "+lElapsed3+" ms");
+				System.out.println(saved+"  - "+lElapsed3+" ms");
 			
 				f = new File(fileImageOutput.getAbsolutePath()+"/MatPixelate."+sImgExt);
+				System.out.print("  Saving "+f.getName()+" ... ");
 				OpenCvUtil.saveImageAsFile(matPixelate, f.getAbsolutePath());
-				System.out.println("  Saved "+f.getName()+" - "+lElapsed4+" ms");
+				System.out.println(saved+"  - "+lElapsed4+" ms");
 				
-				f = new File(fileImageOutput.getAbsolutePath()+"/ImgPixelate."+sImgExt);
-				ImgUtil.saveAsFile(imgPixelate, f);
-				System.out.println("  Saved "+f.getName()+" - "+lElapsed5+" ms");				
-				mat.release();
 				
 			} catch (IOException e) {
 				e.printStackTrace();

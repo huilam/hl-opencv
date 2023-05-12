@@ -1042,26 +1042,35 @@ public class OpenCvUtil{
 		return mat;
 	}
 	
-	public static void saveImageAsFile(Mat aMatInput, String aFileName)
+	public static boolean saveImageAsFile(Mat aMatInput, String aFileName)
 	{
 		Map<Integer, Integer> mapImageParams = new HashMap<Integer, Integer>();
 		
-		if(aFileName!=null && aFileName.toLowerCase().endsWith(".jpg"))
+		if(aFileName!=null)
 		{
-			mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+			String sExt = aFileName.toLowerCase();
+			if(sExt.endsWith(".jpg"))
+			{
+				mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+			}
+			else if(sExt.endsWith(".png"))
+			{
+				addAlphaChannel(aMatInput);
+			}
 		}
 		
-		saveImageAsFile(aMatInput, aFileName, mapImageParams);
+		return saveImageAsFile(aMatInput, aFileName, mapImageParams);
 	}
 	
-	public static void saveImageAsFile(Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
+	public static boolean saveImageAsFile(Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
 	{
 		MatOfInt matOfInt = null;
 		try {
 			
+			matOfInt = new MatOfInt();
 			if(mapImageParams!=null && mapImageParams.size()>0)
 			{
-				matOfInt = new MatOfInt();
+				
 				List<Integer> list = new ArrayList<Integer> ();
 				Iterator<Integer> iter = mapImageParams.keySet().iterator();
 				while(iter.hasNext())
@@ -1078,10 +1087,7 @@ public class OpenCvUtil{
 				matOfInt.fromList(list);
 			}
 			
-			if(matOfInt!=null)
-			{
-				Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
-			}
+			return Imgcodecs.imwrite(aFileName, aMatInput, matOfInt);
 		}
 		finally
 		{
@@ -1092,7 +1098,7 @@ public class OpenCvUtil{
 	
 	public static void initOpenCV()
 	{
-		initOpenCV(null);
+		initOpenCV("/");
 	}
 	
 	public static OpenCvLibLoader initOpenCV(String aCustomLibPath)
