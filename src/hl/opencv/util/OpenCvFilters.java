@@ -71,7 +71,7 @@ public class OpenCvFilters{
 		return grayscale(aMat, false);
 	}
 	
-	private static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
+	public static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
 	{
 		switch(aNewChannelNo)
 		{

@@ -408,7 +408,19 @@ public class OpenCvUtil{
 				if(aRect==null || (aRect.width==0 && aRect.height==0))
 					aRect = new Rect(0, 0, matTmpInput.width()-1, matTmpInput.height()-1);
 				
+				switch(matTmpInput.channels())
+				{
+					case 1 : OpenCvFilters.grayToMultiChannel(matTmpInput, 3);
+					case 2 : break;
+					case 3 : break;
+					case 4 : OpenCvUtil.removeAlphaChannel(matTmpInput);
+							 break;
+				}
+				
+				//Grabcut support CV_8UC3 only
 				Imgproc.grabCut(matTmpInput, matOutMask, aRect, matbg, matFg, aIterCount, Imgproc.GC_INIT_WITH_RECT);
+				
+				
 			} finally
 			{
 				if(matFg!=null)
@@ -1119,7 +1131,16 @@ public class OpenCvUtil{
 		
 		if(!cvLib.init())
 		{
-			throw new RuntimeException("OpenCv is NOT loaded ! "+Core.NATIVE_LIBRARY_NAME+" path:"+aCustomLibPath);
+			StringBuffer sErr = new StringBuffer();
+			sErr.append("OpenCv is NOT loaded ! libname:").append(Core.NATIVE_LIBRARY_NAME);
+			sErr.append(", libpath:").append(aCustomLibPath);
+			
+			Exception e = cvLib.getInitException();
+			if(e!=null)
+			{
+				sErr.append("\n    Exception:").append(e.getMessage());
+			}
+			throw new RuntimeException(sErr.toString());
 		}
 		
 		return cvLib;
