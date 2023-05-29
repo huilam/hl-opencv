@@ -8,10 +8,10 @@ Tested on OpenCV
 # Enable Camera & Microphone Access for MacOS Eclipse
 
 1. vi Eclipse.app/Contents/Info.plist
-
-\<key>NSCameraUsageDescription\</key><br />
-\<string>Eclipse requires camera access\</string><br />
-\<key>NSMicrophoneUsageDescription\</key><br />
-\<string>Eclipse requires microphone access\</string><br />
-
+```
+<key>NSCameraUsageDescription</key>
+<string>Eclipse requires camera access</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Eclipse requires microphone access</string>
+```
 2. sudo codesign --force --deep --sign - Eclipse.app
