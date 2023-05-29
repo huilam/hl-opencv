@@ -569,11 +569,13 @@ public class VideoDecoder {
 						else
 						{
 							lCurFrameTimestamp += dFrameMs;
-							if(lCurFrameTimestamp > lAdjSelFrameMsTo)
-							{
-								break;
-							}
 						}
+						
+						if(lCurFrameTimestamp > lAdjSelFrameMsTo)
+						{
+							break;
+						}
+						
 						lCurrentFrameNo++;
 						lActualProcessed++;
 							
@@ -581,7 +583,8 @@ public class VideoDecoder {
 						{
 							if(isLiveCam)
 							{
-								dProgressPercentage = 1.0;
+								if(dProgressPercentage<99)
+									dProgressPercentage += 0.5;
 							}
 							else
 							{
