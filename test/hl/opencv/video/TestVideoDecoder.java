@@ -24,8 +24,6 @@ package hl.opencv.video;
 
 import java.io.File;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
-
 import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoDecoder extends VideoDecoder {
@@ -52,9 +50,15 @@ public class TestVideoDecoder extends VideoDecoder {
 	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
 	{
-		System.out.print("#"+aCurFrameNo+" - "+matFrame.width()+"x"+matFrame.height()+" "+aCurFrameMs+"ms "+toDurationStr(aCurFrameMs)+" ... "+aProgressPercentage+"%");
-				
-		System.out.println();
+		
+		if(aProgressPercentage%5==0 || aCurFrameNo==1)
+		{
+			System.out.print("#"+aCurFrameNo+" - "+matFrame.width()+"x"+matFrame.height()+" "+aCurFrameMs+"ms "+toDurationStr(aCurFrameMs)+" ... "+aProgressPercentage+"%");		
+			System.out.println();
+		}
+		
+		matFrame.release();
+		
 		return matFrame;
 	}
 	
@@ -92,7 +96,8 @@ public class TestVideoDecoder extends VideoDecoder {
 		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
 		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
 		System.out.println(" - Total Elapsed/Processed : "+aElpasedMs+" ms / "+aTotalProcessed+" = "+dMsPerFrame+" ms");
-		System.out.println(" - Total Skipped : "+aTotalSkipped);
+		System.out.println(" - Total Skipped : "+aTotalSkipped);	
+		System.out.println(" - Processed FPS : "+(aTotalProcessed / (aElpasedMs/1000)));
 	}
 	
 	
@@ -103,9 +108,19 @@ public class TestVideoDecoder extends VideoDecoder {
 		
 		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
 		
+		long lFreeMemory1 = Runtime.getRuntime().freeMemory();
+		
+		
 		TestVideoDecoder test = new TestVideoDecoder();
 		
 		test.processVideoFile(fileVid);
+		long lFreeMemory2 = Runtime.getRuntime().freeMemory();
+		
+		System.out.println("totalMemory="+Runtime.getRuntime().totalMemory());
+		System.out.println("freeMemory (before) ="+lFreeMemory1);
+		System.out.println("freeMemory (after) ="+lFreeMemory2);
+		System.out.println("freeMemorry (after-before) ="+(lFreeMemory2-lFreeMemory1));
+		
 		
 	}
 }

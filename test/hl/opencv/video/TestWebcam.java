@@ -22,10 +22,6 @@
 
 package hl.opencv.video;
 
-import java.io.File;
-import java.util.Map;
-import org.opencv.core.Mat;
-
 import hl.opencv.util.OpenCvUtil;
 
 public class TestWebcam {
@@ -33,9 +29,11 @@ public class TestWebcam {
 	
 	public static void main(String args[]) throws Exception
 	{
+		
 		OpenCvUtil.initOpenCV();
 		TestVideoDecoder vidDecoder = new TestVideoDecoder();
-		System.out.println(vidDecoder.listCameras(false));
+		
+		vidDecoder.processCamera(0,5000);
 		
 	}
 		
