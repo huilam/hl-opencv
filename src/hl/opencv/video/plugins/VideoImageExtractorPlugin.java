@@ -30,9 +30,9 @@ import hl.opencv.util.OpenCvUtil;
 
 public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	
-	public File folder_imgoutput = null;
-	public long extract_success_count = 0;
-	public long extract_failed_count = 0;
+	private File folder_imgoutput = null;
+	private long extract_success_count = 0;
+	private long extract_failed_count = 0;
 	
 	public boolean setOutputFolder(String aOutputFolder)
 	{

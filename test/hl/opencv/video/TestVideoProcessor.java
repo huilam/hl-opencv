@@ -25,6 +25,7 @@ package hl.opencv.video;
 import java.io.File;
 import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.plugins.VideoImageExtractorPlugin;
+import hl.opencv.video.plugins.VideoImageSizeCalcPlugin;
 import hl.opencv.video.plugins.VideoProcessorDebugPlugin;
 
 public class TestVideoProcessor {
@@ -42,8 +43,14 @@ public class TestVideoProcessor {
 		
 		VideoProcessor test = new VideoProcessor();
 		
-		//test.processLiveCamera(0, VideoImageExtractorPlugin.class.getName(), -1);
-		test.processVideoFile(fileVid, VideoImageExtractorPlugin.class.getName());
+		String sPluginClassName = null;
+		
+		sPluginClassName = VideoImageExtractorPlugin.class.getName();
+		//sPluginClassName = VideoProcessorDebugPlugin.class.getName();
+		//sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
+		
+		test.processLiveCamera(0, sPluginClassName, -1);
+		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
 		
 		long lFreeMemory2 = Runtime.getRuntime().freeMemory();
 		System.out.println();

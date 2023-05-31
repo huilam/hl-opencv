@@ -28,7 +28,7 @@ import hl.opencv.video.VideoDecoder;
 
 public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	
-	public int _DEBUG_FRAME_COUNT = 50;
+	private int _DEBUG_FRAME_COUNT = 50;
 
 	@Override
 	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
