@@ -542,12 +542,20 @@ public class VideoDecoder {
 				if(!isProcessVideo)
 					return 0;
 				
-				ImgSegmentation imgSegment = new ImgSegmentation();
-				imgSegment.setBackground_ref_mat(this.mat_seg_bgref);
+				ImgSegmentation imgSegment = null;
+				if(this.mat_seg_bgref!=null)
+				{
+					imgSegment = new ImgSegmentation();
+					imgSegment.setBackground_ref_mat(this.mat_seg_bgref);
+				}
 				
-				ImgROI imgROI = new ImgROI();
-				imgROI.setROI_mask(this.mat_roi_mask);
-				imgROI.setCrop_ROI_rect(this.rect_crop_roi);
+				ImgROI imgROI = null;
+				if(this.mat_roi_mask!=null || this.rect_crop_roi!=null)
+				{
+					imgROI = new ImgROI();
+					imgROI.setROI_mask(this.mat_roi_mask);
+					imgROI.setCrop_ROI_rect(this.rect_crop_roi);
+				}
 				
 				double dProgressPercentage = 0.0;
 				
@@ -571,7 +579,7 @@ public class VideoDecoder {
 							lCurFrameTimestamp += dFrameMs;
 						}
 						
-						if(lCurFrameTimestamp > lAdjSelFrameMsTo)
+						if(lAdjSelFrameMsTo>-1 && lCurFrameTimestamp > lAdjSelFrameMsTo)
 						{
 							break;
 						}
@@ -581,10 +589,16 @@ public class VideoDecoder {
 							
 						if(vid.grab())
 						{
-							if(isLiveCam)
+							if(lAdjSelFrameMsTo==-1 && isLiveCam)
 							{
 								if(dProgressPercentage<99)
+								{
 									dProgressPercentage += 0.5;
+								}
+								else
+								{
+									dProgressPercentage = 99.99;
+								}
 							}
 							else
 							{
@@ -609,12 +623,12 @@ public class VideoDecoder {
 							}
 						}
 						
-						if(this.mat_seg_bgref!=null)
+						if(imgSegment!=null)
 						{
 							matFrame = imgSegment.extractForeground(matFrame);
 						}
 						
-						if(this.mat_roi_mask!=null || this.rect_crop_roi!=null)
+						if(imgROI!=null)
 						{
 							imgROI.extractImageROI(matFrame);
 						}
