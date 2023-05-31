@@ -40,9 +40,10 @@ public class VideoProcessor {
 	
 	public void processLiveCamera(int aCamID, String aProcessorPluginName, long aMsDuration)
 	{
-		IVideoProcessorPlugin plugin = initPlugin(aProcessorPluginName);
+		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, String.valueOf(aCamID));
 		VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
 		vidDecoder.processCamera(aCamID, aMsDuration);
+		plugin.destroyPlugin(String.valueOf(aCamID));
 	}
 	
 	//////////////////////////////////////
@@ -55,17 +56,18 @@ public class VideoProcessor {
 	public void processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
-		IVideoProcessorPlugin plugin = initPlugin(aProcessorPluginName);
+		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, aVidFile.getAbsolutePath());
 		if(plugin!=null)
 		{
 			VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
 			vidDecoder.processVideoFile(aVidFile);
+			plugin.destroyPlugin(aVidFile.getAbsolutePath());
 		}
 	}
 	
 	//////////////////////////////////////
 	
-	private IVideoProcessorPlugin initPlugin(String aPluginClassName)
+	private IVideoProcessorPlugin initNewPlugin(String aPluginClassName, String aVideoSource)
 	{
 		IVideoProcessorPlugin plugin = null;
 		
@@ -74,12 +76,17 @@ public class VideoProcessor {
 			if(classPlugin!=null)
 			{
 				plugin = (IVideoProcessorPlugin) classPlugin.getDeclaredConstructor().newInstance();
+				if(plugin.initPlugin(aVideoSource))
+				{
+					return plugin;
+				}
+				else throw new Exception("plugin:"+aPluginClassName+" - InitPlugin return false !");
 			}
 		}catch(Exception ex)
 		{
 			logger.severe(ex.getMessage());
 		}
-		return plugin;
+		return null;
 	}
 	
 	private VideoDecoder initVideoDecoderWithPlugin(IVideoProcessorPlugin aProcessorPlugin)

@@ -26,6 +26,8 @@ import org.opencv.core.Mat;
 
 public interface IVideoProcessorPlugin {
 	
+	public boolean initPlugin(String aVideoSource);
+	
 	public boolean processStarted(String aVideoFileName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs);
@@ -42,4 +44,5 @@ public interface IVideoProcessorPlugin {
 	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);
 	
+	public void destroyPlugin(String aVideoSource);
 }
