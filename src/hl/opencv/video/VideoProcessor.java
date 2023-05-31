@@ -49,18 +49,18 @@ public class VideoProcessor {
 	
 	public void processVideoFile(File aVidFile, String aProcessorPluginName)
 	{
+		processVideoFile(aVidFile, aProcessorPluginName, 0, -1);
+	}
+	
+	public void processVideoFile(File aVidFile, String aProcessorPluginName,
+			long aFrameDurationFrom, long aFrameDurationTo)
+	{
 		IVideoProcessorPlugin plugin = initPlugin(aProcessorPluginName);
 		if(plugin!=null)
 		{
-			processVideoFile(aVidFile, 0, -1, plugin);
+			VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
+			vidDecoder.processVideoFile(aVidFile);
 		}
-	}
-	
-	public void processVideoFile(File aVidFile, long aFrameDurationFrom, long aFrameDurationTo,  
-			IVideoProcessorPlugin aProcessorPlugin)
-	{
-		VideoDecoder vidDecoder = initVideoDecoderWithPlugin(aProcessorPlugin);
-		vidDecoder.processVideoFile(aVidFile);
 	}
 	
 	//////////////////////////////////////
