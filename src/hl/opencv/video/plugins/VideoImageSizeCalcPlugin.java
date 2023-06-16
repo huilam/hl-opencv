@@ -22,6 +22,8 @@
 
 package hl.opencv.video.plugins;
 
+import java.util.Map;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfInt;
@@ -87,7 +89,7 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?, ?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
@@ -97,7 +99,7 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 		System.out.println(" - "+image_file_format+" Quality : "+jpg_quality+"%");
 		System.out.println(" - Total "+image_file_format+" File Count : "+_total_jpg_file_count);
 		System.out.println(" - Total "+image_file_format+" File Size  : "+bytesToWords(_total_jpg_file_size));
-		
+		return null;
 	}
 
 	@Override

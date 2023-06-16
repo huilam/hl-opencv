@@ -23,6 +23,7 @@
 package hl.opencv.video.plugins;
 
 import java.io.File;
+import java.util.Map;
 
 import org.opencv.core.Mat;
 
@@ -58,7 +59,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 		else
 			extract_failed_count++;
 		
-		if(aCurFrameNo%100==0 || aCurFrameNo==1)
+		if(aCurFrameNo%50==0 || aCurFrameNo==1)
 		{
 			System.out.println();
 			System.out.print("#"+aCurFrameNo+" "+aProgressPercentage+"% ");
@@ -83,7 +84,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?,?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
@@ -93,7 +94,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 		System.out.println(" - Images Extract Location: "+folder_imgoutput.getAbsolutePath());
 		System.out.println(" - Images Extract Success: "+extract_success_count);
 		System.out.println(" - Images Extract Failed : "+extract_failed_count);
-		
+		return null;
 	}
 
 	@Override
@@ -106,7 +107,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 		if(fileVideo==null)
 		{
 			//Live Camera
-			folder_imgoutput = new File("./"+"cameras/"+aVideoSource+"/output/"+System.currentTimeMillis());
+			folder_imgoutput = new File("./test/"+"cameras/"+aVideoSource+"/output/"+System.currentTimeMillis());
 			return folder_imgoutput.mkdirs();
 		}
 		else if(fileVideo.isDirectory())

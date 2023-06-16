@@ -22,6 +22,8 @@
 
 package hl.opencv.video.plugins;
 
+import java.util.Map;
+
 import org.opencv.core.Mat;
 
 public interface IVideoProcessorPlugin {
@@ -41,7 +43,7 @@ public interface IVideoProcessorPlugin {
 	public Mat processAborted(String aVideoFileName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason);
 	
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public Map<?, ?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);
 	
 	public void destroyPlugin(String aVideoSource);

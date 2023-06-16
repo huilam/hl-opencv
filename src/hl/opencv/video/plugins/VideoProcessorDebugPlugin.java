@@ -22,6 +22,8 @@
 
 package hl.opencv.video.plugins;
 
+import java.util.Map;
+
 import org.opencv.core.Mat;
 
 import hl.opencv.video.VideoDecoder;
@@ -85,7 +87,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?,?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoFileName);
@@ -106,6 +108,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 		
 		System.out.println(" - Processed FPS : "+dFps);
 		System.out.println(" - Processing Time/Frame : "+dMsPerFrame+" ms");
+		return null;
 	}
 
 	@Override
