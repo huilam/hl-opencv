@@ -27,6 +27,7 @@ import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.plugins.VideoImageExtractorPlugin;
 import hl.opencv.video.plugins.VideoImageSizeCalcPlugin;
 import hl.opencv.video.plugins.VideoProcessorDebugPlugin;
+import hl.opencv.video.plugins.VideoReEncodingPlugin;
 
 public class TestVideoProcessor {
 	
@@ -39,17 +40,29 @@ public class TestVideoProcessor {
 		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
 		
 		long lFreeMemory1 = Runtime.getRuntime().freeMemory();
-		
+		 
 		
 		VideoProcessor test = new VideoProcessor();
 		
 		String sPluginClassName = null;
 		
-		sPluginClassName = VideoImageExtractorPlugin.class.getName();
-		//sPluginClassName = VideoProcessorDebugPlugin.class.getName();
-		//sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
-		
-		test.processLiveCamera(0, sPluginClassName, -1);
+		int iPluginId = 0;
+	
+		switch(iPluginId)
+		{
+			case 1 : 
+				break;
+			case 2 : sPluginClassName = VideoProcessorDebugPlugin.class.getName();
+				break;
+			case 3 : sPluginClassName = VideoImageExtractorPlugin.class.getName();
+				break;
+			case 4 : sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
+				break;
+			default :
+				sPluginClassName = VideoReEncodingPlugin.class.getName();
+				break;
+		}
+		//test.processLiveCamera(0, sPluginClassName, -1);
 		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
 		
 		long lFreeMemory2 = Runtime.getRuntime().freeMemory();
