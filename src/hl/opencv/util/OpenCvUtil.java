@@ -985,9 +985,9 @@ public class OpenCvUtil{
 		return OpenCvMask.calcMaskTrimRect(aMat);
 	}
 	
-	public static void removeMaskNoice(Mat aBinaryMask)
+	public static void removeMaskNoise(Mat aBinaryMask)
 	{
-		OpenCvMask.removeMaskNoice(aBinaryMask);
+		OpenCvMask.removeMaskNoise(aBinaryMask);
 	}
 	
 }
