@@ -24,10 +24,10 @@ package hl.opencv.video;
 
 import java.io.File;
 import hl.opencv.util.OpenCvUtil;
+import hl.opencv.video.plugins.VideoFileReEncodingPlugin;
 import hl.opencv.video.plugins.VideoImageExtractorPlugin;
 import hl.opencv.video.plugins.VideoImageSizeCalcPlugin;
 import hl.opencv.video.plugins.VideoProcessorDebugPlugin;
-import hl.opencv.video.plugins.VideoReEncodingPlugin;
 
 public class TestVideoProcessor {
 	
@@ -46,7 +46,7 @@ public class TestVideoProcessor {
 		
 		String sPluginClassName = null;
 		
-		int iPluginId = 0;
+		int iPluginId = 4;
 	
 		switch(iPluginId)
 		{
@@ -59,7 +59,7 @@ public class TestVideoProcessor {
 			case 4 : sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
 				break;
 			default :
-				sPluginClassName = VideoReEncodingPlugin.class.getName();
+				sPluginClassName = VideoFileReEncodingPlugin.class.getName();
 				break;
 		}
 		//test.processLiveCamera(0, sPluginClassName, -1);

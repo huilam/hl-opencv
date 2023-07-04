@@ -24,6 +24,7 @@ package hl.opencv.video.plugins;
 
 import java.util.Map;
 
+import org.json.JSONObject;
 import org.opencv.core.Mat;
 
 import hl.opencv.video.VideoDecoder;
@@ -112,13 +113,13 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public boolean initPlugin(String aVideoSource) {
+	public boolean initPlugin(JSONObject aMetaJson) {
 		_DEBUG_FRAME_COUNT = 10;
 		return true;
 	}
 
 	@Override
-	public void destroyPlugin(String aVideoSource) {
+	public void destroyPlugin(JSONObject aMetaJson) {
 	}
 	
 	/////////////////////////////////

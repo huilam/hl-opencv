@@ -23,8 +23,10 @@
 package hl.opencv.video;
 
 import java.io.File;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONObject;
 import org.opencv.core.Mat;
 
 import hl.opencv.video.plugins.IVideoProcessorPlugin;
@@ -40,10 +42,27 @@ public class VideoProcessor {
 	
 	public void processLiveCamera(int aCamID, String aProcessorPluginName, long aMsDuration)
 	{
-		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, String.valueOf(aCamID));
-		VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
-		vidDecoder.processCamera(aCamID, aMsDuration);
-		plugin.destroyPlugin(String.valueOf(aCamID));
+		JSONObject jsonMeta = VideoDecoder.getCameraMetadata(aCamID);
+		if(jsonMeta==null || jsonMeta.length()==0)
+		{
+			logger.log(Level.SEVERE, "Invalid camera - "+aCamID);
+			return;
+		}
+		
+		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
+		if(plugin!=null)
+		{
+			VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
+			if(vidDecoder!=null)
+			{
+				vidDecoder.processCamera(aCamID, aMsDuration);
+				plugin.destroyPlugin(jsonMeta);
+			}
+		}
+		else
+		{
+			logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
+		}
 	}
 	
 	//////////////////////////////////////
@@ -56,18 +75,32 @@ public class VideoProcessor {
 	public void processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
-		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, aVidFile.getAbsolutePath());
+		JSONObject jsonMeta = VideoDecoder.getVideoFileMetadata(aVidFile);
+		if(jsonMeta==null || jsonMeta.length()==0)
+		{
+			logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
+			return;
+		}
+		
+		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
 		if(plugin!=null)
 		{
 			VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
-			vidDecoder.processVideoFile(aVidFile);
-			plugin.destroyPlugin(aVidFile.getAbsolutePath());
+			if(vidDecoder!=null)
+			{
+				vidDecoder.processVideoFile(aVidFile);
+				plugin.destroyPlugin(jsonMeta);
+			}
+		}
+		else
+		{
+			logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
 		}
 	}
 	
 	//////////////////////////////////////
 	
-	private IVideoProcessorPlugin initNewPlugin(String aPluginClassName, String aVideoSource)
+	private IVideoProcessorPlugin initNewPlugin(String aPluginClassName, JSONObject aMetaJson)
 	{
 		IVideoProcessorPlugin plugin = null;
 		
@@ -76,7 +109,7 @@ public class VideoProcessor {
 			if(classPlugin!=null)
 			{
 				plugin = (IVideoProcessorPlugin) classPlugin.getDeclaredConstructor().newInstance();
-				if(plugin.initPlugin(aVideoSource))
+				if(plugin.initPlugin(aMetaJson))
 				{
 					return plugin;
 				}

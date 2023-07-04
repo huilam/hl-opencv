@@ -24,11 +24,12 @@ package hl.opencv.video.plugins;
 
 import java.util.Map;
 
+import org.json.JSONObject;
 import org.opencv.core.Mat;
 
 public interface IVideoProcessorPlugin {
 	
-	public boolean initPlugin(String aVideoSource);
+	public boolean initPlugin(JSONObject aMetaJson);
 	
 	public boolean processStarted(String aVideoFileName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
@@ -46,5 +47,5 @@ public interface IVideoProcessorPlugin {
 	public Map<?, ?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);
 	
-	public void destroyPlugin(String aVideoSource);
+	public void destroyPlugin(JSONObject aMetaJson);
 }

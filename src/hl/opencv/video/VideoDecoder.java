@@ -113,7 +113,7 @@ public class VideoDecoder {
 	}
 	////
 	
-	protected JSONArray listCameras(boolean isIncludeSampleBase64)
+	protected static JSONArray listCameras(boolean isIncludeSampleBase64)
 	{
 		JSONArray jsonArrCams 	= new JSONArray();
 		VideoCapture vid 		= null;
@@ -168,17 +168,17 @@ public class VideoDecoder {
 		return jsonArrCams;
 	}
 	
-	public JSONObject getVideoFileMetadata(File aVideoFile)
+	public static JSONObject getVideoFileMetadata(File aVideoFile)
 	{
 		return getVideoFileMetadata(aVideoFile, false);
 	}
 	
-	public JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview)
+	public static JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview)
 	{
 		return getVideoFileMetadata(aVideoFile, isShowPreview, 200);
 	}
 	
-	public JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview, int aPreviewWidth)
+	public static JSONObject getVideoFileMetadata(File aVideoFile, boolean isShowPreview, int aPreviewWidth)
 	{
 		JSONObject jsonMeta = new JSONObject();
 		if(validateFileInput(aVideoFile,0,0)==0)
@@ -186,6 +186,7 @@ public class VideoDecoder {
 			VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
 			jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
 			//
+			jsonMeta.put("SOURCE", aVideoFile.getAbsolutePath());
 			jsonMeta.put("FILE_SIZE", aVideoFile.length());
 			jsonMeta.put("FILE_LAST_MODIFIED", aVideoFile.lastModified());
 		}
@@ -194,17 +195,17 @@ public class VideoDecoder {
 	}
 	
 	
-	public JSONObject getCameraMetadata(int aCapDeviceID)
+	public static JSONObject getCameraMetadata(int aCapDeviceID)
 	{
 		return getCameraMetadata(aCapDeviceID, false, 0);
 	}
 	
-	public JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview)
+	public static JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview)
 	{
 		return getCameraMetadata(aCapDeviceID, isShowPreview, 0);
 	}
 	
-	public JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview, int aPreviewWidth)
+	public static JSONObject getCameraMetadata(int aCapDeviceID, boolean isShowPreview, int aPreviewWidth)
 	{
 		JSONObject jsonMeta = new JSONObject();
 		if(aCapDeviceID>=0)
@@ -212,13 +213,14 @@ public class VideoDecoder {
 			VideoCapture vid = new VideoCapture(aCapDeviceID);
 			jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
 			//
+			jsonMeta.put("SOURCE", aCapDeviceID);
 			jsonMeta.put("CAPTURE_DEVICE_ID", aCapDeviceID);
 		}
 		
 		return jsonMeta;
 	}
 	
-	private JSONObject getVidCapMetadata(VideoCapture aVideoCap, boolean isShowPreview, int aPreviewWidth)
+	private static JSONObject getVidCapMetadata(VideoCapture aVideoCap, boolean isShowPreview, int aPreviewWidth)
 	{
 		JSONObject jsonMeta = new JSONObject();
 
@@ -294,7 +296,7 @@ public class VideoDecoder {
 		return jsonMeta;
 	}
 	
-	private int validateFileInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	private static int validateFileInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		int iErrCode = 0;
 		if(aVideoFile==null || !aVideoFile.isFile())
@@ -678,9 +680,6 @@ public class VideoDecoder {
 						}
 					}
 				}
-				
-				
-				
 			}
 		}finally
 		{

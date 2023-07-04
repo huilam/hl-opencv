@@ -22,30 +22,26 @@
 
 package hl.opencv.video.plugins;
 
-import java.io.File;
 import java.util.Map;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
+import org.opencv.videoio.VideoWriter;
 
-import hl.opencv.util.OpenCvUtil;
+import hl.opencv.video.VideoDecoder;
+import hl.opencv.video.VideoEncoder;
 
-public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
+public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	
-	private File folder_imgoutput = null;
-	private long extract_success_count = 0;
-	private long extract_failed_count = 0;
+	private static final String OUTPUT_VIDEO_ENCODER 	= "h264";
 	
-	public boolean setOutputFolder(String aOutputFolder)
-	{
-		File folder = new File(aOutputFolder);
-		folder.mkdirs();
-		return folder.isDirectory();
-	}
+	private int iEncodeFormat = -1;
+	private VideoEncoder videoEnc = null;
 
 	@Override
 	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
+		
 		return true;
 	}
 
@@ -53,20 +49,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
-		String sImageFileName = aVideoFileName+"_"+aCurFrameNo+"_"+aCurFrameMs+".jpg";
-		
-		if(OpenCvUtil.saveImageAsFile(matFrame, folder_imgoutput.getAbsolutePath()+"/"+sImageFileName))
-			extract_success_count++;
-		else
-			extract_failed_count++;
-		
-		if(aCurFrameNo%50==0 || aCurFrameNo==1)
-		{
-			System.out.println();
-			System.out.print("#"+aCurFrameNo+" "+aProgressPercentage+"% ");
-		}
-		System.out.print(".");		
-		
+
 		return matFrame;
 	}
 
@@ -74,60 +57,65 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason, double aScore) {
 		
+		System.out.print("[SKIPPED] #"+aCurFrameNo+" - "+aCurFrameMs+"ms - "+aReason+":"+aReason+" ... "+aProgressPercentage+"%");
+		System.out.println();
+		
 		return matFrame;
 	}
 
 	@Override
 	public Mat processAborted(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason) {
-		
+
 		return matFrame;
 	}
 
 	@Override
-	public Map<?,?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<String, ?> processEnded(String aVideoFileName, 
+			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoFileName);
+		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
+		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
 		System.out.println(" - Total Elapsed : "+aElpasedMs+" ms");
 		System.out.println(" - Total Processed : "+aTotalProcessed);
-		System.out.println(" - Images Extract Location: "+folder_imgoutput.getAbsolutePath());
-		System.out.println(" - Images Extract Success: "+extract_success_count);
-		System.out.println(" - Images Extract Failed : "+extract_failed_count);
+		System.out.println(" - Total Skipped : "+aTotalSkipped);
+		
+		double dMsPerFrame = 0;
+		double dFps = 0;
+		if(aTotalProcessed>0)
+		{
+			dFps = (((double) aTotalProcessed) / (((double)aElpasedMs) /1000.0));
+			
+			dMsPerFrame = ((double)aElpasedMs) / ((double)aTotalProcessed);
+		}
+		
+		System.out.println(" - Processed FPS : "+dFps);
+		System.out.println(" - Processing Time/Frame : "+dMsPerFrame+" ms");
 		return null;
 	}
 
 	@Override
 	public boolean initPlugin(JSONObject aMetaJson) {
 		
-		extract_success_count = 0;
-		extract_failed_count = 0;
-		
 		String sVideoSource = aMetaJson.getString("SOURCE");
+		videoEnc = new VideoEncoder(sVideoSource, iEncodeFormat, iEncodeFormat);
 		
-		File fileVideo = new File(sVideoSource).getParentFile();
-		if(fileVideo==null)
-		{
-			//Live Camera
-			folder_imgoutput = new File("./test/"+"cameras/"+sVideoSource+"/output/"+System.currentTimeMillis());
-			return folder_imgoutput.mkdirs();
-		}
-		else if(fileVideo.isDirectory())
-		{
-			folder_imgoutput = new File(fileVideo.getAbsolutePath()+"/output/"+System.currentTimeMillis());
-			return folder_imgoutput.mkdirs();
-		}
-		
-		System.err.println("Error creating output folder for VideoSource : "+sVideoSource);
-		return false;
-			
+		return true;
 	}
-
 
 	@Override
-	public void destroyPlugin(JSONObject aMetaJson) {
-		folder_imgoutput = null;
+	public void destroyPlugin(JSONObject aMetaJson)
+	{ 
 	}
 	
+	/////////////////////////////////
+	/////////////////////////////////
+	
+	private String toDurationStr(long aTimeMs)
+	{
+		return VideoDecoder.toDurationStr(aTimeMs);
+	}
 }

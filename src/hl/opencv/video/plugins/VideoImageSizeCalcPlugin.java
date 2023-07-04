@@ -24,6 +24,7 @@ package hl.opencv.video.plugins;
 
 import java.util.Map;
 
+import org.json.JSONObject;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfInt;
@@ -103,13 +104,13 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public boolean initPlugin(String aVideoSource) {
+	public boolean initPlugin(JSONObject aMetaJson) {
 		return true;
 	}
 
 
 	@Override
-	public void destroyPlugin(String aVideoSource) {
+	public void destroyPlugin(JSONObject aMetaJson) {
 	}
 	
 	private static String bytesToWords(long aBytes)
