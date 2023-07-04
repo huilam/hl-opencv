@@ -47,7 +47,6 @@ import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -364,330 +363,6 @@ public class OpenCvUtil{
 		}
 	}
 	
-	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
-	{
-		return grabcut(aMatInput, aRect, aBlurThreshold, 1, true);
-	}
-	
-	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount)
-	{
-		return grabcut(aMatInput, aRect, aBlurThreshold, aIterCount, true);
-	}
-	
-	public static Mat grabcutBG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
-	{
-		return grabcut(aMatInput, aRect, aBlurThreshold, 1, false);
-	}
-	
-	private static Mat grabcut(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount, boolean isForeground)
-	{
-		Mat matOutMask 	= null;
-		Mat matGrabcutOutput = null;
-		
-		Mat matTmpInput = aMatInput.clone();
-		try {
-			matOutMask 	= new Mat();
-			Mat matFg 	= null;
-			Mat matbg 	= null;
-			try {
-				matFg = new Mat();
-				matbg = new Mat();
-				/**
-				if(matTmpInput.width()>720)
-				{
-					OpenCvUtil.resizeByWidth(matTmpInput, 720);
-				}
-				**/
-				
-				if(aBlurThreshold>0)
-				{
-					//aBlurThreshold = 0.0 - 1.0
-					matTmpInput = OpenCvFilters.medianBlur(matTmpInput, aBlurThreshold);
-				}
-				
-				if(aRect==null || (aRect.width==0 && aRect.height==0))
-					aRect = new Rect(0, 0, matTmpInput.width()-1, matTmpInput.height()-1);
-				
-				switch(matTmpInput.channels())
-				{
-					case 1 : OpenCvFilters.grayToMultiChannel(matTmpInput, 3);
-					case 2 : break;
-					case 3 : break;
-					case 4 : OpenCvUtil.removeAlphaChannel(matTmpInput);
-							 break;
-				}
-				
-				//Grabcut support CV_8UC3 only
-				Imgproc.grabCut(matTmpInput, matOutMask, aRect, matbg, matFg, aIterCount, Imgproc.GC_INIT_WITH_RECT);
-				
-				
-			} finally
-			{
-				if(matFg!=null)
-					matFg.release();
-				
-				if(matbg!=null)
-					matbg.release();
-			}
-			
-			Mat matSegMask	= null;
-			try {
-				//2 = Background Mask
-				//3 = Foreground Mask
-				int iSegVal = isForeground ? 3:2;
-				matSegMask = new Mat(1, 1, CvType.CV_8U, new Scalar(iSegVal));
-				Core.compare(matOutMask, matSegMask, matOutMask, Core.CMP_EQ);
-			
-				if(matOutMask.size()!=aMatInput.size())
-				{
-					OpenCvUtil.resize(matOutMask, aMatInput.width(), aMatInput.height(), false);
-				}
-				
-				matGrabcutOutput = new Mat(aMatInput.size(), CvType.CV_8UC3, new Scalar(255, 255, 255));
-				aMatInput.copyTo(matGrabcutOutput, matOutMask);
-				
-			}
-			finally
-			{
-				if(matSegMask!=null)
-					matSegMask.release();
-			}
-		}
-		finally
-		{
-			if(matOutMask!=null)
-				matOutMask.release();
-			
-			if(matTmpInput!=null)
-				matTmpInput.release();
-		}
-		
-		return matGrabcutOutput;
-	}
-	
-	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
-	{
-		int iProcWidth = 1080;
-		
-		if(matInput.width()<iProcWidth)
-			iProcWidth = matInput.width();
-		
-		int iMinObjSize = iProcWidth/5;
-		
-		return extractFGMask(matInput, matBackground, aDiffThreshold, iProcWidth, iMinObjSize);
-	}
-	
-	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
-			int aProcessWidth, int minContourPixelSize) throws Exception
-	{
-		return extractFGMask(matInput, matBackground, aDiffThreshold, aProcessWidth, minContourPixelSize, false);
-	}
-	
-	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
-			int aProcessWidth, int minContourPixelSize, boolean isGrayscale) throws Exception
-	{
-		if(matBackground==null || matBackground.empty())
-			return null;
-		
-		Mat matMask = null;
-		Mat matBgResized = matBackground.clone();
-		Mat matInResized = matInput.clone();
-		
-		try {
-			if(aDiffThreshold<0 || aDiffThreshold>1)
-			{
-				throw new Exception("Threshold value should be 0.0-1.0");
-			}
-			
-			//downscale to width=360
-			int iProcessWidth = 360;
-			
-			if(aProcessWidth>0)
-				iProcessWidth = aProcessWidth;
-			
-			if(matInResized.width()>iProcessWidth)
-			{
-				resizeByWidth(matInResized, iProcessWidth);
-			}
-			else
-			{
-				iProcessWidth = matInResized.width();
-			}
-			
-			if(matBgResized.width()!=iProcessWidth)
-			{
-				resizeByWidth(matBgResized, iProcessWidth);
-			}
-			
-			//
-			matMask = new Mat(
-					new Size(matInput.width(), matInput.height()), 
-					matInput.type(), 
-					Scalar.all(255));
-	
-			try {
-				
-				if(isGrayscale)
-				{
-					matBgResized = OpenCvFilters.grayscale(matBgResized);
-					matInResized = OpenCvFilters.grayscale(matInResized);
-				}
-				
-				if(!matBgResized.empty())
-				{
-					Core.absdiff(matBgResized, matInResized, matMask);
-				}
-			}
-			catch(Throwable t)
-			{
-				t.printStackTrace();
-			}
-			
-			if(matMask!=null && matMask.width()>0)
-			{
-				Imgproc.GaussianBlur(matMask, matMask, new Size(11,11), 0);
-				
-				switch(matMask.channels())
-				{
-					case 3 : 
-						Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGR2GRAY);
-						break;
-						
-					case 4 : 
-						Imgproc.cvtColor(matMask, matMask, Imgproc.COLOR_BGRA2GRAY);
-						break;
-				}	
-				Imgproc.threshold(matMask, matMask, aDiffThreshold*100, 255, Imgproc.THRESH_BINARY);	
-				//
-				if(matMask.total()!=matInput.total())
-				{
-					if(minContourPixelSize>0)
-					{
-						matMask = removeMaskContourAreas(matMask,minContourPixelSize,0);
-					}
-					
-					resize(matMask, matInput.width(), matInput.height(), false);
-				}
-			}
-		}
-		finally
-		{
-			if(matBgResized!=null)
-				matBgResized.release();
-			
-			if(matInResized!=null)
-				matInResized.release();
-		}
-		
-		return matMask;
-	}
-	//
-	
-	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
-	{
-		return removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea,
-				Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-	}
-	
-	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea,
-			int iFindContourMode, int iFindContourMethod)
-	{
-		if(aMatMask!=null && !aMatMask.empty())
-		{
-			if(aMinContourArea>0 || aMaxContourArea>0) 
-			{
-				List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-				List<MatOfPoint> contours_remove = null;
-				
-				try {
-				
-					Imgproc.findContours(aMatMask, contours, new Mat(), 
-							iFindContourMode, iFindContourMethod);
-					
-					if(contours.size()>0)
-					{
-						contours_remove = new ArrayList<MatOfPoint>();
-						for(MatOfPoint c : contours)
-						{
-							if(aMinContourArea>0 && Imgproc.contourArea(c)<aMinContourArea)
-								contours_remove.add(c);
-							
-							if(aMaxContourArea>0 && Imgproc.contourArea(c)>aMaxContourArea)
-								contours_remove.add(c);
-						}
-						if(contours_remove.size()>0)
-							Imgproc.drawContours(aMatMask, contours_remove, -1, new Scalar(0), -1);
-					}
-				}
-				finally
-				{
-					if(contours!=null)
-					{
-						for(MatOfPoint c : contours)
-						{
-							c.release();
-						}
-					}
-					
-					if(contours_remove!=null)
-					{
-						for(MatOfPoint c : contours_remove)
-						{
-							c.release();
-						}
-					}
-				}
-			}
-		}	
-		
-		return aMatMask;
-	}
-	
-	//
-	
-	public static Mat colorToMask(Mat aMat)
-	{
-		return colorToMask(aMat, 50);
-	}
-	
-	public static Mat colorToMask(Mat aMat, int aThreshold)
-	{
-		Mat matMask = new Mat();
-		Imgproc.threshold(aMat, matMask, aThreshold, 255, Imgproc.THRESH_BINARY);
-		return OpenCvFilters.grayscale(matMask, false);
-	}
-	
-	//
-	public static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
-	{
-//alpha = 1.5 # Contrast control (1.0-3.0)
-//beta = 0 # Brightness control (0-100)
-		if(aBeta<0) aBeta = 0;
-		if(aBeta>1) aBeta = 1;
-		
-		Mat matAdjusted = null;
-		Mat mat2 = null;
-		
-		try {
-		    mat2 = aMat;
-		    if(aScalar!=null)
-		    {
-		    	mat2 = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
-		    }
-		    
-		    double alpha = 1.0 - aBeta;
-		    
-		    matAdjusted = new Mat();
-		    Core.addWeighted(aMat, alpha, mat2, aBeta, 0.0, matAdjusted);
-		}
-		finally
-		{
-			if(mat2!=null)
-				mat2.release();
-		}
-	    return matAdjusted;
-	}
-	
 	public static Mat toHSV(Mat aMat)
 	{
 		Mat matHSV = aMat.clone();
@@ -707,292 +382,6 @@ public class OpenCvUtil{
 		return matHSV;
 	}
 
-	public static Mat adjBrightness(Mat aMatIn, double aBrightness)
-	{
-		double dContrast = 1 + (aBrightness/100);
-		return adjBrightness(aMatIn, dContrast, aBrightness);
-	}
-	
-	public static Mat adjBrightness(Mat aMatIn, double aContrast, double aBrightness)
-	{
-		Mat aMatOut = new Mat();
-		//Contrast control (1.0-3.0)
-		//Brightness control (0-100)
-		Core.convertScaleAbs(aMatIn, aMatOut, aContrast, aBrightness);
-		return aMatOut;
-	}
-	
-	public static double compareBrightnessDiff(Mat aMat1, Mat aMat2)
-	{
-		double dMean1 = calcBrightness(aMat1, true);
-		double dMean2 = calcBrightness(aMat2, true);
-		
-		return dMean1-dMean2;
-	}
-	
-	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
-	{
-		return compareBrightnessDiff(aMat1, aMat2);
-	}
-	
-	public static double calcBrightness(Mat aMat1)
-	{
-		return calcBrightness(aMat1, null, aMat1.width());
-	}
-	
-	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
-	{
-		Mat matMask = null;
-		if(isExclBlack)
-		{			
-			matMask = new Mat(
-					new Size(aMat1.width(), aMat1.height()), 
-					CvType.CV_8UC1,
-					Scalar.all(0));
-			Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
-			matMask = OpenCvFilters.grayscale(matMask, false);
-		}
-		
-		return calcBrightness(aMat1, matMask, aMat1.width());
-	}
-	
-	public static Mat getMask(final Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
-	{
-		Mat matMask = null;
-		
-		if(aMat1!=null && aFromScalar!=null && aToScalar!=null)
-		{
-			Mat matHsv = null;
-			
-			try
-			{
-				matMask = new Mat();
-				matHsv = OpenCvUtil.toHSV(aMat1);
-				Core.inRange(matHsv, aFromScalar, aToScalar, matMask);
-			}
-			finally
-			{
-				if(matHsv!=null)
-					matHsv.release();
-			}
-
-		}
-		return matMask;
-	}
-	
-	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
-	{
-		double dBrightnessScore = 0;
-		
-		Mat matMask = getMask(aMat1, aFromScalar, aToScalar);
-		try {
-			dBrightnessScore = calcBrightness(aMat1, matMask, aMat1.width());
-		}
-		finally
-		{
-			if(matMask!=null)
-				matMask.release();
-		}
-		
-		return dBrightnessScore;
-	}
-	
-	public static double calcBrightness(final Mat aMat1, final Mat aBgMat, int aSamplingWidth)
-	{
-		double dBrightnessScore = 0;
-
-		if(aMat1==null)
-			return 0;
-		
-		Mat mat1 = aMat1.clone();
-		
-		Mat matBg = null;
-		if(aBgMat!=null)
-		{
-			matBg = aBgMat.clone();
-		}
-		
-		Mat matHSV1 = null;
-		Mat matMask1 = null;
-		
-		try {
-			if(aSamplingWidth>0 && mat1.width()>0)
-			{
-				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
-					aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
-
-				OpenCvUtil.resizeByWidth(mat1, aSamplingWidth);	
-			}
-			
-			Scalar scalar1 = null;
-			
-			if(matBg!=null && !matBg.empty())
-			{
-				if(matBg.width()!=mat1.width() && mat1.width()>0)
-				{
-					OpenCvUtil.resize(matBg, mat1.width(), mat1.height(), false);
-				}
-				
-				if(matBg!=null && matBg.channels()==1)
-				{
-					matMask1 = matBg;
-				}
-				else
-				{
-					try {
-						matMask1 = extractFGMask(mat1, matBg, 0.18);
-					} catch (Exception e) {
-						matMask1 = null;
-						e.printStackTrace();
-					}
-				}
-			}
-			
-			
-			matHSV1 = OpenCvUtil.toHSV(mat1);
-			
-			if(matMask1!=null && matHSV1.width() == matMask1.width())
-			{
-				scalar1 = Core.mean(matHSV1, matMask1);
-			}
-			else
-			{
-				scalar1 = Core.mean(matHSV1);
-			}
-			
-			if(scalar1!=null && scalar1.val.length>0)
-			{
-				//H=Hue S=Saturation V=Value (channel=HSV)
-				double dVal1 = (scalar1.val)[2];
-				dBrightnessScore = dVal1 / 255;
-			}
-		}
-		finally
-		{
-			if(mat1!=null)
-				mat1.release();
-			
-			if(matHSV1!=null)
-				matHSV1.release();
-			
-			if(matMask1!=null)
-				matMask1.release();
-			
-			if(matBg!=null)
-				matBg.release();
-		}
-		
-		return dBrightnessScore;
-	}
-	
-	public static Mat matchImageTemplate(Mat matImage, Mat matTempl)
-	{
-		Mat matResult = new Mat();
-		Imgproc.matchTemplate(matImage, matTempl, matResult, 0);
-		return matResult;
-	}
-
-	public static double calcImageSimilarity(Mat matImage1, Mat matImage2)
-	{
-		double similarity = 0.0;
-		
-		if(matImage1!=null && matImage2!=null && matImage1.cols()>0)
-		{
-			Mat matDesc1 = getImageSimilarityDescriptors(matImage1);
-			Mat matDesc2 = getImageSimilarityDescriptors(matImage2);
-			try {
-				similarity = calcDescriptorSimilarity(matDesc1, matDesc2);
-			}
-			finally
-			{
-				if(matDesc1!=null)
-					matDesc1.release();
-				if(matDesc2!=null)
-					matDesc2.release();
-			}
-		}
-		return similarity;
-			
-	}
-	
-	public static Mat getImageSimilarityDescriptors(Mat aMatImage)
-	{
-		return getImageSimilarityDescriptors(aMatImage, 0);
-	}
-	
-	public static Mat getImageSimilarityDescriptors(final Mat aMatImage, int aMaxWidth)
-	{
-		if(aMatImage==null)
-		{
-			return null;
-		}
-		
-		Mat matImage = aMatImage.clone();
-		Mat d1 = new Mat();
-		MatOfKeyPoint kp1 = new MatOfKeyPoint();
-		
-		if(orb==null)
-			orb = ORB.create(ORB_MAX_KEYPOINTS);
-		
-		try {
-			
-			if(aMaxWidth>0 && matImage.width()>aMaxWidth)
-			{
-				resizeByWidth(matImage, aMaxWidth);
-			}
-			
-			orb.detect(matImage, kp1);
-			orb.compute(matImage, kp1, d1);
-		}
-		finally
-		{	
-			if(kp1!=null)
-				kp1.release();
-			
-			if(matImage!=null)
-				matImage.release();
-		}
-		
-		return d1;
-	}
-	
-	public static double calcDescriptorSimilarity(Mat d1, Mat d2)
-	{
-		if(d1==null || d2==null)
-			return -1;
-		
-	    double similarity = 0.0;
-
-	    MatOfDMatch matchMatrix = null;
-	    
-	    try {
-		    	
-		    if (d1.cols() == d2.cols()) {
-		    	
-		    	matchMatrix = new MatOfDMatch();
-		        DescriptorMatcher matcher = 
-		        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
-		        matcher.match(d1, d2, matchMatrix);
-		        DMatch[] matches = matchMatrix.toArray();
-		        
-		        for (DMatch m : matches)
-		        {
-		        	if(m.distance <= 50)
-		        		similarity++;
-		        }
-		        
-		        if(similarity>0)
-			    	similarity = similarity / ORB_MAX_KEYPOINTS;
-		    }
-		    
-	    }finally
-	    {
-	    	if(matchMatrix!=null)
-	    		matchMatrix.release();
-	    }
-	    return similarity;		
-	}
-	
 	public static void addAlphaChannel(Mat matInput)
 	{
 		if(matInput==null || matInput.empty() || matInput.channels()==4)
@@ -1037,7 +426,6 @@ public class OpenCvUtil{
 			}
 		}
 	}
-	
 	
 	public static Mat loadImage(String aImageURI) 
 	{
@@ -1144,6 +532,462 @@ public class OpenCvUtil{
 		}
 		
 		return cvLib;
+	}
+	
+	////////////////////////////////
+	
+	//
+	public static Mat adjust(Mat aMat, double aBeta, Scalar aScalar)
+	{
+		//alpha = 1.5 # Contrast control (1.0-3.0)
+		//beta = 0 # Brightness control (0-100)
+		if(aBeta<0) aBeta = 0;
+		if(aBeta>1) aBeta = 1;
+		
+		Mat matAdjusted = null;
+		Mat mat2 = null;
+		
+		try {
+		    mat2 = aMat;
+		    if(aScalar!=null)
+		    {
+		    	mat2 = new Mat(aMat.height(), aMat.width(), aMat.type(), aScalar);
+		    }
+		    
+		    double alpha = 1.0 - aBeta;
+		    
+		    matAdjusted = new Mat();
+		    Core.addWeighted(aMat, alpha, mat2, aBeta, 0.0, matAdjusted);
+		}
+		finally
+		{
+			if(mat2!=null)
+				mat2.release();
+		}
+	    return matAdjusted;
+	}
+
+	public static Mat adjBrightness(Mat aMatIn, double aBrightness)
+	{
+		double dContrast = 1 + (aBrightness/100);
+		return adjBrightness(aMatIn, dContrast, aBrightness);
+	}
+	
+	public static Mat adjBrightness(Mat aMatIn, double aContrast, double aBrightness)
+	{
+		Mat aMatOut = new Mat();
+		//Contrast control (1.0-3.0)
+		//Brightness control (0-100)
+		Core.convertScaleAbs(aMatIn, aMatOut, aContrast, aBrightness);
+		return aMatOut;
+	}
+	
+	public static double compareBrightnessDiff(Mat aMat1, Mat aMat2)
+	{
+		double dMean1 = calcBrightness(aMat1, true);
+		double dMean2 = calcBrightness(aMat2, true);
+		
+		return dMean1-dMean2;
+	}
+	
+	public static double calcBrightnessDiff(Mat aMat1, Mat aMat2)
+	{
+		return compareBrightnessDiff(aMat1, aMat2);
+	}
+	
+	public static double calcBrightness(Mat aMat1)
+	{
+		return calcBrightness(aMat1, null, aMat1.width());
+	}
+	
+	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
+	{
+		Mat matMask = null;
+		if(isExclBlack)
+		{			
+			matMask = new Mat(
+					new Size(aMat1.width(), aMat1.height()), 
+					CvType.CV_8UC1,
+					Scalar.all(0));
+			Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
+			matMask = OpenCvFilters.grayscale(matMask, false);
+		}
+		
+		return calcBrightness(aMat1, matMask, aMat1.width());
+	}
+	
+	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	{
+		double dBrightnessScore = 0;
+		
+		Mat matMask = getMask(aMat1, aFromScalar, aToScalar);
+		try {
+			dBrightnessScore = calcBrightness(aMat1, matMask, aMat1.width());
+		}
+		finally
+		{
+			if(matMask!=null)
+				matMask.release();
+		}
+		
+		return dBrightnessScore;
+	}
+	
+	public static double calcBrightness(final Mat aMat1, final Mat aBgMat, int aSamplingWidth)
+	{
+		double dBrightnessScore = 0;
+
+		if(aMat1==null)
+			return 0;
+		
+		Mat mat1 = aMat1.clone();
+		
+		Mat matBg = null;
+		if(aBgMat!=null)
+		{
+			matBg = aBgMat.clone();
+		}
+		
+		Mat matHSV1 = null;
+		Mat matMask1 = null;
+		
+		try {
+			if(aSamplingWidth>0 && mat1.width()>0)
+			{
+				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)
+					aSamplingWidth = BRIGHTNESS_MAX_SAMPLING_WIDTH;
+
+				OpenCvUtil.resizeByWidth(mat1, aSamplingWidth);	
+			}
+			
+			Scalar scalar1 = null;
+			
+			if(matBg!=null && !matBg.empty())
+			{
+				if(matBg.width()!=mat1.width() && mat1.width()>0)
+				{
+					OpenCvUtil.resize(matBg, mat1.width(), mat1.height(), false);
+				}
+				
+				if(matBg!=null && matBg.channels()==1)
+				{
+					matMask1 = matBg;
+				}
+				else
+				{
+					try {
+						matMask1 = extractFGMask(mat1, matBg, 0.18);
+					} catch (Exception e) {
+						matMask1 = null;
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			
+			matHSV1 = OpenCvUtil.toHSV(mat1);
+			
+			if(matMask1!=null && matHSV1.width() == matMask1.width())
+			{
+				scalar1 = Core.mean(matHSV1, matMask1);
+			}
+			else
+			{
+				scalar1 = Core.mean(matHSV1);
+			}
+			
+			if(scalar1!=null && scalar1.val.length>0)
+			{
+				//H=Hue S=Saturation V=Value (channel=HSV)
+				double dVal1 = (scalar1.val)[2];
+				dBrightnessScore = dVal1 / 255;
+			}
+		}
+		finally
+		{
+			if(mat1!=null)
+				mat1.release();
+			
+			if(matHSV1!=null)
+				matHSV1.release();
+			
+			if(matMask1!=null)
+				matMask1.release();
+			
+			if(matBg!=null)
+				matBg.release();
+		}
+		
+		return dBrightnessScore;
+	}	
+	
+	////////////////////////////////
+	
+
+	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
+	{
+		return grabcut(aMatInput, aRect, aBlurThreshold, 1, true);
+	}
+	
+	public static Mat grabcutFG(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount)
+	{
+		return grabcut(aMatInput, aRect, aBlurThreshold, aIterCount, true);
+	}
+	
+	public static Mat grabcutBG(final Mat aMatInput, Rect aRect, double aBlurThreshold)
+	{
+		return grabcut(aMatInput, aRect, aBlurThreshold, 1, false);
+	}
+	
+	private static Mat grabcut(final Mat aMatInput, Rect aRect, double aBlurThreshold, int aIterCount, boolean isForeground)
+	{
+		Mat matOutMask 	= null;
+		Mat matGrabcutOutput = null;
+		
+		Mat matTmpInput = aMatInput.clone();
+		try {
+			matOutMask 	= new Mat();
+			Mat matFg 	= null;
+			Mat matbg 	= null;
+			try {
+				matFg = new Mat();
+				matbg = new Mat();
+				/**
+				if(matTmpInput.width()>720)
+				{
+					OpenCvUtil.resizeByWidth(matTmpInput, 720);
+				}
+				**/
+				
+				if(aBlurThreshold>0)
+				{
+					//aBlurThreshold = 0.0 - 1.0
+					matTmpInput = OpenCvFilters.medianBlur(matTmpInput, aBlurThreshold);
+				}
+				
+				if(aRect==null || (aRect.width==0 && aRect.height==0))
+					aRect = new Rect(0, 0, matTmpInput.width()-1, matTmpInput.height()-1);
+				
+				switch(matTmpInput.channels())
+				{
+					case 1 : OpenCvFilters.grayToMultiChannel(matTmpInput, 3);
+					case 2 : break;
+					case 3 : break;
+					case 4 : OpenCvUtil.removeAlphaChannel(matTmpInput);
+							 break;
+				}
+				
+				//Grabcut support CV_8UC3 only
+				Imgproc.grabCut(matTmpInput, matOutMask, aRect, matbg, matFg, aIterCount, Imgproc.GC_INIT_WITH_RECT);
+				
+				
+			} finally
+			{
+				if(matFg!=null)
+					matFg.release();
+				
+				if(matbg!=null)
+					matbg.release();
+			}
+			
+			Mat matSegMask	= null;
+			try {
+				//2 = Background Mask
+				//3 = Foreground Mask
+				int iSegVal = isForeground ? 3:2;
+				matSegMask = new Mat(1, 1, CvType.CV_8U, new Scalar(iSegVal));
+				Core.compare(matOutMask, matSegMask, matOutMask, Core.CMP_EQ);
+			
+				if(matOutMask.size()!=aMatInput.size())
+				{
+					OpenCvUtil.resize(matOutMask, aMatInput.width(), aMatInput.height(), false);
+				}
+				
+				matGrabcutOutput = new Mat(aMatInput.size(), CvType.CV_8UC3, new Scalar(255, 255, 255));
+				aMatInput.copyTo(matGrabcutOutput, matOutMask);
+				
+			}
+			finally
+			{
+				if(matSegMask!=null)
+					matSegMask.release();
+			}
+		}
+		finally
+		{
+			if(matOutMask!=null)
+				matOutMask.release();
+			
+			if(matTmpInput!=null)
+				matTmpInput.release();
+		}
+		
+		return matGrabcutOutput;
+	}
+	
+	
+	////////////////////////////////
+	
+	public static Mat matchImageTemplate(Mat matImage, Mat matTempl)
+	{
+		Mat matResult = new Mat();
+		Imgproc.matchTemplate(matImage, matTempl, matResult, 0);
+		return matResult;
+	}
+
+	public static double calcImageSimilarity(Mat matImage1, Mat matImage2)
+	{
+		double similarity = 0.0;
+		
+		if(matImage1!=null && matImage2!=null && matImage1.cols()>0)
+		{
+			Mat matDesc1 = getImageSimilarityDescriptors(matImage1);
+			Mat matDesc2 = getImageSimilarityDescriptors(matImage2);
+			try {
+				similarity = calcDescriptorSimilarity(matDesc1, matDesc2);
+			}
+			finally
+			{
+				if(matDesc1!=null)
+					matDesc1.release();
+				if(matDesc2!=null)
+					matDesc2.release();
+			}
+		}
+		return similarity;
+			
+	}
+	
+	private static Mat getImageSimilarityDescriptors(Mat aMatImage)
+	{
+		return getImageSimilarityDescriptors(aMatImage, 0);
+	}
+	
+	public static Mat getImageSimilarityDescriptors(final Mat aMatImage, int aMaxWidth)
+	{
+		if(aMatImage==null)
+		{
+			return null;
+		}
+		
+		Mat matImage = aMatImage.clone();
+		Mat d1 = new Mat();
+		MatOfKeyPoint kp1 = new MatOfKeyPoint();
+		
+		if(orb==null)
+			orb = ORB.create(ORB_MAX_KEYPOINTS);
+		
+		try {
+			
+			if(aMaxWidth>0 && matImage.width()>aMaxWidth)
+			{
+				resizeByWidth(matImage, aMaxWidth);
+			}
+			
+			orb.detect(matImage, kp1);
+			orb.compute(matImage, kp1, d1);
+		}
+		finally
+		{	
+			if(kp1!=null)
+				kp1.release();
+			
+			if(matImage!=null)
+				matImage.release();
+		}
+		
+		return d1;
+	}
+	
+	public static double calcDescriptorSimilarity(Mat d1, Mat d2)
+	{
+		if(d1==null || d2==null)
+			return -1;
+		
+	    double similarity = 0.0;
+
+	    MatOfDMatch matchMatrix = null;
+	    
+	    try {
+		    	
+		    if (d1.cols() == d2.cols()) {
+		    	
+		    	matchMatrix = new MatOfDMatch();
+		        DescriptorMatcher matcher = 
+		        		DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+		        matcher.match(d1, d2, matchMatrix);
+		        DMatch[] matches = matchMatrix.toArray();
+		        
+		        for (DMatch m : matches)
+		        {
+		        	if(m.distance <= 50)
+		        		similarity++;
+		        }
+		        
+		        if(similarity>0)
+			    	similarity = similarity / ORB_MAX_KEYPOINTS;
+		    }
+		    
+	    }finally
+	    {
+	    	if(matchMatrix!=null)
+	    		matchMatrix.release();
+	    }
+	    return similarity;		
+	}	
+	
+	////////////////////////////////
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold) throws Exception
+	{
+		return OpenCvMask.extractFGMask(matInput, matBackground, aDiffThreshold);
+	}
+	
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
+			int aProcessWidth, int minContourPixelSize) throws Exception
+	{
+		return OpenCvMask.extractFGMask(matInput, matBackground, aDiffThreshold, aProcessWidth, minContourPixelSize);
+	}
+	
+	public static Mat extractFGMask(Mat matInput, Mat matBackground, double aDiffThreshold,
+			int aProcessWidth, int minContourPixelSize, boolean isGrayscale) throws Exception
+	{
+		return OpenCvMask.extractFGMask(matInput, matBackground, aDiffThreshold, aProcessWidth, minContourPixelSize, isGrayscale);
+	}
+	
+	public static Mat getMask(final Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
+	{
+		return OpenCvMask.getMask(aMat1, aFromScalar, aToScalar);
+	}
+	
+	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea)
+	{
+		return OpenCvMask.removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea);
+	}
+	
+	public static Mat removeMaskContourAreas(Mat aMatMask, double aMinContourArea, double aMaxContourArea,
+			int iFindContourMode, int iFindContourMethod)
+	{
+		return OpenCvMask.removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea, iFindContourMode, iFindContourMethod);
+	}
+	
+	public static Mat colorToMask(Mat aMat)
+	{
+		return OpenCvMask.colorToMask(aMat);
+	}
+	
+	public static Mat colorToMask(Mat aMat, int aThreshold)
+	{
+		return OpenCvMask.colorToMask(aMat, aThreshold);
+	}
+	
+	public static Rect calcMaskTrimRect(Mat aMat)
+	{
+		return OpenCvMask.calcMaskTrimRect(aMat);
+	}
+	
+	public static void removeMaskNoice(Mat aBinaryMask)
+	{
+		OpenCvMask.removeMaskNoice(aBinaryMask);
 	}
 	
 }
