@@ -335,12 +335,12 @@ public class OpenCvMask{
 	
 	//////////////////////////////////////////////////
 	
-	protected static void removeMaskNoise(Mat aBinaryMask)
+	protected static void reduceMaskNoise(Mat aBinaryMask)
 	{
-		removeMaskNoise(aBinaryMask, 50);
+		reduceMaskNoise(aBinaryMask, 50);
 	}
 	
-	protected static void removeMaskNoise(Mat aBinaryMask, int iMinPxArea)
+	protected static void reduceMaskNoise(Mat aBinaryMask, int iMinPxArea)
 	{
 		if(aBinaryMask!=null && aBinaryMask.channels()==1)
 		{
