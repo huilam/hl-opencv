@@ -990,4 +990,9 @@ public class OpenCvUtil{
 		OpenCvMask.reduceMaskNoise(aBinaryMask);
 	}
 	
+	public static void reduceMaskNoise(Mat aBinaryMask, int aMinNoiseSize)
+	{
+		OpenCvMask.reduceMaskNoise(aBinaryMask, aMinNoiseSize);
+	}
+	
 }

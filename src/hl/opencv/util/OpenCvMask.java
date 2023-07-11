@@ -340,16 +340,16 @@ public class OpenCvMask{
 		reduceMaskNoise(aBinaryMask, 50);
 	}
 	
-	protected static void reduceMaskNoise(Mat aBinaryMask, int iMinPxArea)
+	protected static void reduceMaskNoise(Mat aBinaryMask, int aMinNoiseArea)
 	{
 		if(aBinaryMask!=null && aBinaryMask.channels()==1)
 		{
-			int iMinContour = iMinPxArea;
+			int iMinContour = aMinNoiseArea;
 			
 			long lTotalMaskArea = aBinaryMask.width()*aBinaryMask.height();
 			
 			if(iMinContour>=(lTotalMaskArea*0.01))
-				iMinContour = (int)(iMinContour * 0.1);
+				iMinContour = (int)(iMinContour * 0.2);
 			
 			Core.bitwise_not(aBinaryMask, aBinaryMask);
 			aBinaryMask = OpenCvUtil.removeMaskContourAreas(aBinaryMask,iMinContour,0);
