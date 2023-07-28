@@ -502,32 +502,32 @@ public class VideoCaptureDecoder {
 	}
 	
 	///// 
-	public boolean processStarted(String aVideoFileName, 
+	public boolean processStarted(String aVideoSourceName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		return true;
 	}
 	
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public void processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
 		
 	}
 	
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore)
 	{
 		return matFrame;
 	}
 	
-	public Mat processAborted(String aVideoFileName, Mat matFrame, 
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason)
 	{
 		return matFrame;
 	}
 
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
 	{
 		return matFrame;
