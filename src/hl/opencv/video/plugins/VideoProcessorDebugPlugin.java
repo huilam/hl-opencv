@@ -52,9 +52,9 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 		sbStatusMsg.append("#").append(aCurFrameNo).append(" - ").append(matFrame.width()).append("x").append(matFrame.height());
 		sbStatusMsg.append(" ").append(aCurFrameMs).append("ms ").append(toDurationStr(aCurFrameMs)).append(" ...");
 		
-		if(aCurFrameNo % _DEBUG_FRAME_COUNT ==0 || aCurFrameNo==1)
+		if(aCurFrameNo % _DEBUG_FRAME_COUNT ==0 || aCurFrameNo==1 || aProgressPercentage>=100)
 		{
-			if(aProgressPercentage>=99.99)
+			if(aProgressPercentage>=99.99 && aProgressPercentage<100)
 			{
 				sbStatusMsg.append(" live");
 			}

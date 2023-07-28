@@ -49,7 +49,9 @@ public class VideoCaptureDecoder {
 	protected static String EVENT_NULLFRAME 		= "NULL_FRAME";
 	
 	////
-	private VideoCapture videocap = null;
+	private VideoCapture videocap 		= null;
+	private String videocap_name		= null;
+	private boolean is_auto_release  	= true;
 	
 	protected double min_similarity_skip_threshold = 0.0;
 	protected double min_brightness_skip_threshold = 0.0;
@@ -57,7 +59,7 @@ public class VideoCaptureDecoder {
 	protected int max_brightness_calc_width	 	 = 0;
 	protected int max_similarity_compare_width	 = 0;
 	
-	protected Mat mat_roi_mask 	= null;
+	protected Mat mat_roi_mask 		= null;
 	protected Rect rect_crop_roi 	= null;
 	
 	protected Mat mat_seg_bgref 	= null;
@@ -69,11 +71,44 @@ public class VideoCaptureDecoder {
 	public void setVideoCapture(VideoCapture aVideoCap)
 	{
 		this.videocap = aVideoCap;
+		
+		if(aVideoCap!=null)
+		{
+			if(getVideoCaptureName()==null)
+			{
+				setVideoCaptureName(aVideoCap.toString());
+			}
+		}
+	}
+	
+	public VideoCapture getVideoCapture()
+	{
+		return this.videocap;
+	}
+	
+	protected void setVideoCaptureName(String aVideoCapName)
+	{
+		this.videocap_name = aVideoCapName;
+	}
+	
+	public String getVideoCaptureName()
+	{
+		return this.videocap_name;
+	}
+	
+	public void setAutoRelease(boolean isAutoRelease)
+	{
+		this.is_auto_release = isAutoRelease;
+	}
+	
+	public boolean getAutoRelease()
+	{
+		return this.is_auto_release;
 	}
 	
 	public void release()
 	{
-		if(this.videocap!=null)
+		if(this.videocap!=null && is_auto_release)
 		{
 			this.videocap.release();
 		}
@@ -133,76 +168,69 @@ public class VideoCaptureDecoder {
 	{
 		JSONObject jsonMeta = new JSONObject();
 
-		VideoCapture vid = null;
-		try {
-			vid = this.videocap;
-			if(vid.isOpened())
+		VideoCapture vid = this.videocap;			
+		if(vid.isOpened())
+		{
+			double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+			double dFps = vid.get(Videoio.CAP_PROP_FPS);
+			
+			double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
+			//
+			jsonMeta.put("FPS", dFps);
+			jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
+			jsonMeta.put("EST_DURATION_MS", dEstDurationMs);
+			//
+			jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
+			jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+			jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+			//
+			
+			if(isShowPreview)
 			{
-				double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-				double dFps = vid.get(Videoio.CAP_PROP_FPS);
+				JSONObject jsonSampling = new JSONObject();
+				String sJpgBase64 = null;
+				Mat matSample = new Mat();
+				try {
 				
-				double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
-				//
-				jsonMeta.put("FPS", dFps);
-				jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
-				jsonMeta.put("EST_DURATION_MS", dEstDurationMs);
-				//
-				jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
-				jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
-				jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
-				//
-				
-				if(isShowPreview)
-				{
-					JSONObject jsonSampling = new JSONObject();
-					String sJpgBase64 = null;
-					Mat matSample = new Mat();
-					try {
+					int iSearchFrame = 2;
+					double dBrightness = 0.0;
 					
-						int iSearchFrame = 2;
-						double dBrightness = 0.0;
-						
-						vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
-						while(vid.read(matSample)) 
-						{	
-							if(!matSample.empty())
+					vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
+					while(vid.read(matSample)) 
+					{	
+						if(!matSample.empty())
+						{
+							dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
+							if(dBrightness>0.15)
 							{
-								dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
-								if(dBrightness>0.15)
+								if(aPreviewWidth>0)
 								{
-									if(aPreviewWidth>0)
-									{
-										OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
-									}
-									sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
-									jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
-									
-									break;
+									OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
 								}
-							}
-							iSearchFrame += Math.ceil(dFps);
-							if(iSearchFrame>dTotalFrameCount)
-							{
+								sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
+								jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
+								
 								break;
 							}
-							vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 						}
+						iSearchFrame += Math.ceil(dFps);
+						if(iSearchFrame>dTotalFrameCount)
+						{
+							break;
+						}
+						vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 					}
-					finally
-					{
-						if(matSample!=null)
-							matSample.release();
-					}
-					jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 				}
-				
+				finally
+				{
+					if(matSample!=null)
+						matSample.release();
+				}
+				jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 			}
+			
 		}
-		finally
-		{
-			if(vid!=null)
-				vid.release();
-		}
+
 		return jsonMeta;
 	}
 	
@@ -233,12 +261,18 @@ public class VideoCaptureDecoder {
 		return mapFrames;
 	}
 	
-	protected long processVideoCap(String aVidCapName,
+	public long processVideo()
+	{
+		return processVideo(0, -1);
+	}
+
+	public long processVideo(
 			final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		boolean isLiveCam 	= true;
 		
 		VideoCapture vid 	= null;
+		String sVidCapName  = this.videocap_name;
 		Mat matFrame 		= new Mat();
 		
 		Mat matPrevDescriptors 	= null;
@@ -336,7 +370,7 @@ public class VideoCaptureDecoder {
 					dTotalSelectedFrames++;
 				}
 				
-				boolean isProcessVideo = processStarted( aVidCapName, 
+				boolean isProcessVideo = processStarted( sVidCapName, 
 						lAdjSelFrameMsFrom, lAdjSelFrameMsTo, iWidth, iHeight, 
 						(long)dTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
@@ -417,7 +451,7 @@ public class VideoCaptureDecoder {
 							double dBrightness = OpenCvUtil.calcBrightness(matFrame, null, this.max_brightness_calc_width);
 							if(dBrightness < this.min_brightness_skip_threshold)
 							{
-								skippedVideoFrame(aVidCapName, matFrame, 
+								skippedVideoFrame(sVidCapName, matFrame, 
 										lCurrentFrameNo, lCurFrameTimestamp, 
 										dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
 								lActualSkipped++;
@@ -450,7 +484,7 @@ public class VideoCaptureDecoder {
 	
 									if(dSimilarityScore>=this.min_similarity_skip_threshold)
 									{	
-										skippedVideoFrame(aVidCapName, matFrame, 
+										skippedVideoFrame(sVidCapName, matFrame, 
 												lCurrentFrameNo, lCurFrameTimestamp, 
 												dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
 										lActualSkipped++;
@@ -466,7 +500,7 @@ public class VideoCaptureDecoder {
 								if(lCurFrameTimestamp<=lAdjSelFrameMsTo || lAdjSelFrameMsTo==-1)
 								{
 									matFrame = decodedVideoFrame(
-											aVidCapName, matFrame, 
+											sVidCapName, matFrame, 
 											lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
 								}
 							}
@@ -474,7 +508,7 @@ public class VideoCaptureDecoder {
 						
 						if(matFrame==null)
 						{
-							processAborted(aVidCapName, matFrame, 
+							processAborted(sVidCapName, matFrame, 
 									lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
 							break;
 						}
@@ -484,7 +518,7 @@ public class VideoCaptureDecoder {
 		}finally
 		{
 			long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-			processEnded(aVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+			processEnded(sVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
 					(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			
 			if(vid!=null)

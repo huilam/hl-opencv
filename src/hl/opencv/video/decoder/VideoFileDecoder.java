@@ -44,6 +44,9 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
 		super.setVideoCapture(vid);
 		this.video_file = aVideoFile;
+		//
+		String sFileName = aVideoFile.getName();
+		super.setVideoCaptureName(sFileName);
 	}
 	
 	public JSONObject getVideoFileMetadata()
@@ -130,8 +133,7 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		{
 			return iErrCode;
 		}
-		String sFileName = videoFile.getName();
-		return super.processVideoCap(sFileName, aSelectedTimestampFrom, aSelectedTimestampTo);
+		return super.processVideo(aSelectedTimestampFrom, aSelectedTimestampTo);
 	}
 	
 	public Map<Long,Mat> getFramesByIndex(long aIndexes[])

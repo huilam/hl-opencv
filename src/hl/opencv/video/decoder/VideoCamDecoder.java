@@ -37,6 +37,9 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 		VideoCapture vid = new VideoCapture(this.capture_id);
 		super.setVideoCapture(vid);
 		this.capture_id = aCapDeviceID;
+		//
+		String sCapSourceName = String.valueOf(this.capture_id);
+		super.setVideoCaptureName(sCapSourceName);
 	}
 	
 	public JSONObject getCameraMetadata()
@@ -61,7 +64,7 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	
 	public long processCamera(final long aSelectedTimestampTo)
 	{
-		return super.processVideoCap(String.valueOf(this.capture_id), 0, aSelectedTimestampTo);
+		return super.processVideo(0, aSelectedTimestampTo);
 	}
 
 }

@@ -28,13 +28,17 @@ import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
+import org.opencv.videoio.VideoCapture;
 
+import hl.opencv.video.decoder.VideoCaptureDecoder;
+import hl.opencv.video.decoder.VideoFileDecoder;
 import hl.opencv.video.plugins.IVideoProcessorPlugin;
 
 public class VideoProcessor {
 	
 	private static Logger logger = Logger.getLogger(VideoProcessor.class.getName());
 	
+	/**
 	public void processLiveCamera(int aCamID, String aProcessorPluginName)
 	{
 		processLiveCamera(aCamID, aProcessorPluginName, -1);
@@ -64,38 +68,60 @@ public class VideoProcessor {
 			logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
 		}
 	}
-	
+	**/
 	//////////////////////////////////////
 	
-	public void processVideoFile(File aVidFile, String aProcessorPluginName)
+	public long processVideoFile(File aVidFile, String aProcessorPluginName)
 	{
-		processVideoFile(aVidFile, aProcessorPluginName, 0, -1);
+		return processVideoFile(aVidFile, aProcessorPluginName, 0, -1);
 	}
 	
-	public void processVideoFile(File aVidFile, String aProcessorPluginName,
+	public long processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
-		JSONObject jsonMeta = VideoDecoder.getVideoFileMetadata(aVidFile);
-		if(jsonMeta==null || jsonMeta.length()==0)
+		long lFramesProcessed = 0;
+		
+		if(!aVidFile.isFile())
 		{
-			logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
-			return;
+			logger.log(Level.SEVERE, "Video file NOT found !- "+aVidFile.getAbsolutePath());
+			return lFramesProcessed;
 		}
 		
-		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
-		if(plugin!=null)
-		{
-			VideoDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
-			if(vidDecoder!=null)
+		VideoCapture vcap = null;
+		try {
+			VideoFileDecoder vid = new VideoFileDecoder(aVidFile);
+			vcap = vid.getVideoCapture();
+			
+			JSONObject jsonMeta = vid.getVideoFileMetadata();
+			if(jsonMeta==null || jsonMeta.length()==0)
 			{
-				vidDecoder.processVideoFile(aVidFile);
-				plugin.destroyPlugin(jsonMeta);
+				logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
+				return lFramesProcessed;
+			}
+		
+			IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
+			if(plugin!=null)
+			{
+				VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
+				if(vidDecoder!=null)
+				{
+					vidDecoder.setVideoCapture(vcap);
+					
+					lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
+					plugin.destroyPlugin(jsonMeta);
+				}
+			}
+			else
+			{
+				logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
 			}
 		}
-		else
+		finally
 		{
-			logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
+			if(vcap!=null)
+				vcap.release();
 		}
+		return lFramesProcessed;
 	}
 	
 	//////////////////////////////////////
@@ -122,47 +148,50 @@ public class VideoProcessor {
 		return null;
 	}
 	
-	private VideoDecoder initVideoDecoderWithPlugin(IVideoProcessorPlugin aProcessorPlugin)
+	private VideoCaptureDecoder initVideoDecoderWithPlugin(IVideoProcessorPlugin aProcessorPlugin)
 	{
-		VideoDecoder vidDecoder = new VideoDecoder()
+		VideoCaptureDecoder vidDecoder = null;
+		if(aProcessorPlugin!=null)
 		{
-			public boolean processStarted(String aVideoFileName, 
-					long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
-					long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
+			vidDecoder = new VideoCaptureDecoder()
 			{
-				return aProcessorPlugin.processStarted(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
-						aResWidth, aResHeight, aTotalSelectedFrames, aFps, aSelectedDurationMs);
-			}
-
-			public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
-					long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
-			{
-				return aProcessorPlugin.decodedVideoFrame(aVideoFileName, matFrame, aCurFrameNo, 
-						aCurFrameMs, aProgressPercentage);
-			}
-			
-			public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
-					long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore)
-			{
-				return aProcessorPlugin.skippedVideoFrame(aVideoFileName, matFrame, aCurFrameNo, aCurFrameMs, 
-						aProgressPercentage, aReason, aScore);
-			}
-			
-			public Mat processAborted(String aVideoFileName, Mat matFrame, 
-					long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason)
-			{
-				return aProcessorPlugin.processAborted(aVideoFileName, matFrame, aCurFrameNo, aCurFrameMs, 
-						aProgressPercentage, aReason);
-			}
-			
-			public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
-					long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
-			{
-				aProcessorPlugin.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
-						aTotalProcessed, aTotalSkipped, aElpasedMs);
-			}
-		};
-		
+				public boolean processStarted(String aVideoFileName, 
+						long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
+						long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
+				{
+					return aProcessorPlugin.processStarted(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
+							aResWidth, aResHeight, aTotalSelectedFrames, aFps, aSelectedDurationMs);
+				}
+	
+				public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+						long aCurFrameNo, long aCurFrameMs, double aProgressPercentage)
+				{
+					return aProcessorPlugin.decodedVideoFrame(aVideoFileName, matFrame, aCurFrameNo, 
+							aCurFrameMs, aProgressPercentage);
+				}
+				
+				public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+						long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore)
+				{
+					return aProcessorPlugin.skippedVideoFrame(aVideoFileName, matFrame, aCurFrameNo, aCurFrameMs, 
+							aProgressPercentage, aReason, aScore);
+				}
+				
+				public Mat processAborted(String aVideoFileName, Mat matFrame, 
+						long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason)
+				{
+					return aProcessorPlugin.processAborted(aVideoFileName, matFrame, aCurFrameNo, aCurFrameMs, 
+							aProgressPercentage, aReason);
+				}
+				
+				public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+						long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
+				{
+					aProcessorPlugin.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
+							aTotalProcessed, aTotalSkipped, aElpasedMs);
+				}
+			};
+		}
 		return vidDecoder;
 	}
 	
