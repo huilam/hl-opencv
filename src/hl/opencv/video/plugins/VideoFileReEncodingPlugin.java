@@ -26,35 +26,36 @@ import java.util.Map;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
-import org.opencv.videoio.VideoWriter;
+import org.opencv.core.Size;
 
 import hl.opencv.video.VideoDecoder;
-import hl.opencv.video.VideoEncoder;
+import hl.opencv.video.encoder.VideoEncoder;
+
 
 public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	
 	private static final String OUTPUT_VIDEO_ENCODER 	= "h264";
-	
-	private int iEncodeFormat = -1;
+	private Size encodeResolution = new Size();
 	private VideoEncoder videoEnc = null;
 
 	@Override
-	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
+	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
 		
 		return true;
 	}
 
 	@Override
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
+		videoEnc.encodeFrame(matFrame);
 
 		return matFrame;
 	}
 
 	@Override
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason, double aScore) {
 		
 		System.out.print("[SKIPPED] #"+aCurFrameNo+" - "+aCurFrameMs+"ms - "+aReason+":"+aReason+" ... "+aProgressPercentage+"%");
@@ -64,19 +65,19 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat processAborted(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason) {
 
 		return matFrame;
 	}
 
 	@Override
-	public Map<String, ?> processEnded(String aVideoFileName, 
+	public Map<String, ?> processEnded(String aVideoSourceName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
-		System.out.println("[COMPLETED] "+aVideoFileName);
+		System.out.println("[COMPLETED] "+aVideoSourceName);
 		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
 		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
 		System.out.println(" - Total Elapsed : "+aElpasedMs+" ms");
@@ -101,7 +102,10 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	public boolean initPlugin(JSONObject aMetaJson) {
 		
 		String sVideoSource = aMetaJson.getString("SOURCE");
-		videoEnc = new VideoEncoder(sVideoSource, iEncodeFormat, iEncodeFormat);
+		
+		videoEnc = new VideoEncoder(OUTPUT_VIDEO_ENCODER, 
+				(int)encodeResolution.width, 
+				(int)encodeResolution.height);
 		
 		return true;
 	}

@@ -34,10 +34,10 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	private int _DEBUG_FRAME_COUNT = 50;
 
 	@Override
-	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
+	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
 		
-		System.out.print("[START] "+aVideoFileName+" from:"+aAdjSelFrameMsFrom+" to:"+aAdjSelFrameMsTo+" res:"+aResWidth+"x"+aResHeight);
+		System.out.print("[START] "+aVideoSourceName+" from:"+aAdjSelFrameMsFrom+" to:"+aAdjSelFrameMsTo+" res:"+aResWidth+"x"+aResHeight);
 		System.out.print(" fps:"+aFps+" duration:"+aSelectedDurationMs+"ms");
 		System.out.println();
 		
@@ -45,7 +45,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
 		StringBuffer sbStatusMsg = new StringBuffer();
@@ -68,7 +68,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason, double aScore) {
 		
 		System.out.print("[SKIPPED] #"+aCurFrameNo+" - "+aCurFrameMs+"ms - "+aReason+":"+aReason+" ... "+aProgressPercentage+"%");
@@ -78,7 +78,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat processAborted(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason) {
 		
 		System.out.print("[ABORTED] #"+aCurFrameNo+" - "+aCurFrameMs+"ms - "+aReason+":"+aReason+" ... "+aProgressPercentage+"%");
@@ -88,10 +88,10 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Map<?,?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?,?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		System.out.println();
-		System.out.println("[COMPLETED] "+aVideoFileName);
+		System.out.println("[COMPLETED] "+aVideoSourceName);
 		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
 		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
 		System.out.println(" - Total Elapsed : "+aElpasedMs+" ms");

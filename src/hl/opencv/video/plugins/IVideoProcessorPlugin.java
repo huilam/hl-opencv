@@ -31,20 +31,20 @@ public interface IVideoProcessorPlugin {
 	
 	public boolean initPlugin(JSONObject aMetaJson);
 	
-	public boolean processStarted(String aVideoFileName, 
+	public boolean processStarted(String aVideoSourceName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth, int aResHeight, 
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs);
 	
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, 
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage);
 	
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, 
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore);
 	
-	public Mat processAborted(String aVideoFileName, Mat matFrame, 
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason);
 	
-	public Map<?, ?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public Map<?, ?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);
 	
 	public void destroyPlugin(JSONObject aMetaJson);

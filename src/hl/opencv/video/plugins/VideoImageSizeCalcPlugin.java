@@ -42,7 +42,7 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	private MatOfInt matint_jpg_params 	= null;
 
 	@Override
-	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
+	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
 		
 		image_file_format = image_file_format.toLowerCase();
@@ -54,7 +54,7 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
 		matbyte_frame = new MatOfByte(); 
@@ -76,25 +76,25 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason, double aScore) {
 		
 		return matFrame;
 	}
 
 	@Override
-	public Mat processAborted(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason) {
 		
 		return matFrame;
 	}
 
 	@Override
-	public Map<?, ?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?, ?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
-		System.out.println("[COMPLETED] "+aVideoFileName);
+		System.out.println("[COMPLETED] "+aVideoSourceName);
 		System.out.println(" - Total Elapsed : "+aElpasedMs+" ms");
 		System.out.println(" - Image File Format : "+image_file_format);
 		System.out.println(" - "+image_file_format+" Quality : "+jpg_quality+"%");

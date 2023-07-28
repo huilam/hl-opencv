@@ -44,16 +44,16 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public boolean processStarted(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
+	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
 		return true;
 	}
 
 	@Override
-	public Mat decodedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
-		String sImageFileName = aVideoFileName+"_"+aCurFrameNo+"_"+aCurFrameMs+".jpg";
+		String sImageFileName = aVideoSourceName+"_"+aCurFrameNo+"_"+aCurFrameMs+".jpg";
 		
 		if(OpenCvUtil.saveImageAsFile(matFrame, folder_imgoutput.getAbsolutePath()+"/"+sImageFileName))
 			extract_success_count++;
@@ -71,25 +71,25 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Mat skippedVideoFrame(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason, double aScore) {
 		
 		return matFrame;
 	}
 
 	@Override
-	public Mat processAborted(String aVideoFileName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
+	public Mat processAborted(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage, String aReason) {
 		
 		return matFrame;
 	}
 
 	@Override
-	public Map<?,?> processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public Map<?,?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
-		System.out.println("[COMPLETED] "+aVideoFileName);
+		System.out.println("[COMPLETED] "+aVideoSourceName);
 		System.out.println(" - Total Elapsed : "+aElpasedMs+" ms");
 		System.out.println(" - Total Processed : "+aTotalProcessed);
 		System.out.println(" - Images Extract Location: "+folder_imgoutput.getAbsolutePath());
