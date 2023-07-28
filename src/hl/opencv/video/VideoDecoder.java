@@ -183,8 +183,15 @@ public class VideoDecoder {
 		JSONObject jsonMeta = new JSONObject();
 		if(validateFileInput(aVideoFile,0,0)==0)
 		{
-			VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
-			jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
+			VideoCapture vid = null;
+			try {
+				vid = new VideoCapture(aVideoFile.getAbsolutePath());
+				jsonMeta = getVidCapMetadata(vid, isShowPreview, aPreviewWidth);
+			}finally
+			{
+				if(vid!=null)
+					vid.release();
+			}
 			//
 			jsonMeta.put("SOURCE", aVideoFile.getAbsolutePath());
 			jsonMeta.put("FILE_SIZE", aVideoFile.length());
@@ -193,7 +200,6 @@ public class VideoDecoder {
 		
 		return jsonMeta;
 	}
-	
 	
 	public static JSONObject getCameraMetadata(int aCapDeviceID)
 	{
@@ -224,74 +230,66 @@ public class VideoDecoder {
 	{
 		JSONObject jsonMeta = new JSONObject();
 
-		VideoCapture vid = null;
-		try {
-			vid = aVideoCap;
-			if(vid.isOpened())
+		VideoCapture vid = aVideoCap;
+		if(vid!=null && vid.isOpened())
+		{
+			double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
+			double dFps = vid.get(Videoio.CAP_PROP_FPS);
+			
+			double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
+			//
+			jsonMeta.put("FPS", dFps);
+			jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
+			jsonMeta.put("EST_DURATION_MS", dEstDurationMs);
+			//
+			jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
+			jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+			jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+			//
+			
+			if(isShowPreview)
 			{
-				double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
-				double dFps = vid.get(Videoio.CAP_PROP_FPS);
+				JSONObject jsonSampling = new JSONObject();
+				String sJpgBase64 = null;
+				Mat matSample = new Mat();
+				try {
 				
-				double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
-				//
-				jsonMeta.put("FPS", dFps);
-				jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
-				//
-				jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
-				jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
-				jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
-				//
-				
-				if(isShowPreview)
-				{
-					JSONObject jsonSampling = new JSONObject();
-					String sJpgBase64 = null;
-					Mat matSample = new Mat();
-					try {
+					int iSearchFrame = 2;
+					double dBrightness = 0.0;
 					
-						int iSearchFrame = 2;
-						double dBrightness = 0.0;
-						
-						vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
-						while(vid.read(matSample)) 
-						{	
-							if(!matSample.empty())
+					vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
+					while(vid.read(matSample)) 
+					{	
+						if(!matSample.empty())
+						{
+							dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
+							if(dBrightness>0.15)
 							{
-								dBrightness = OpenCvUtil.calcBrightness(matSample, null, 100);
-								if(dBrightness>0.15)
+								if(aPreviewWidth>0)
 								{
-									if(aPreviewWidth>0)
-									{
-										OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
-									}
-									sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
-									jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
-									
-									break;
+									OpenCvUtil.resizeByWidth(matSample, aPreviewWidth);
 								}
-							}
-							iSearchFrame += Math.ceil(dFps);
-							if(iSearchFrame>dTotalFrameCount)
-							{
+								sJpgBase64 = OpenCvUtil.mat2base64Img(matSample, "JPG");
+								jsonSampling.put(String.valueOf(iSearchFrame), sJpgBase64);
+								
 								break;
 							}
-							vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 						}
+						iSearchFrame += Math.ceil(dFps);
+						if(iSearchFrame>dTotalFrameCount)
+						{
+							break;
+						}
+						vid.set(Videoio.CAP_PROP_POS_FRAMES, iSearchFrame);
 					}
-					finally
-					{
-						if(matSample!=null)
-							matSample.release();
-					}
-					jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 				}
-				
+				finally
+				{
+					if(matSample!=null)
+						matSample.release();
+				}
+				jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 			}
-		}
-		finally
-		{
-			if(vid!=null)
-				vid.release();
 		}
 		return jsonMeta;
 	}
