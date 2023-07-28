@@ -41,12 +41,12 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	public VideoFileDecoder(File aVideoFile)
 	{
+		//
 		VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
 		super.setVideoCapture(vid);
 		this.video_file = aVideoFile;
 		//
-		String sFileName = aVideoFile.getName();
-		super.setVideoCaptureName(sFileName);
+		super.setVideoCaptureName(aVideoFile.getName());
 	}
 	
 	public JSONObject getVideoFileMetadata()

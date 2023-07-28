@@ -71,14 +71,6 @@ public class VideoCaptureDecoder {
 	public void setVideoCapture(VideoCapture aVideoCap)
 	{
 		this.videocap = aVideoCap;
-		
-		if(aVideoCap!=null)
-		{
-			if(getVideoCaptureName()==null)
-			{
-				setVideoCaptureName(aVideoCap.toString());
-			}
-		}
 	}
 	
 	public VideoCapture getVideoCapture()
@@ -86,7 +78,7 @@ public class VideoCaptureDecoder {
 		return this.videocap;
 	}
 	
-	protected void setVideoCaptureName(String aVideoCapName)
+	public void setVideoCaptureName(String aVideoCapName)
 	{
 		this.videocap_name = aVideoCapName;
 	}
@@ -289,7 +281,7 @@ public class VideoCaptureDecoder {
 		Mat matPrevDescriptors 	= null;
 		Mat matCurDescriptors 	= null;
 		
-		long lCurrentFrameNo 	= 0;
+		long lCurrentFrameIdx 	= -1;
 		long lActualProcessed 	= 0;
 		long lActualSkipped 	= 0;
 		
@@ -305,6 +297,7 @@ public class VideoCaptureDecoder {
 		try{
 			
 			vid = this.videocap;
+			vid.set(Videoio.CAP_PROP_POS_MSEC, 0);
 			if(vid.isOpened())
 			{
 				double dFps = Math.floor(vid.get(Videoio.CAP_PROP_FPS)*1000.0)/1000.0;
@@ -334,7 +327,7 @@ public class VideoCaptureDecoder {
 						long lAdjFrameStartMs = 0;
 						while(lAdjFrameStartMs < lAdjSelFrameMsFrom)
 						{
-							lCurrentFrameNo++;
+							lCurrentFrameIdx++;
 							lAdjFrameStartMs += dFrameMs;
 						}
 						lAdjSelFrameMsFrom = lAdjFrameStartMs;
@@ -431,7 +424,7 @@ public class VideoCaptureDecoder {
 							break;
 						}
 						
-						lCurrentFrameNo++;
+						lCurrentFrameIdx++;
 						lActualProcessed++;
 							
 						if(vid.grab())
@@ -463,7 +456,7 @@ public class VideoCaptureDecoder {
 							if(dBrightness < this.min_brightness_skip_threshold)
 							{
 								skippedVideoFrame(sVidCapName, matFrame, 
-										lCurrentFrameNo, lCurFrameTimestamp, 
+										lCurrentFrameIdx, lCurFrameTimestamp, 
 										dProgressPercentage, EVENT_BRIGHTNESS, dBrightness);
 								lActualSkipped++;
 								continue;
@@ -496,7 +489,7 @@ public class VideoCaptureDecoder {
 									if(dSimilarityScore>=this.min_similarity_skip_threshold)
 									{	
 										skippedVideoFrame(sVidCapName, matFrame, 
-												lCurrentFrameNo, lCurFrameTimestamp, 
+												lCurrentFrameIdx, lCurFrameTimestamp, 
 												dProgressPercentage, EVENT_SIMILARITY, dSimilarityScore);
 										lActualSkipped++;
 										continue;
@@ -512,7 +505,7 @@ public class VideoCaptureDecoder {
 								{
 									matFrame = decodedVideoFrame(
 											sVidCapName, matFrame, 
-											lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage);
+											lCurrentFrameIdx, lCurFrameTimestamp, dProgressPercentage);
 								}
 							}
 						}
@@ -520,7 +513,7 @@ public class VideoCaptureDecoder {
 						if(matFrame==null)
 						{
 							processAborted(sVidCapName, matFrame, 
-									lCurrentFrameNo, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
+									lCurrentFrameIdx, lCurFrameTimestamp, dProgressPercentage, EVENT_NULLFRAME);
 							break;
 						}
 					}

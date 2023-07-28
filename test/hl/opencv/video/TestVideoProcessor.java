@@ -64,7 +64,7 @@ public class TestVideoProcessor {
 		}
 		//test.processLiveCamera(0, sPluginClassName, -1);
 
-		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
+		test.processVideoFile(fileVid, sPluginClassName);
 		
 	}
 }

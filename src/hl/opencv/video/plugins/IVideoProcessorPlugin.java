@@ -36,13 +36,13 @@ public interface IVideoProcessorPlugin {
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs);
 	
 	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, 
-			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage);
+			long aCurFrameIdx, long aCurFrameMs, double aProgressPercentage);
 	
 	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, 
-			long aCurFrameNo, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore);
+			long aCurFrameIdx, long aCurFrameMs, double aProgressPercentage, String aReason, double aScore);
 	
 	public Mat processAborted(String aVideoSourceName, Mat matFrame, 
-			long aCurFrameNo, long aCurFrameMs,  double aProgressPercentage, String aReason);
+			long aCurFrameIdx, long aCurFrameMs,  double aProgressPercentage, String aReason);
 	
 	public Map<?, ?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);

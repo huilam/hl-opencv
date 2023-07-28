@@ -68,6 +68,7 @@ public class VideoProcessor {
 				if(vidDecoder!=null)
 				{
 					vidDecoder.setVideoCapture(vcap);
+					vidDecoder.setVideoCaptureName(aCamID+"");
 					lFramesProcessed = vidDecoder.processVideo(0, aMsDuration);
 					plugin.destroyPlugin(jsonMeta);
 	
@@ -123,6 +124,7 @@ public class VideoProcessor {
 				if(vidDecoder!=null)
 				{
 					vidDecoder.setVideoCapture(vcap);
+					vidDecoder.setVideoCaptureName(aVidFile.getName());
 					lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
 					plugin.destroyPlugin(jsonMeta);
 				}
