@@ -28,6 +28,7 @@ import hl.opencv.video.plugins.VideoFileReEncodingPlugin;
 import hl.opencv.video.plugins.VideoImageExtractorPlugin;
 import hl.opencv.video.plugins.VideoImageSizeCalcPlugin;
 import hl.opencv.video.plugins.VideoProcessorDebugPlugin;
+import hl.opencv.video.processor.VideoProcessor;
 
 public class TestVideoProcessor {
 	
@@ -35,18 +36,17 @@ public class TestVideoProcessor {
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		File fileVid = new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
+		File fileVid = 
+				//new File("./test/videos/privacy-demo-h264.mp4");
+				new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
 		
 		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
-		
-		long lFreeMemory1 = Runtime.getRuntime().freeMemory();
-		 
-		
+	
 		VideoProcessor test = new VideoProcessor();
 		
 		String sPluginClassName = null;
 		
-		int iPluginId = 4;
+		int iPluginId = 2;
 	
 		switch(iPluginId)
 		{
@@ -63,14 +63,8 @@ public class TestVideoProcessor {
 				break;
 		}
 		//test.processLiveCamera(0, sPluginClassName, -1);
+
 		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
-		
-		long lFreeMemory2 = Runtime.getRuntime().freeMemory();
-		System.out.println();
-		System.out.println("totalMemory="+Runtime.getRuntime().totalMemory());
-		System.out.println("freeMemory (before) ="+lFreeMemory1);
-		System.out.println("freeMemory (after) ="+lFreeMemory2);
-		System.out.println("freeMemorry (after-before) ="+(lFreeMemory2-lFreeMemory1));
 		
 	}
 }

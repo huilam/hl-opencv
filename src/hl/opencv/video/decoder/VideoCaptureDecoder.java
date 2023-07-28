@@ -185,6 +185,17 @@ public class VideoCaptureDecoder {
 			jsonMeta.put("FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
 			//
 			
+			long lLastFrameIndex = (long)dTotalFrameCount;
+			vid.set(Videoio.CAP_PROP_POS_FRAMES, lLastFrameIndex);
+			while(vid.grab()==false)
+			{
+				vid.set(Videoio.CAP_PROP_POS_FRAMES, --lLastFrameIndex);
+			}
+			jsonMeta.put("LAST_FRAME_IDX", lLastFrameIndex);
+			
+			long lLastFrameMs = (long) vid.get(Videoio.CAP_PROP_POS_MSEC);
+			jsonMeta.put("LAST_FRAME_MS", lLastFrameMs);
+				
 			if(isShowPreview)
 			{
 				JSONObject jsonSampling = new JSONObject();
@@ -532,6 +543,8 @@ public class VideoCaptureDecoder {
 			
 			if(matPrevDescriptors!=null)
 				matPrevDescriptors.release();
+			
+			release();
 		}
 		
 		return (long)lActualProcessed;

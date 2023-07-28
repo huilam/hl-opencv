@@ -23,7 +23,6 @@
 package hl.opencv.video;
 
 import java.io.File;
-import java.util.Map;
 
 import org.opencv.core.Mat;
 
@@ -37,14 +36,17 @@ public class TestVideoFile {
 		OpenCvUtil.initOpenCV();
 		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		
-		TestVideoDecoder vidDecoder = new TestVideoDecoder();
+		TestVideoDecoder vidDecoder = new TestVideoDecoder(file);
 		vidDecoder.fileOutput = new File(file.getParentFile().getAbsolutePath()+"/output");
 		vidDecoder.setBgref_mat(null);
 		
 		//
 		File fileROIMask = new File(file.getParentFile().getAbsolutePath()+"/mask-test.jpg");
-		Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
-		vidDecoder.setROI_mat(matROImask);
+		if(fileROIMask.isFile())
+		{
+			Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
+			vidDecoder.setROI_mat(matROImask);
+		}
 		
 		//vidDecoder.setCrop_ROI_rect(new org.opencv.core.Rect(100,100,10,10));
 		//
@@ -54,7 +56,7 @@ public class TestVideoFile {
 		vidDecoder.setMin_similarity_skip_threshold(0);
 		vidDecoder.setMax_similarity_compare_width(500);
 		//
-		vidDecoder.processVideoFile(file, 0, 100);
+		vidDecoder.processVideoFile(0, 1000);
 		
 		
 	}
