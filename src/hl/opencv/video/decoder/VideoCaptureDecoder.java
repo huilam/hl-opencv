@@ -42,7 +42,7 @@ public class VideoCaptureDecoder {
 	
 	protected static long SECOND_MS 	= 1000;
 	protected static long MINUTE_MS 	= SECOND_MS * 60;
-	protected static long HOUR_MS 	= MINUTE_MS * 60;
+	protected static long HOUR_MS 		= MINUTE_MS * 60;
 	
 	protected static String EVENT_BRIGHTNESS 		= "BRIGHTNESS";
 	protected static String EVENT_SIMILARITY 		= "SIMILARITY";
@@ -145,6 +145,7 @@ public class VideoCaptureDecoder {
 				//
 				jsonMeta.put("FPS", dFps);
 				jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
+				jsonMeta.put("EST_DURATION_MS", dEstDurationMs);
 				//
 				jsonMeta.put("FRAME_COUNT", (int)dTotalFrameCount);
 				jsonMeta.put("FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
@@ -211,7 +212,7 @@ public class VideoCaptureDecoder {
 		
 		VideoCapture videoCap = this.videocap;
 		
-		if(videoCap!=null && aPosValue.length>0)
+		if(videoCap!=null && aPosValue.length>=0)
 		{
 			for(long lFramePos : aPosValue)
 			{
@@ -376,7 +377,8 @@ public class VideoCaptureDecoder {
 						}
 						else
 						{
-							lCurFrameTimestamp += dFrameMs;
+							//lCurFrameTimestamp += dFrameMs;
+							lCurFrameTimestamp = (long) vid.get(Videoio.CAP_PROP_POS_MSEC);
 						}
 						
 						if(lAdjSelFrameMsTo>-1 && lCurFrameTimestamp > lAdjSelFrameMsTo)
