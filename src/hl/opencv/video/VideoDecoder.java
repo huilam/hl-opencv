@@ -39,6 +39,7 @@ import hl.opencv.image.ImgROI;
 import hl.opencv.image.ImgSegmentation;
 import hl.opencv.util.OpenCvUtil;
 
+@Deprecated
 public class VideoDecoder {
 	
 	private static Logger logger = Logger.getLogger(VideoDecoder.class.getName());
