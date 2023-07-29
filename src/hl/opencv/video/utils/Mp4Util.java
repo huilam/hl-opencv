@@ -20,7 +20,7 @@
  
  */
 
-package hl.opencv.video.encoder;
+package hl.opencv.video.utils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,7 +44,7 @@ import org.opencv.videoio.Videoio;
 
 import hl.opencv.util.OpenCvUtil;
 
-public class VideoEncUtil {
+public class Mp4Util {
 
 	// Requires https://github.com/sannies/mp4parser
 	
@@ -225,7 +225,6 @@ public class VideoEncUtil {
 		/////////////
 		Movie combinedMp4 = mergeMp4(fileVids);
 		writeMp4ToFile(combinedMp4, fileOutput);
-		
 		
 	}
 	

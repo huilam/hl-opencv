@@ -20,7 +20,7 @@
  
  */
 
-package hl.opencv.video;
+package hl.opencv.video.utils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +32,7 @@ import hl.opencv.util.OpenCvUtil;
 
 public class CamUtil {
 
-	public static JSONArray listCameras(boolean isIncludeSampleBase64)
+	public static JSONArray listLocalCameras(boolean isIncludeSampleBase64)
 	{
 		JSONArray jsonArrCams 	= new JSONArray();
 		VideoCapture vid 		= null;
