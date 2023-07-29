@@ -23,6 +23,7 @@
 package hl.opencv.video;
 
 import hl.opencv.util.OpenCvUtil;
+import hl.opencv.video.decoder.VideoCamDecoder;
 
 public class TestWebcam {
 	
@@ -31,9 +32,9 @@ public class TestWebcam {
 	{
 		
 		OpenCvUtil.initOpenCV();
-		TestVideoDecoder vidDecoder = new TestVideoDecoder();
-		
-		vidDecoder.processCamera(0,5000);
+		VideoCamDecoder vidDecoder = new VideoCamDecoder(0);
+		vidDecoder.setCamFps(5);
+		vidDecoder.processCamera(5000);
 		
 	}
 		

@@ -26,20 +26,42 @@ import java.util.logging.Logger;
 
 import org.json.JSONObject;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 
 public class VideoCamDecoder extends VideoCaptureDecoder {
 	
 	private static Logger logger = Logger.getLogger(VideoCamDecoder.class.getName());
-	private int capture_id = -1;
+	private int cam_id 	= -1;
+	private int cam_fps = -1;
 	
 	public VideoCamDecoder(int aCapDeviceID)
 	{
-		VideoCapture vid = new VideoCapture(this.capture_id);
+		initCamera(aCapDeviceID);
+	}
+	
+	private void initCamera(int aCapDeviceID)
+	{
+		this.cam_id = aCapDeviceID;
+		VideoCapture vid = new VideoCapture(aCapDeviceID);
 		super.setVideoCapture(vid);
-		this.capture_id = aCapDeviceID;
 		//
-		String sCapSourceName = String.valueOf(this.capture_id);
+		String sCapSourceName = String.valueOf(aCapDeviceID);
 		super.setVideoCaptureName(sCapSourceName);
+	}
+	
+	public int getCamDeviceId()
+	{
+		return this.cam_id;
+	}
+	
+	public void setCamFps(int aFps)
+	{
+		this.cam_fps = aFps;
+	}
+	
+	public int getCamFps()
+	{
+		return this.cam_fps;
 	}
 	
 	public JSONObject getCameraMetadata()
@@ -64,6 +86,10 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	
 	public long processCamera(final long aSelectedTimestampTo)
 	{
+		if(getCamFps()>0)
+		{
+			super.getVideoCapture().set(Videoio.CAP_PROP_FPS, getCamFps());
+		}
 		return super.processVideo(0, aSelectedTimestampTo);
 	}
 
