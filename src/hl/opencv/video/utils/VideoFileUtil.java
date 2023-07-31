@@ -23,27 +23,8 @@
 package hl.opencv.video.utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
-import org.mp4parser.Container;
-import org.mp4parser.muxer.Movie;
-import org.mp4parser.muxer.Track;
-import org.mp4parser.muxer.builder.DefaultFragmenterImpl;
-import org.mp4parser.muxer.builder.FragmentedMp4Builder;
-import org.mp4parser.muxer.container.mp4.MovieCreator;
-import org.mp4parser.muxer.tracks.AppendTrack;
-import org.opencv.core.Mat;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.Videoio;
-
 import hl.opencv.util.OpenCvUtil;
-import hl.opencv.video.decoder.VideoCaptureDecoder;
 import hl.opencv.video.decoder.VideoFileDecoder;
 
 public class VideoFileUtil {
