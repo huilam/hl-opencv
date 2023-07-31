@@ -24,6 +24,7 @@ package hl.opencv.video.decoder;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
@@ -178,16 +179,28 @@ public class VideoCaptureDecoder {
 			//
 			
 			long lLastFrameIndex = (long)dTotalFrameCount;
+			
 			vid.set(Videoio.CAP_PROP_POS_FRAMES, lLastFrameIndex);
+			
+			int iMaxAttempt = 10;
 			while(vid.grab()==false)
 			{
+				iMaxAttempt--;
 				vid.set(Videoio.CAP_PROP_POS_FRAMES, --lLastFrameIndex);
+				if(iMaxAttempt<=0)
+				{
+					logger.log(Level.WARNING,"Failed to perform OpenCv.grab() to get last frame !");
+					break;
+				}
 			}
-			jsonMeta.put("LAST_FRAME_IDX", lLastFrameIndex);
 			
-			long lLastFrameMs = (long) vid.get(Videoio.CAP_PROP_POS_MSEC);
-			jsonMeta.put("LAST_FRAME_MS", lLastFrameMs);
-				
+			if(iMaxAttempt>0)
+			{
+				jsonMeta.put("LAST_FRAME_IDX", lLastFrameIndex);
+				long lLastFrameMs = (long) vid.get(Videoio.CAP_PROP_POS_MSEC);
+				jsonMeta.put("LAST_FRAME_MS", lLastFrameMs);
+			}
+			
 			if(isShowPreview)
 			{
 				JSONObject jsonSampling = new JSONObject();
