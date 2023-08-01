@@ -34,6 +34,7 @@ import hl.opencv.video.decoder.VideoCamDecoder;
 import hl.opencv.video.decoder.VideoCaptureDecoder;
 import hl.opencv.video.decoder.VideoFileDecoder;
 import hl.opencv.video.plugins.IVideoProcessorPlugin;
+import hl.opencv.video.utils.VideoFileUtil;
 
 public class VideoProcessor {
 	
@@ -97,29 +98,49 @@ public class VideoProcessor {
 	public long processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
-		long lFramesProcessed = 0;
-		
 		if(!aVidFile.isFile())
 		{
 			logger.log(Level.SEVERE, "Video file NOT found !- "+aVidFile.getAbsolutePath());
 			return 0;
 		}
 		
-		VideoCapture vcap = null;
-		try {
-			VideoFileDecoder vid = new VideoFileDecoder(aVidFile);
-			vcap = vid.getVideoCapture();
-			
-			JSONObject jsonMeta = vid.getVideoFileMetadata();
-			if(jsonMeta==null || jsonMeta.length()==0)
-			{
-				logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
-				return lFramesProcessed;
-			}
+		if(aProcessorPluginName==null || aProcessorPluginName.trim().length()==0)
+		{
+			logger.log(Level.SEVERE, "Invalid Plugin ClassName !- "+aProcessorPluginName);
+			return 0;
+		}
 		
-			IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
-			if(plugin!=null)
-			{
+		JSONObject jsonMeta = VideoFileUtil.getVideoFileMetadata(aVidFile);
+		IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
+		return processVideoFile(aVidFile, plugin, aFrameDurationFrom, aFrameDurationTo);
+	}
+	
+	public long processVideoFile(File aVidFile, IVideoProcessorPlugin plugin)
+	{
+		return processVideoFile(aVidFile, plugin, 0, -1);
+	}
+	
+	public long processVideoFile(File aVidFile, IVideoProcessorPlugin plugin,
+			long aFrameDurationFrom, long aFrameDurationTo)
+	{
+		long lFramesProcessed = 0;
+		VideoCapture vcap = null;
+		
+		if(aVidFile!=null && aVidFile.isFile() 
+				&& plugin!=null)
+		{
+		
+			try {
+				VideoFileDecoder vid = new VideoFileDecoder(aVidFile);
+				vcap = vid.getVideoCapture();
+				
+				JSONObject jsonMeta = vid.getVideoFileMetadata();
+				if(jsonMeta==null || jsonMeta.length()==0)
+				{
+					logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
+					return lFramesProcessed;
+				}
+
 				VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
 				if(vidDecoder!=null)
 				{
@@ -129,16 +150,21 @@ public class VideoProcessor {
 					plugin.destroyPlugin(jsonMeta);
 				}
 			}
-			else
+			finally
 			{
-				logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
+				if(vcap!=null)
+					vcap.release();
 			}
+		
 		}
-		finally
+		else
 		{
-			if(vcap!=null)
-				vcap.release();
-		}
+			if(aVidFile==null || !aVidFile.isFile())
+				logger.log(Level.SEVERE, "Invalid Video File - "+(aVidFile==null?aVidFile:aVidFile.getAbsolutePath()));
+			
+			if(plugin==null)
+				logger.log(Level.SEVERE, "Invalid plugin - "+plugin);
+		}		
 		return lFramesProcessed;
 	}
 	

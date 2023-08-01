@@ -136,12 +136,12 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		return super.processVideo(aSelectedTimestampFrom, aSelectedTimestampTo);
 	}
 	
-	public Mat getOneFrameByIndex(long aIndexes)
+	public Mat getOneFrameByIndex(long aIndex)
 	{
-		Map<Long,Mat> mapFrames = getVideoFileFrames(Videoio.CAP_PROP_POS_FRAMES, new long[] {aIndexes});
+		Map<Long,Mat> mapFrames = getVideoFileFrames(Videoio.CAP_PROP_POS_FRAMES, new long[] {aIndex});
 		
 		if(mapFrames.size()>0)
-			return mapFrames.get(0l);
+			return mapFrames.get(aIndex);
 		
 		return null;
 	}
@@ -156,14 +156,14 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		Map<Long,Mat> mapFrames = getVideoFileFrames(Videoio.CAP_PROP_POS_MSEC, new long[] {aTimestamp});
 		
 		if(mapFrames.size()>0)
-			return mapFrames.get(0l);
+			return mapFrames.get(aTimestamp);
 		
 		return null;
 	}
 	
-	public Map<Long,Mat> getFramesByTimestamp(long aTimestamp[])
+	public Map<Long,Mat> getFramesByTimestamp(long aTimestamps[])
 	{
-		return getVideoFileFrames(Videoio.CAP_PROP_POS_MSEC, aTimestamp);
+		return getVideoFileFrames(Videoio.CAP_PROP_POS_MSEC, aTimestamps);
 	}
 
 	private Map<Long,Mat> getVideoFileFrames(int aPosType, long aPosValue[])
