@@ -52,7 +52,7 @@ public class CamUtil {
 					int iFps 	= (int) vid.get(Videoio.CAP_PROP_FPS);
 					if(matSample!=null)
 					{
-						vid.retrieve(matSample);
+						vid.read(matSample);
 					}
 					vid.release();
 					
@@ -61,7 +61,7 @@ public class CamUtil {
 					jsonCam.put("width", iWidth);
 					jsonCam.put("height", iHeight);
 					jsonCam.put("fps", iFps);
-					if(matSample!=null)
+					if(matSample!=null && !matSample.empty())
 					{
 						jsonCam.put("base64", OpenCvUtil.mat2base64Img(matSample, "JPG"));
 					}
