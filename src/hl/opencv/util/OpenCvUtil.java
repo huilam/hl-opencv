@@ -54,7 +54,6 @@ import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.ORB;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-
 import hl.opencv.OpenCvLibLoader;
 
 public class OpenCvUtil{
@@ -496,9 +495,9 @@ public class OpenCvUtil{
 		}
 	}
 	
-	public static void initOpenCV()
+	public static OpenCvLibLoader initOpenCV()
 	{
-		initOpenCV("/");
+		return initOpenCV("/");
 	}
 	
 	public static OpenCvLibLoader initOpenCV(String aCustomLibPath)
@@ -995,4 +994,9 @@ public class OpenCvUtil{
 		OpenCvMask.reduceMaskNoise(aBinaryMask, aMinNoiseSize);
 	}
 	
+	public static void main(String args[]) throws Exception
+	{
+		//OpenCvUtil.initOpenCV();
+		//Core.getBuildInformation();
+	}
 }

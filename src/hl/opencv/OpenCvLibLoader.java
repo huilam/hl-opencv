@@ -24,6 +24,7 @@ package hl.opencv;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -40,6 +41,7 @@ public class OpenCvLibLoader{
 	private boolean loaded 			= false;
 	private Exception errInit		= null;
 	private String opencv_version	= null;
+	private String opencv_buildinfo	= null;
 	
 	private static OpenCvLibLoader instance = null;
 	private static Object synObj = new Object();
@@ -102,6 +104,11 @@ public class OpenCvLibLoader{
 		return this.opencv_version;
 	}
 	//
+	public String getBuildInfo()
+	{
+		return this.opencv_buildinfo;
+	}
+	//
 	public boolean init()
 	{
 		if(this.loaded)
@@ -115,28 +122,41 @@ public class OpenCvLibLoader{
 					this.errInit= null;
 					this.loaded = FileUtil.loadNativeLib(this.native_libname, this.native_libpath);
 					
-					ClassLoader cl = OpenCvLibLoader.class.getClassLoader();
-					
-					if(getOpencv_jarpath()!=null)
+					if(this.loaded)
 					{
-						File fileJar = new File(getOpencv_jarpath());
-						if(fileJar.isFile())
+						ClassLoader cl = OpenCvLibLoader.class.getClassLoader();
+						
+						if(getOpencv_jarpath()!=null)
 						{
-							cl = new URLClassLoader(new URL[]{ new URL(fileJar.getCanonicalPath())});
+							File fileJar = new File(getOpencv_jarpath());
+							if(fileJar.isFile())
+							{
+								cl = new URLClassLoader(new URL[]{ new URL(fileJar.getCanonicalPath())});
+							}
+							else
+							{
+								throw new Exception("File NOT found ! - "+getOpencv_jarpath());
+							}
 						}
-						else
+						
+						if(cl!=null)
 						{
-							throw new Exception("File NOT found ! - "+getOpencv_jarpath());
-						}
-					}
-					
-					Class<?> classCV = cl.loadClass("org.opencv.core.Core");
-					if(classCV!=null)
-					{
-						Field f = classCV.getDeclaredField("VERSION");
-						if(f!=null)
-						{
-							this.opencv_version = (String) f.get(null);
+							Class<?> classCV = cl.loadClass("org.opencv.core.Core");
+							if(classCV!=null)
+							{
+								Field f = classCV.getDeclaredField("VERSION");
+								if(f!=null)
+								{
+									this.opencv_version = (String) f.get(null);
+									
+									Method m = classCV.getMethod("getBuildInformation");
+									if(m!=null)
+									{
+										this.opencv_buildinfo = (String) m.invoke(null);
+									}
+								}
+							}
+							
 						}
 					}
 				}
@@ -150,16 +170,18 @@ public class OpenCvLibLoader{
 		return this.loaded;
 	}
 	
-	private static OpenCvLibLoader testLoadCvLib()
+	private static OpenCvLibLoader testLoadCvLib(String aNativeLibPath)
 	{
-		File curDir = new File("./lib/opencv/4.6.0");
+		File curDir = new File(aNativeLibPath);
 		//
 		String sNativeLibPath = curDir.getAbsolutePath();
 		String sNativeLibName = Core.NATIVE_LIBRARY_NAME;
 		OpenCvLibLoader cvLoader = new OpenCvLibLoader(sNativeLibName, sNativeLibPath);
 		
 		if(cvLoader.init())
+		{
 			System.out.println("Loaded OpenCV Version : "+cvLoader.getVersion());
+		}
 		else
 			System.err.println("Err : "+cvLoader.getInitException());
 		return cvLoader;
@@ -167,7 +189,6 @@ public class OpenCvLibLoader{
 	
 	public static void main(String args[]) throws Exception
 	{
-		testLoadCvLib();
-		//
+		OpenCvLibLoader cvLib = testLoadCvLib("./lib/opencv/4.8.0/x86_64");
 	}
 }

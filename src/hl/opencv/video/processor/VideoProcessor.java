@@ -30,7 +30,6 @@ import org.json.JSONObject;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 
-import hl.opencv.video.decoder.VideoCamDecoder;
 import hl.opencv.video.decoder.VideoCaptureDecoder;
 import hl.opencv.video.decoder.VideoFileDecoder;
 import hl.opencv.video.plugins.IVideoProcessorPlugin;
@@ -40,54 +39,6 @@ public class VideoProcessor {
 	
 	private static Logger logger = Logger.getLogger(VideoProcessor.class.getName());
 	
-	/**
-	public long processLiveCamera(int aCamID, String aProcessorPluginName)
-	{
-		return processLiveCamera(aCamID, aProcessorPluginName, -1);
-	}
-	
-	public long processLiveCamera(int aCamID, String aProcessorPluginName, long aMsDuration)
-	{
-		long lFramesProcessed = 0;
-		
-		VideoCapture vcap = null;
-		try {
-			VideoCamDecoder vid = new VideoCamDecoder(aCamID);
-			vcap = vid.getVideoCapture();
-		
-			JSONObject jsonMeta = vid.getCameraMetadata();
-			if(jsonMeta==null || jsonMeta.length()==0)
-			{
-				logger.log(Level.SEVERE, "Invalid camera - "+aCamID);
-				return 0;
-			}
-		
-			IVideoProcessorPlugin plugin = initNewPlugin(aProcessorPluginName, jsonMeta);
-			if(plugin!=null)
-			{
-				VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
-				if(vidDecoder!=null)
-				{
-					vidDecoder.setVideoCapture(vcap);
-					vidDecoder.setVideoCaptureName(aCamID+"");
-					lFramesProcessed = vidDecoder.processVideo(0, aMsDuration);
-					plugin.destroyPlugin(jsonMeta);
-	
-				}
-			}
-			else
-			{
-				logger.log(Level.SEVERE, "Invalid plugin - "+aProcessorPluginName);
-			}
-		}
-		finally
-		{
-			if(vcap!=null)
-				vcap.release();
-		}
-		return lFramesProcessed;
-	}
-	**/
 	//////////////////////////////////////
 	
 	public long processVideoFile(File aVidFile, String aProcessorPluginName)
