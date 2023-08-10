@@ -75,6 +75,7 @@ public class VideoProcessor {
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
 		long lFramesProcessed = 0;
+		VideoFileDecoder vid = null;
 		VideoCapture vcap = null;
 		
 		if(aVidFile!=null && aVidFile.isFile() 
@@ -82,7 +83,7 @@ public class VideoProcessor {
 		{
 		
 			try {
-				VideoFileDecoder vid = new VideoFileDecoder(aVidFile);
+				vid = new VideoFileDecoder(aVidFile);
 				vcap = vid.getVideoCapture();
 				
 				JSONObject jsonMeta = vid.getVideoFileMetadata();
@@ -105,6 +106,9 @@ public class VideoProcessor {
 			{
 				if(vcap!=null)
 					vcap.release();
+				
+				if(vid!=null)
+					vid.release();
 			}
 		
 		}

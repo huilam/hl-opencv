@@ -22,6 +22,8 @@
 
 package hl.opencv.video.decoder;
 
+
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -37,7 +39,7 @@ import hl.opencv.image.ImgROI;
 import hl.opencv.image.ImgSegmentation;
 import hl.opencv.util.OpenCvUtil;
 
-public class VideoCaptureDecoder {
+public class VideoCaptureDecoder implements AutoCloseable {
 	
 	private static Logger logger = Logger.getLogger(VideoCaptureDecoder.class.getName());
 	
@@ -626,6 +628,11 @@ public class VideoCaptureDecoder {
 		sbTimeMs.append(aTimeMs);
 		
 		return sbTimeMs.toString();
+	}
+
+	@Override
+	public void close() throws IOException {
+		release();
 	}
 	
 }
