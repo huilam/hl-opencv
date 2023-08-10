@@ -27,7 +27,8 @@ import java.util.Map;
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 
-import hl.opencv.video.VideoDecoder;
+import hl.opencv.video.decoder.VideoFileDecoder;
+
 
 public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	
@@ -126,6 +127,6 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	
 	private String toDurationStr(long aTimeMs)
 	{
-		return VideoDecoder.toDurationStr(aTimeMs);
+		return VideoFileDecoder.toDurationStr(aTimeMs);
 	}
 }
