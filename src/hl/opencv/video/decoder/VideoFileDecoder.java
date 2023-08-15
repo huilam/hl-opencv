@@ -41,8 +41,19 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	public VideoFileDecoder(File aVideoFile)
 	{
+		initVideoFile(aVideoFile, Videoio.CAP_ANY);
+	}
+	
+	public VideoFileDecoder(File aVideoFile, int aApiPreference)
+	{
+		initVideoFile(aVideoFile, aApiPreference);
+	}
+	
+	private void initVideoFile(File aVideoFile, int aApiPreference)
+	{
 		//
-		VideoCapture vid = new VideoCapture(aVideoFile.getAbsolutePath());
+		VideoCapture vid = 
+				new VideoCapture(aVideoFile.getAbsolutePath(), aApiPreference);
 		super.setVideoCapture(vid);
 		this.video_file = aVideoFile;
 		//

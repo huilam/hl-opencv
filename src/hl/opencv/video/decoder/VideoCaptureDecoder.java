@@ -70,6 +70,11 @@ public class VideoCaptureDecoder implements AutoCloseable {
 	protected VideoCaptureDecoder()
 	{
 	}
+
+	protected VideoCaptureDecoder(VideoCapture aVideoCap)
+	{
+		setVideoCapture(aVideoCap);
+	}
 	
 	public void setVideoCapture(VideoCapture aVideoCap)
 	{

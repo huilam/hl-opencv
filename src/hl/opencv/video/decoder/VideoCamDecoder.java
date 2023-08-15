@@ -25,6 +25,7 @@ package hl.opencv.video.decoder;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
+import org.opencv.core.Core;
 import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
@@ -40,13 +41,18 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	//
 	public VideoCamDecoder(int aCapDeviceID)
 	{
-		initCamera(aCapDeviceID);
+		initCamera(aCapDeviceID, Videoio.CAP_ANY);
 	}
 	
-	private void initCamera(int aCapDeviceID)
+	public VideoCamDecoder(int aCapDeviceID, int aApiPreference)
+	{
+		initCamera(aCapDeviceID, aApiPreference);
+	}
+	
+	private void initCamera(int aCapDeviceID, int aApiPreference)
 	{
 		this.cam_id = aCapDeviceID;
-		VideoCapture vid = new VideoCapture(aCapDeviceID);
+		VideoCapture vid = new VideoCapture(aCapDeviceID, aApiPreference);
 		super.setVideoCapture(vid);
 		//
 		String sCapSourceName = String.valueOf(aCapDeviceID);
