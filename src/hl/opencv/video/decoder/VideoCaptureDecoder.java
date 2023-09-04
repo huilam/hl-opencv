@@ -423,6 +423,10 @@ public class VideoCaptureDecoder implements AutoCloseable {
 					//Jump video to 'from' 
 					vid.set(Videoio.CAP_PROP_POS_MSEC, lAdjSelFrameMsFrom);
 				}
+				else
+				{
+					vid.set(Videoio.CAP_PROP_POS_MSEC, 0);
+				}
 				
 				lElapseStartMs = System.currentTimeMillis();
 				if(vid.grab())
@@ -537,6 +541,12 @@ public class VideoCaptureDecoder implements AutoCloseable {
 							break;
 						}
 					}
+				}
+				else
+				{
+					// can't grab
+					
+					System.err.println(vid.getBackendName());
 				}
 			}
 		}finally

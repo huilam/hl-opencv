@@ -90,16 +90,17 @@ public class VideoProcessor {
 				if(jsonMeta==null || jsonMeta.length()==0)
 				{
 					logger.log(Level.SEVERE, "Invalid video file - "+aVidFile.getAbsolutePath());
-					return lFramesProcessed;
 				}
-
-				VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
-				if(vidDecoder!=null)
+				else
 				{
-					vidDecoder.setVideoCapture(vcap);
-					vidDecoder.setVideoCaptureName(aVidFile.getName());
-					lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
-					plugin.destroyPlugin(jsonMeta);
+					VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
+					if(vidDecoder!=null)
+					{
+						vidDecoder.setVideoCapture(vcap);
+						vidDecoder.setVideoCaptureName(aVidFile.getName());
+						lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
+						plugin.destroyPlugin(jsonMeta);
+					}
 				}
 			}
 			finally

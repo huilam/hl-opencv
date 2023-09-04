@@ -38,32 +38,28 @@ public class OpenCvFilters{
 	
 	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
 	{
-		if(aMat!=null)
+		if(aMat!=null && !aMat.empty())
 		{
-			Mat matGray = aMat.clone();
 			int iOrigChannel = aMat.channels();
 			
 			switch(iOrigChannel)
 			{
 				case 3 :  
-					Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGB2GRAY);
+					Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGB2GRAY);
 					break;
 				case 4 :  
-					Imgproc.cvtColor(aMat, matGray, Imgproc.COLOR_RGBA2GRAY);
+					Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGBA2GRAY);
 					break;
 			}
 			
 			if(isConvertBackOrigType)
 			{
-				matGray = grayToMultiChannel(matGray, iOrigChannel);
+				grayToMultiChannel(aMat, iOrigChannel);
 			}
 			
-			return matGray;
+			return aMat;
 		}
-		else
-		{
-			return null;
-		}
+		return null;
 	}
 	
 	public static Mat toMask(Mat aMat)
@@ -71,7 +67,7 @@ public class OpenCvFilters{
 		return grayscale(aMat, false);
 	}
 	
-	public static Mat grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
+	protected static void grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
 	{
 		switch(aNewChannelNo)
 		{
@@ -82,27 +78,26 @@ public class OpenCvFilters{
 				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGBA);
 				break;
 		}
-		return aMatGray;
 	}
 	
 	public static Mat solidfill(Mat aMat, Scalar aScalar)
 	{
-		Mat matReturn = new Mat();
-		Mat matSolid = null;
-		Mat matMask = null;
+		Mat matSolid 	= null;
+		Mat matMask 	= null;
 		try {
 			matSolid = new Mat(aMat.size(), aMat.type(), aScalar);
 			matMask = OpenCvUtil.colorToMask(aMat, 5);
-			Core.copyTo(matSolid, matReturn, matMask);
+			Core.copyTo(matSolid, aMat, matMask);
 		}
 		finally
 		{
 			if(matSolid!=null)
 				matSolid.release();
+			
 			if(matMask!=null)
 				matMask.release();
 		}
-		return matReturn;
+		return aMat;
 	}
 	
 	public static Mat medianBlur(Mat aMat, double aBlurScale)
@@ -117,10 +112,9 @@ public class OpenCvFilters{
 		if(iBlurScale%2==0) iBlurScale += 1;
 		if(iBlurScale>=100) iBlurScale = 99;
 		
-		Mat matBlurred = new Mat();
-		Imgproc.medianBlur(aMat, matBlurred, iBlurScale);
+		Imgproc.medianBlur(aMat, aMat, iBlurScale);
 		
-		return matBlurred;
+		return aMat;
 	}
 	
 	public static Mat blur(Mat aMat, double aBlurScale)
@@ -131,21 +125,15 @@ public class OpenCvFilters{
 		if(aBlurScale<0)
 			aBlurScale = 0;
 		
-		
 		int iH = (int)(80 * aBlurScale);
 		int iW = (int)(80 * aBlurScale);
 		
-		Mat matBlurred = new Mat();
 		if(iH>0 && iW>0)
 		{
 			Size ksize = new Size(iW,iH);
-			Imgproc.blur(aMat, matBlurred, ksize);
+			Imgproc.blur(aMat, aMat, ksize);
 		}
-		else
-		{
-			matBlurred = aMat;
-		}
-		return matBlurred;
+		return aMat;
 	}
 	
 	public static Mat gaussianBlur(Mat aMat, double aBlurScale)
@@ -155,8 +143,6 @@ public class OpenCvFilters{
 		
 		if(aBlurScale<0)
 			aBlurScale = 0;
-
-		Mat matBlurred = new Mat();
 		
 		if(aBlurScale>0)
 		{
@@ -166,9 +152,9 @@ public class OpenCvFilters{
 				iThreshold += 1;
 			
 			Size ksize = new Size(iThreshold, iThreshold);
-			Imgproc.GaussianBlur(aMat, matBlurred, ksize, 0);
+			Imgproc.GaussianBlur(aMat, aMat, ksize, 0);
 		}
-		return matBlurred;
+		return aMat;
 	}
 	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
@@ -178,10 +164,11 @@ public class OpenCvFilters{
 	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, int aKernelSize, boolean isinvert)
 	{
-		return cannyEdge(aMat, aThreshold, aThreshold*3, aKernelSize, isinvert);
+		cannyEdge(aMat, aThreshold, aThreshold*3, aKernelSize, isinvert);
+		return aMat;
 	}
 	
-	private static Mat cannyEdge(Mat aMat, int aThreshold1, int aThreshold2, int aKernelSize, boolean isinvert)
+	private static void cannyEdge(Mat aMat, int aThreshold1, int aThreshold2, int aKernelSize, boolean isinvert)
 	{
 		
 		if(aKernelSize<3)
@@ -189,28 +176,37 @@ public class OpenCvFilters{
 		else if(aKernelSize>7)
 			aKernelSize = 7;
 		
-		Mat matEdges = new Mat();
-		Imgproc.Canny(aMat, matEdges, aThreshold1, aThreshold2, aKernelSize, false);
-		
-		if(isinvert)
-		{
-			Mat matInvert = null;
-			try {			
-				matInvert = new Mat(matEdges.rows(), matEdges.cols(), matEdges.type(), new Scalar(255,255,255));
-				Core.subtract(matInvert, matEdges, matEdges);
-			}
-			finally
+		Mat matTmp = new Mat();
+		try {
+			Imgproc.Canny(aMat, matTmp, aThreshold1, aThreshold2, aKernelSize, false);
+			
+			if(isinvert)
 			{
-				if(matInvert!=null)
-					matInvert.release();
+				Mat matInvert = null;
+				try {			
+					matInvert = new Mat(matTmp.rows(), matTmp.cols(), matTmp.type(), new Scalar(255,255,255));
+					Core.subtract(matInvert, matTmp, matTmp);
+					
+					aMat.release();
+					aMat = matTmp.clone();
+				}
+				finally
+				{
+					if(matInvert!=null)
+						matInvert.release();
+				}
 			}
 		}
+		finally
+		{
+			if(matTmp!=null)
+				matTmp.release();
+		}
 		
-		matEdges = grayToMultiChannel(matEdges, aMat.channels());
-		return matEdges;
+		grayToMultiChannel(aMat, aMat.channels());
 	}
 	
-	public static Mat pixelate(final Mat aMat, double aPixelateScale)
+	public static Mat pixelate(Mat aMat, double aPixelateScale)
 	{
 		if(aPixelateScale>1)
 			aPixelateScale = 1;
@@ -218,34 +214,44 @@ public class OpenCvFilters{
 		if(aPixelateScale<=0)
 			aPixelateScale = 0.1;
 
-		Mat mat1 = aMat.clone();
-		if(mat1.width()>960)
-		{
-			OpenCvUtil.resizeByWidth(mat1, 960);
-		}
+		Mat matTmp = aMat.clone();
 		
-		double dRatio = (double)mat1.width() / (double)aMat.width();
-		double dBlockScale = Math.round(6 * aPixelateScale);
-		if(dBlockScale<1)
-			dBlockScale = 1;
-		double dBlockSize = (10 + dBlockScale) * dRatio;
-		
-		for(int iX=0; iX<mat1.width(); iX+=dBlockSize)
-		{
-			for(int iY=0; iY<mat1.height(); iY+=dBlockSize)
+		try {
+			if(matTmp.width()>960)
 			{
-				Imgproc.rectangle(mat1, 
-						new Rect(iX, iY, (int)dBlockSize, (int)dBlockSize), 
-						new Scalar(mat1.get(iY, iX)), 
-						-1);
+				OpenCvUtil.resizeByWidth(matTmp, 960);
 			}
-		}
-		
-		if(mat1.width()!= aMat.width())
+			
+			double dRatio = (double)matTmp.width() / (double)matTmp.width();
+			double dBlockScale = Math.round(6 * aPixelateScale);
+			if(dBlockScale<1)
+				dBlockScale = 1;
+			double dBlockSize = (10 + dBlockScale) * dRatio;
+			
+			for(int iX=0; iX<matTmp.width(); iX+=dBlockSize)
+			{
+				for(int iY=0; iY<matTmp.height(); iY+=dBlockSize)
+				{
+					Imgproc.rectangle(matTmp, 
+							new Rect(iX, iY, (int)dBlockSize, (int)dBlockSize), 
+							new Scalar(matTmp.get(iY, iX)), 
+							-1);
+				}
+			}
+			
+			if(matTmp.width()!= aMat.width())
+			{
+				OpenCvUtil.resize(matTmp, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST); 
+				aMat.release();
+				aMat = matTmp.clone();
+			}
+			
+		}finally
 		{
-			OpenCvUtil.resize(mat1, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST); 
+			if(matTmp!=null)
+				matTmp.release();
 		}
-		return mat1;
+		return aMat;
 	}
 	
 	//

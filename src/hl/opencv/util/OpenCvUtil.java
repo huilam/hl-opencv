@@ -602,17 +602,26 @@ public class OpenCvUtil{
 	public static double calcBrightness(Mat aMat1, boolean isExclBlack)
 	{
 		Mat matMask = null;
-		if(isExclBlack)
-		{			
-			matMask = new Mat(
-					new Size(aMat1.width(), aMat1.height()), 
-					CvType.CV_8UC1,
-					Scalar.all(0));
-			Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
-			matMask = OpenCvFilters.grayscale(matMask, false);
+		try {
+			
+			if(isExclBlack)
+			{			
+				matMask = new Mat(
+						new Size(aMat1.width(), aMat1.height()), 
+						CvType.CV_8UC1,
+						Scalar.all(0));
+				Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
+				matMask = OpenCvFilters.grayscale(matMask, false);
+			}
+			
+			return calcBrightness(aMat1, matMask, aMat1.width());
+		}
+		finally
+		{
+			if(matMask!=null)
+				matMask.release();
 		}
 		
-		return calcBrightness(aMat1, matMask, aMat1.width());
 	}
 	
 	public static double calcBrightness(Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
@@ -639,18 +648,18 @@ public class OpenCvUtil{
 		if(aMat1==null)
 			return 0;
 		
-		Mat mat1 = aMat1.clone();
-		
-		Mat matBg = null;
-		if(aBgMat!=null)
-		{
-			matBg = aBgMat.clone();
-		}
-		
-		Mat matHSV1 = null;
-		Mat matMask1 = null;
+		Mat mat1 		= aMat1.clone();
+		Mat matBg 		= null;
+		Mat matHSV1 	= null;
+		Mat matMask1 	= null;
 		
 		try {
+		
+			if(aBgMat!=null)
+			{
+				matBg = aBgMat.clone();
+			}
+			
 			if(aSamplingWidth>0 && mat1.width()>0)
 			{
 				if(aSamplingWidth>BRIGHTNESS_MAX_SAMPLING_WIDTH)

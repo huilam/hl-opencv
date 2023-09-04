@@ -222,9 +222,8 @@ public class OpenCvMask{
 	
 	protected static Mat colorToMask(Mat aMat, int aThreshold)
 	{
-		Mat matMask = new Mat();
-		Imgproc.threshold(aMat, matMask, aThreshold, 255, Imgproc.THRESH_BINARY);
-		return OpenCvFilters.grayscale(matMask, false);
+		Imgproc.threshold(aMat, aMat, aThreshold, 255, Imgproc.THRESH_BINARY);
+		return OpenCvFilters.grayscale(aMat, false);
 	}
 	
 	protected static Mat getMask(final Mat aMat1, Scalar aFromScalar, Scalar aToScalar)
