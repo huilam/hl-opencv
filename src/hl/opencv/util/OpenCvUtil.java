@@ -778,10 +778,15 @@ public class OpenCvUtil{
 				
 				switch(matTmpInput.channels())
 				{
-					case 1 : OpenCvFilters.grayToMultiChannel(matTmpInput, 3);
-					case 2 : break;
-					case 3 : break;
-					case 4 : OpenCvUtil.removeAlphaChannel(matTmpInput);
+					case 1 : 
+					case 2 : 
+						OpenCvFilters.grayToMultiChannel(matTmpInput, 3);
+						break;
+					case 3 : 
+						//Do nothing
+						break;
+					case 4 : 
+						OpenCvUtil.removeAlphaChannel(matTmpInput);
 							 break;
 				}
 				

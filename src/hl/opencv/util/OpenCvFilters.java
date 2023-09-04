@@ -69,14 +69,17 @@ public class OpenCvFilters{
 	
 	protected static void grayToMultiChannel(Mat aMatGray, int aNewChannelNo)
 	{
-		switch(aNewChannelNo)
+		if(aMatGray.channels()==1)
 		{
-			case 3 : 
-				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGB);
-				break;
-			case 4 :  
-				Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGBA);
-				break;
+			switch(aNewChannelNo)
+			{
+				case 3 : 
+					Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGB);
+					break;
+				case 4 :  
+					Imgproc.cvtColor(aMatGray, aMatGray, Imgproc.COLOR_GRAY2RGBA);
+					break;
+			}
 		}
 	}
 	
@@ -170,12 +173,15 @@ public class OpenCvFilters{
 	
 	private static void cannyEdge(Mat aMat, int aThreshold1, int aThreshold2, int aKernelSize, boolean isinvert)
 	{
+		if(aMat==null || aMat.empty())
+			return;
 		
 		if(aKernelSize<3)
 			aKernelSize = 3;
 		else if(aKernelSize>7)
 			aKernelSize = 7;
 		
+		int iOrgChannels = aMat.channels();
 		Mat matTmp = new Mat();
 		try {
 			Imgproc.Canny(aMat, matTmp, aThreshold1, aThreshold2, aKernelSize, false);
@@ -186,7 +192,6 @@ public class OpenCvFilters{
 				try {			
 					matInvert = new Mat(matTmp.rows(), matTmp.cols(), matTmp.type(), new Scalar(255,255,255));
 					Core.subtract(matInvert, matTmp, matTmp);
-					
 					aMat.release();
 					aMat = matTmp.clone();
 				}
@@ -196,14 +201,14 @@ public class OpenCvFilters{
 						matInvert.release();
 				}
 			}
+			
+			grayToMultiChannel(matTmp, iOrgChannels);			
 		}
 		finally
 		{
 			if(matTmp!=null)
 				matTmp.release();
 		}
-		
-		grayToMultiChannel(aMat, aMat.channels());
 	}
 	
 	public static Mat pixelate(Mat aMat, double aPixelateScale)
