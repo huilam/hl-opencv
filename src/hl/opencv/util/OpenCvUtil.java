@@ -364,21 +364,20 @@ public class OpenCvUtil{
 	
 	public static Mat toHSV(Mat aMat)
 	{
-		Mat matHSV = aMat.clone();
 		int iOrigChannel = aMat.channels();
 		
 		switch(iOrigChannel)
 		{
 			case 1 :  
-				Imgproc.cvtColor(matHSV, matHSV, Imgproc.COLOR_GRAY2BGR);
+				Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_GRAY2BGR);
 				//let it continue to convert to HSV
 			case 3 :  
 			case 4 :  
-				Imgproc.cvtColor(matHSV, matHSV, Imgproc.COLOR_BGR2HSV);
+				Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_BGR2HSV);
 				break;
 		}
 		
-		return matHSV;
+		return aMat;
 	}
 
 	public static void addAlphaChannel(Mat matInput)
@@ -441,27 +440,35 @@ public class OpenCvUtil{
 		return mat;
 	}
 	
-	public static boolean saveImageAsFile(Mat aMatInput, String aFileName)
+	public static boolean saveImageAsFile(final Mat aMatInput, String aFileName)
 	{
 		Map<Integer, Integer> mapImageParams = new HashMap<Integer, Integer>();
 		
-		if(aFileName!=null)
-		{
-			String sExt = aFileName.toLowerCase();
-			if(sExt.endsWith(".jpg"))
+		Mat matToSave = aMatInput.clone();
+		try {
+			if(aFileName!=null)
 			{
-				mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+				String sExt = aFileName.toLowerCase();
+				if(sExt.endsWith(".jpg"))
+				{
+					mapImageParams.put(Imgcodecs.IMWRITE_JPEG_QUALITY, 80);
+				}
+				else if(sExt.endsWith(".png"))
+				{
+					addAlphaChannel(matToSave);
+				}
 			}
-			else if(sExt.endsWith(".png"))
-			{
-				addAlphaChannel(aMatInput);
-			}
+			
+			return saveImageAsFile(matToSave, aFileName, mapImageParams);
 		}
-		
-		return saveImageAsFile(aMatInput, aFileName, mapImageParams);
+		finally
+		{
+			if(matToSave!=null)
+				matToSave.release();
+		}
 	}
 	
-	public static boolean saveImageAsFile(Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
+	public static boolean saveImageAsFile(final Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
 	{
 		MatOfInt matOfInt = null;
 		try {
