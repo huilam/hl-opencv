@@ -186,6 +186,11 @@ public class OpenCvFilters{
 			aKernelSize = 7;
 		
 		int iOrgChannels = aMat.channels();
+		
+		if(aMat.channels()>1)
+		{
+			OpenCvFilters.grayscale(aMat, false);
+		}
 		Imgproc.Canny(aMat, aMat, aThreshold1, aThreshold2, aKernelSize, false);
 		
 		if(isinvert)
