@@ -38,28 +38,28 @@ public class OpenCvFilters{
 	
 	public static Mat grayscale(Mat aMat, boolean isConvertBackOrigType)
 	{
-		if(aMat!=null && !aMat.empty())
+		if(aMat==null || aMat.empty())
 		{
-			int iOrigChannel = aMat.channels();
-			
-			switch(iOrigChannel)
-			{
-				case 3 :  
-					Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGB2GRAY);
-					break;
-				case 4 :  
-					Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGBA2GRAY);
-					break;
-			}
-			
-			if(isConvertBackOrigType)
-			{
-				grayToMultiChannel(aMat, iOrigChannel);
-			}
-			
-			return aMat;
+			return null;
 		}
-		return null;
+		
+		int iOrigChannel = aMat.channels();
+		
+		switch(iOrigChannel)
+		{
+			case 3 :  
+				Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGB2GRAY);
+				break;
+			case 4 :  
+				Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_RGBA2GRAY);
+				break;
+		}
+		
+		if(isConvertBackOrigType)
+		{
+			grayToMultiChannel(aMat, iOrigChannel);
+		}
+		return aMat;
 	}
 	
 	public static Mat toMask(Mat aMat)
@@ -162,7 +162,8 @@ public class OpenCvFilters{
 	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, boolean isinvert)
 	{
-		return cannyEdge(aMat, aThreshold, 3, isinvert);
+		cannyEdge(aMat, aThreshold, 3, isinvert);
+		return aMat;
 	}
 	
 	public static Mat cannyEdge(Mat aMat, int aThreshold, int aKernelSize, boolean isinvert)
@@ -174,7 +175,10 @@ public class OpenCvFilters{
 	private static void cannyEdge(Mat aMat, int aThreshold1, int aThreshold2, int aKernelSize, boolean isinvert)
 	{
 		if(aMat==null || aMat.empty())
+		{
+			System.err.println("cannyEdge input image is NULL or Empty !");
 			return;
+		}
 		
 		if(aKernelSize<3)
 			aKernelSize = 3;
@@ -182,33 +186,13 @@ public class OpenCvFilters{
 			aKernelSize = 7;
 		
 		int iOrgChannels = aMat.channels();
-		Mat matTmp = new Mat();
-		try {
-			Imgproc.Canny(aMat, matTmp, aThreshold1, aThreshold2, aKernelSize, false);
-			
-			if(isinvert)
-			{
-				Mat matInvert = null;
-				try {			
-					matInvert = new Mat(matTmp.rows(), matTmp.cols(), matTmp.type(), new Scalar(255,255,255));
-					Core.subtract(matInvert, matTmp, matTmp);
-					aMat.release();
-					aMat = matTmp.clone();
-				}
-				finally
-				{
-					if(matInvert!=null)
-						matInvert.release();
-				}
-			}
-			
-			grayToMultiChannel(matTmp, iOrgChannels);			
-		}
-		finally
+		Imgproc.Canny(aMat, aMat, aThreshold1, aThreshold2, aKernelSize, false);
+		
+		if(isinvert)
 		{
-			if(matTmp!=null)
-				matTmp.release();
+			Core.bitwise_not(aMat, aMat);
 		}
+		grayToMultiChannel(aMat, iOrgChannels);	
 	}
 	
 	public static Mat pixelate(Mat aMat, double aPixelateScale)

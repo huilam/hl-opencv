@@ -470,6 +470,12 @@ public class OpenCvUtil{
 	
 	public static boolean saveImageAsFile(final Mat aMatInput, String aFileName, Map<Integer, Integer> mapImageParams)
 	{
+		if(aMatInput==null || aMatInput.empty())
+		{
+			System.err.println("Input Image is NULL or Empty.");
+			return false;
+		}
+		
 		MatOfInt matOfInt = null;
 		try {
 			
