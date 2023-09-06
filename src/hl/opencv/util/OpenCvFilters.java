@@ -208,43 +208,36 @@ public class OpenCvFilters{
 		if(aPixelateScale<=0)
 			aPixelateScale = 0.1;
 
-		Mat matTmp = aMat.clone();
+		Rect rectOrg = new Rect(0,0,aMat.width(), aMat.height());
 		
-		try {
-			if(matTmp.width()>960)
-			{
-				OpenCvUtil.resizeByWidth(matTmp, 960);
-			}
-			
-			double dRatio = (double)matTmp.width() / (double)matTmp.width();
-			double dBlockScale = Math.round(6 * aPixelateScale);
-			if(dBlockScale<1)
-				dBlockScale = 1;
-			double dBlockSize = (10 + dBlockScale) * dRatio;
-			
-			for(int iX=0; iX<matTmp.width(); iX+=dBlockSize)
-			{
-				for(int iY=0; iY<matTmp.height(); iY+=dBlockSize)
-				{
-					Imgproc.rectangle(matTmp, 
-							new Rect(iX, iY, (int)dBlockSize, (int)dBlockSize), 
-							new Scalar(matTmp.get(iY, iX)), 
-							-1);
-				}
-			}
-			
-			if(matTmp.width()!= aMat.width())
-			{
-				OpenCvUtil.resize(matTmp, aMat.width(), aMat.height(), false, Imgproc.INTER_NEAREST); 
-				aMat.release();
-				aMat = matTmp.clone();
-			}
-			
-		}finally
+		//downsize for faster processing
+		if(aMat.width()>960)
 		{
-			if(matTmp!=null)
-				matTmp.release();
+			OpenCvUtil.resizeByWidth(aMat, 960);
 		}
+		
+		double dRatio = (double)rectOrg.height / (double)rectOrg.width;
+		double dBlockScale = Math.round(6 * aPixelateScale);
+		if(dBlockScale<1)
+			dBlockScale = 1;
+		double dBlockSize = (10 + dBlockScale) * dRatio;
+		
+		for(int iX=0; iX<aMat.width(); iX+=dBlockSize)
+		{
+			for(int iY=0; iY<aMat.height(); iY+=dBlockSize)
+			{
+				Imgproc.rectangle(aMat, 
+						new Rect(iX, iY, (int)dBlockSize, (int)dBlockSize), 
+						new Scalar(aMat.get(iY, iX)), 
+						-1);
+			}
+		}
+		
+		if(aMat.size()!= rectOrg.size())
+		{
+			OpenCvUtil.resize(aMat, rectOrg.width, rectOrg.height, false, Imgproc.INTER_NEAREST); 
+		}
+		
 		return aMat;
 	}
 	
