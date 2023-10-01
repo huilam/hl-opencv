@@ -624,7 +624,7 @@ public class OpenCvUtil{
 						CvType.CV_8UC1,
 						Scalar.all(0));
 				Imgproc.threshold(aMat1, matMask, 10, 255, Imgproc.THRESH_BINARY);
-				matMask = OpenCvFilters.grayscale(matMask, false);
+				OpenCvFilters.grayscale(matMask, false);
 			}
 			
 			return calcBrightness(aMat1, matMask, aMat1.width());
@@ -783,7 +783,7 @@ public class OpenCvUtil{
 				if(aBlurThreshold>0)
 				{
 					//aBlurThreshold = 0.0 - 1.0
-					matTmpInput = OpenCvFilters.medianBlur(matTmpInput, aBlurThreshold);
+					OpenCvFilters.medianBlur(matTmpInput, aBlurThreshold);
 				}
 				
 				if(aRect==null || (aRect.width==0 && aRect.height==0))
@@ -996,14 +996,14 @@ public class OpenCvUtil{
 		return OpenCvMask.removeMaskContourAreas(aMatMask, aMinContourArea, aMaxContourArea, iFindContourMode, iFindContourMethod);
 	}
 	
-	public static Mat colorToMask(Mat aMat)
+	public static void colorToMask(Mat aMat)
 	{
-		return OpenCvMask.colorToMask(aMat);
+		OpenCvMask.colorToMask(aMat);
 	}
 	
-	public static Mat colorToMask(Mat aMat, int aThreshold)
+	public static void colorToMask(Mat aMat, int aThreshold)
 	{
-		return OpenCvMask.colorToMask(aMat, aThreshold);
+		OpenCvMask.colorToMask(aMat, aThreshold);
 	}
 	
 	public static Rect calcMaskTrimRect(Mat aMat)

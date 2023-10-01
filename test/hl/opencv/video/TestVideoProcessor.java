@@ -38,7 +38,13 @@ public class TestVideoProcessor {
 		OpenCvUtil.initOpenCV();
 		File fileVid = 
 				//new File("./test/videos/privacy-demo-h264.mp4");
-				new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
+				//new File("./test/videos/nls/xinlai-video-03.MP4")
+				new File("./test/videos/nls/ace_cam1_15mins.mkv")
+				//
+				//new File("./test/videos/nls/xinlai-01_30s_5fps.mp4")
+				//
+			//	,new File("./test/videos/youtube/SG_REQ_NOMASK.mp4")
+				;
 		
 		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
 	
@@ -64,7 +70,10 @@ public class TestVideoProcessor {
 		}
 		//test.processLiveCamera(0, sPluginClassName, -1);
 
-		test.processVideoFile(fileVid, sPluginClassName);
+		
+		
+		
+		test.processVideoFile(fileVid, new VideoProcessorDebugPlugin(), 0, -1);
 		
 	}
 }

@@ -7,13 +7,18 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/json-20220924.jar"/>
 	<classpathentry kind="lib" path="lib/hl-common_jdk11_20230417-1629-18.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="hl-opencv/lib/opencv/4.6.0"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/opencv/4.6.0/opencv-460-jdk11.jar"/>
-	<classpathentry kind="lib" path="lib/opencv/4.6.0/x86_64"/>
+	<classpathentry kind="lib" path="lib/isoparser/aspectjrt-1.9.19.jar"/>
+	<classpathentry kind="lib" path="lib/isoparser/isoparser-1.9.56.jar"/>
+	<classpathentry kind="lib" path="lib/isoparser/muxer-1.9.56.jar" sourcepath="/mp4parser/muxer/src/main/java"/>
+	<classpathentry kind="lib" path="lib/isoparser/slf4j-api-2.0.7.jar"/>
+	<classpathentry kind="lib" path="lib/isoparser/streaming-1.9.56.jar"/>
+	<classpathentry kind="lib" path="lib/json-20220924.jar"/>
+	<classpathentry kind="lib" path="lib/opencv/4.8.0/opencv-480.jar"/>
+	<classpathentry kind="lib" path="lib/opencv/4.8.0/x86_64"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

@@ -55,7 +55,7 @@ public class ImgROI {
 		{
 			if(aROIMask.channels()!=1)
 			{
-				aROIMask = OpenCvFilters.toMask(aROIMask);
+				OpenCvFilters.toMask(aROIMask);
 			}
 			
 			this.mat_roi_mask = aROIMask;

@@ -28,7 +28,7 @@ import org.json.JSONObject;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
-import hl.opencv.video.VideoDecoder;
+import hl.opencv.video.decoder.VideoFileDecoder;
 import hl.opencv.video.encoder.VideoEncoder;
 
 
@@ -120,6 +120,6 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	
 	private String toDurationStr(long aTimeMs)
 	{
-		return VideoDecoder.toDurationStr(aTimeMs);
+		return VideoFileDecoder.toDurationStr(aTimeMs);
 	}
 }

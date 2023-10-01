@@ -99,8 +99,8 @@ public class OpenCvMask{
 				
 				if(isGrayscale)
 				{
-					matBgResized = OpenCvFilters.grayscale(matBgResized);
-					matInResized = OpenCvFilters.grayscale(matInResized);
+					OpenCvFilters.grayscale(matBgResized);
+					OpenCvFilters.grayscale(matInResized);
 				}
 				
 				if(!matBgResized.empty())
@@ -215,15 +215,15 @@ public class OpenCvMask{
 	
 	//
 	
-	protected static Mat colorToMask(Mat aMat)
+	protected static void colorToMask(Mat aMat)
 	{
-		return colorToMask(aMat, 50);
+		colorToMask(aMat, 50);
 	}
 	
-	protected static Mat colorToMask(Mat aMat, int aThreshold)
+	protected static void colorToMask(Mat aMat, int aThreshold)
 	{
 		Imgproc.threshold(aMat, aMat, aThreshold, 255, Imgproc.THRESH_BINARY);
-		return OpenCvFilters.grayscale(aMat, false);
+		OpenCvFilters.grayscale(aMat, false);
 	}
 	
 	protected static Mat getMask(final Mat aMat1, Scalar aFromScalar, Scalar aToScalar)

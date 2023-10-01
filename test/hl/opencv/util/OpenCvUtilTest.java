@@ -26,11 +26,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import hl.common.ImgUtil;
-import hl.opencv.OpenCvLibLoader;
 
 public class OpenCvUtilTest{
 	
@@ -135,19 +133,23 @@ public class OpenCvUtilTest{
 				double iPixelate = .6; 
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur1 = OpenCvFilters.blur(mat, iBlur);
+				Mat matBlur1 = mat.clone();
+				OpenCvFilters.blur(matBlur1, iBlur);
 				lElapsed1 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur2 = OpenCvFilters.medianBlur(mat, iBlur);
+				Mat matBlur2 = mat.clone();
+				OpenCvFilters.medianBlur(matBlur2, iBlur);
 				lElapsed2 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matBlur3 = OpenCvFilters.gaussianBlur(mat, iBlur);
+				Mat matBlur3 = mat.clone();
+				OpenCvFilters.gaussianBlur(matBlur3, iBlur);
 				long lElapsed3 = getElapsedMs(lStart);
 				
 				lStart = System.currentTimeMillis();
-				Mat matPixelate = OpenCvFilters.pixelate(mat, iPixelate);
+				Mat matPixelate = mat.clone();
+				OpenCvFilters.pixelate(matPixelate, iPixelate);
 				long lElapsed4 = getElapsedMs(lStart);
 				
 				File f = new File(fileImageOutput.getAbsolutePath()+"/blur."+sImgExt);
