@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 
 import hl.common.ImgUtil;
 
@@ -83,6 +84,21 @@ public class OpenCvUtilTest{
 				{
 					System.out.println(" Loaded mat "+fImg.getName()+" "+mat.width()+"x"+mat.height()+" elapsed:"+lElapsed2+"ms");
 				}
+				
+				///////////////
+				
+				System.out.println("  mat.channels = "+mat.channels());
+				
+				double dBrightness1 = OpenCvUtil.calcBrightness(mat);
+				System.out.println("  calcBrightness-1 = "+dBrightness1);
+				
+				double dBrightness2 = OpenCvUtil.calcBrightness(mat, true);
+				System.out.println("  calcBrightness-2 = "+dBrightness2);
+		
+				double dBrightness3 = OpenCvUtil.calcBrightness(mat, 
+						new Scalar(0.0, 17.85, 20.0, 0.0), new Scalar(25.0, 204.0, 255.0, 0.0));				
+				System.out.println("  calcBrightness-3 = "+dBrightness3);
+				
 				
 				////////////////
 				System.out.println();

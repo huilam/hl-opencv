@@ -237,13 +237,16 @@ public class OpenCvMask{
 			try
 			{
 				matMask = new Mat();
-				matHsv = OpenCvUtil.toHSV(aMat1);
+				matHsv = aMat1.clone();
+				OpenCvUtil.toHSV(matHsv);
 				Core.inRange(matHsv, aFromScalar, aToScalar, matMask);
 			}
 			finally
 			{
 				if(matHsv!=null)
 					matHsv.release();
+				
+				matHsv = null;
 			}
 
 		}

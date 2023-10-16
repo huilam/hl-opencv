@@ -362,10 +362,10 @@ public class OpenCvUtil{
 		}
 	}
 	
-	public static Mat toHSV(Mat aMat)
+	public static void toHSV(Mat aMat)
 	{
 		int iOrigChannel = aMat.channels();
-		
+
 		switch(iOrigChannel)
 		{
 			case 1 :  
@@ -376,8 +376,6 @@ public class OpenCvUtil{
 				Imgproc.cvtColor(aMat, aMat, Imgproc.COLOR_BGR2HSV);
 				break;
 		}
-		
-		return aMat;
 	}
 
 	public static void addAlphaChannel(Mat matInput)
@@ -705,8 +703,8 @@ public class OpenCvUtil{
 				}
 			}
 			
-			
-			matHSV1 = OpenCvUtil.toHSV(mat1);
+			matHSV1 = mat1.clone();
+			OpenCvUtil.toHSV(matHSV1);
 			
 			if(matMask1!=null && matHSV1.width() == matMask1.width())
 			{
