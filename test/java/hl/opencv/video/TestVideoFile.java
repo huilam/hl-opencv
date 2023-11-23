@@ -34,6 +34,8 @@ public class TestVideoFile {
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
+		
+		
 		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
 		
 		TestVideoDecoder vidDecoder = new TestVideoDecoder(file);
