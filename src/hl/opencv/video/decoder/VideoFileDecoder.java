@@ -218,13 +218,13 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 			switch (iErrCode)
 			{
 				case -5:
-					sErrMsg = "Input video file FPS is higher than total frame count.";
+					sErrMsg = "Input video file's FPS is higher than total frame count.";
 					break;
 				case -4:
-					sErrMsg = "Input file contain invalid video frame resolution.";
+					sErrMsg = "Input file contain invalid video frame resolution or greater than "+MAX_RES_8K+".";
 					break;
 				case -3:
-					sErrMsg = "Input file contain invalid FPS value.";
+					sErrMsg = "Input file contain invalid FPS value or greater than "+MAX_FPS_100+".";
 					break;
 				case -2:
 					sErrMsg = "Please make sure input file is a supported video format.";
