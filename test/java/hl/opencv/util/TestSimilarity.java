@@ -20,22 +20,27 @@
  
  */
 
-package hl.opencv.video;
+package hl.opencv.util;
 
-import hl.opencv.util.OpenCvUtil;
-import hl.opencv.video.decoder.VideoCamDecoder;
+import java.io.File;
 
-public class TestWebcam {
+import org.opencv.core.Mat;
+
+public class TestSimilarity {
 	
-	
-	public static void main(String args[]) throws Exception
+	public static void main(String[] args)
 	{
-		
 		OpenCvUtil.initOpenCV();
-		VideoCamDecoder vidDecoder = new VideoCamDecoder(0);
-		vidDecoder.setCamFps(5);
-		vidDecoder.processCamera(5000);
 		
+		File fileImages = new File("./test/images/xinlai");
+
+		Mat mat1 = OpenCvUtil.loadImage(fileImages.getAbsolutePath()+"/xinlai_02.jpg");
+		Mat mat2 = OpenCvUtil.loadImage(fileImages.getAbsolutePath()+"/xinlai_03.jpg");
+		
+		System.out.println("mat1="+mat1.width()+"x"+mat1.height());
+		System.out.println("mat2="+mat2.width()+"x"+mat2.height());
+		
+		System.out.println(OpenCvUtil.calcImageSimilarity(mat1, mat2));
 	}
-		
+	
 }

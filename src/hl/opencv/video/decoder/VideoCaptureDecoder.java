@@ -166,14 +166,19 @@ public class VideoCaptureDecoder implements AutoCloseable {
 	
 	protected JSONObject getVidCapMetadata(boolean isShowPreview, int aPreviewWidth)
 	{
-		JSONObject jsonMeta = new JSONObject();
-
 		VideoCapture vid = this.videocap;			
 		if(vid.isOpened())
 		{
+			JSONObject jsonMeta = new JSONObject();
+			//
+			jsonMeta.put("Videoio.CAP_PROP_FRAME_COUNT", vid.get(Videoio.CAP_PROP_FRAME_COUNT));
+			jsonMeta.put("Videoio.CAP_PROP_FPS", vid.get(Videoio.CAP_PROP_FPS));
+			jsonMeta.put("Videoio.CAP_PROP_FRAME_WIDTH", vid.get(Videoio.CAP_PROP_FRAME_WIDTH));
+			jsonMeta.put("Videoio.CAP_PROP_FRAME_HEIGHT", vid.get(Videoio.CAP_PROP_FRAME_HEIGHT));
+			//
+			
 			double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 			double dFps = vid.get(Videoio.CAP_PROP_FPS);
-			
 			double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
 			//
 			jsonMeta.put("FPS", dFps);
@@ -189,7 +194,7 @@ public class VideoCaptureDecoder implements AutoCloseable {
 			
 			vid.set(Videoio.CAP_PROP_POS_FRAMES, lLastFrameIndex);
 			
-			int iMaxAttempt = 10;
+			int iMaxAttempt = 5;
 			while(vid.grab()==false)
 			{
 				iMaxAttempt--;
@@ -198,6 +203,11 @@ public class VideoCaptureDecoder implements AutoCloseable {
 				{
 					logger.log(Level.WARNING,"Failed to perform OpenCv.grab() to get last frame !");
 					break;
+				}
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 			
@@ -251,10 +261,10 @@ public class VideoCaptureDecoder implements AutoCloseable {
 				}
 				jsonMeta.put("PREVIEW_FRAMES", jsonSampling);
 			}
-			
+			return jsonMeta;
 		}
-
-		return jsonMeta;
+		return null;
+		
 	}
 	
 	protected Map<Long,Mat> getVideoCapFrames(int aPosType, long aPosValue[])

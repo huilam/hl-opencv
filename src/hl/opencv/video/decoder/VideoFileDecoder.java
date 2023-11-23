@@ -36,7 +36,17 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	private static Logger logger = Logger.getLogger(VideoFileDecoder.class.getName());
 	
-	private File video_file = null; 
+	private File video_file = null;
+	
+	private int default_preview_width 				= 200;
+	private JSONObject json_video_meta				= null;
+	private JSONObject json_video_default_preview	= null;
+	
+	
+	private static long MAX_RES_8K 		= 8192;
+	private static long MAX_FPS_100 	= 100;
+	private static String[] SUPP_VIDEO_FORMAT_EXT = new String[] {".mp4",".mkv",".avi"};
+	
 	////
 	
 	public VideoFileDecoder(File aVideoFile)
@@ -67,28 +77,75 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	public JSONObject getVideoFileMetadata(boolean isShowPreview)
 	{
-		return getVideoFileMetadata(isShowPreview, 200);
+		return getVideoFileMetadata(isShowPreview, default_preview_width);
+	}
+	
+	private JSONObject getCachedVideoMeta(boolean isShowPreview, int aPreviewWidth)
+	{
+		JSONObject jsonMeta = null;
+		
+		if(json_video_meta!=null)
+		{
+			jsonMeta = new JSONObject(json_video_meta);
+			if(isShowPreview)
+			{
+				if(aPreviewWidth!=default_preview_width)
+				{
+					jsonMeta = null;
+				}
+				else
+				{
+					jsonMeta.put("PREVIEW_FRAMES", new JSONObject(json_video_default_preview));
+				}
+			}
+		}
+		
+		return jsonMeta;
+	}
+	
+	private void updateCachedVideoMeta(JSONObject jsonMeta, boolean isShowPreview, int aPreviewWidth)
+	{
+		if(jsonMeta!=null)
+		{
+			json_video_meta = new JSONObject(jsonMeta);
+			
+			JSONObject jsonPreviews = (JSONObject)json_video_meta.remove("PREVIEW_FRAMES");
+			
+			if(jsonPreviews!=null && aPreviewWidth==default_preview_width)
+			{
+				json_video_default_preview = new JSONObject(jsonPreviews);
+			}
+		}
 	}
 	
 	public JSONObject getVideoFileMetadata(boolean isShowPreview, int aPreviewWidth)
 	{
-		File videoFile = this.video_file;
+		JSONObject jsonMeta = getCachedVideoMeta(isShowPreview, aPreviewWidth);
 		
-		JSONObject jsonMeta = new JSONObject();
-		if(validateFileInput(videoFile,0,0)==0)
+		if(jsonMeta==null)
 		{
-			jsonMeta = super.getVidCapMetadata(isShowPreview, aPreviewWidth);
-			//
-			jsonMeta.put("SOURCE", videoFile.getAbsolutePath());
-			jsonMeta.put("FILE_SIZE", videoFile.length());
-			jsonMeta.put("FILE_LAST_MODIFIED", videoFile.lastModified());
+		
+			File videoFile = this.video_file;
+			
+			jsonMeta = null;
+			if(validateFileInput(videoFile,0,0)==0)
+			{
+				jsonMeta = super.getVidCapMetadata(isShowPreview, aPreviewWidth);
+				//
+				jsonMeta.put("SOURCE", videoFile.getAbsolutePath());
+				jsonMeta.put("FILE_SIZE", videoFile.length());
+				jsonMeta.put("FILE_LAST_MODIFIED", videoFile.lastModified());
+			}
+		
+			//update cache
+			updateCachedVideoMeta(jsonMeta, isShowPreview, aPreviewWidth);	
 		}
 		
 		return jsonMeta;
 	}
 	
 	
-	private static int validateFileInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	private int validateFileInput(File aVideoFile, final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		int iErrCode = 0;
 		if(aVideoFile==null || !aVideoFile.isFile())
@@ -98,18 +155,86 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		}
 		else
 		{
+			iErrCode = -2;
 			String sFileName = aVideoFile.getName().toLowerCase();
-			if(sFileName.endsWith(".mp4") || sFileName.endsWith(".mkv") || sFileName.endsWith(".avi"))
+			for(String sExt : SUPP_VIDEO_FORMAT_EXT)
 			{
-			}else
-			{
-				iErrCode = -2;
+				if(sFileName.endsWith(sExt))
+				{
+					iErrCode = 0;
+					break;
+				}
 			}
+		}
+		
+		if(iErrCode==0)
+		{
+			JSONObject jsonMeta = getCachedVideoMeta(false,0);
+			
+			if(jsonMeta==null)
+			{
+				jsonMeta = this.getVidCapMetadata(false, 0);
+				updateCachedVideoMeta(jsonMeta, false, 0);
+			}
+			
+			if(jsonMeta!=null)
+			{
+				long lMetaFrameCount 	= jsonMeta.getLong("Videoio.CAP_PROP_FRAME_COUNT");
+				double dMetaFps 		= jsonMeta.getLong("Videoio.CAP_PROP_FPS");
+				long lMetaFrameWidth 	= jsonMeta.getLong("Videoio.CAP_PROP_FRAME_WIDTH");
+				long lMetaFrameHeight 	= jsonMeta.getLong("Videoio.CAP_PROP_FRAME_HEIGHT");
+				
+				if(dMetaFps<=0 || dMetaFps>MAX_FPS_100)
+				{
+					//invalid FPS
+					iErrCode = -3;
+				}
+				
+				else if(lMetaFrameWidth <= 0 || lMetaFrameWidth > MAX_RES_8K)
+				{
+					//invalid Resolution
+					iErrCode = -4;
+				}
+				else if(lMetaFrameHeight <= 0 || lMetaFrameHeight > MAX_RES_8K)
+				{
+					//invalid Resolution
+					iErrCode = -4;
+				}
+				
+				else if(lMetaFrameCount <= dMetaFps)
+				{
+					//Total frame count cannot smaller than fps
+					iErrCode = -5;
+				}
+				
+			}
+			
+			
 		}
 		
 		if(iErrCode<0)
 		{
-			logger.log(Level.SEVERE, "Please make sure input file is a valid video file.");
+			String sErrMsg = "";
+			switch (iErrCode)
+			{
+				case -5:
+					sErrMsg = "Input video file FPS is higher than total frame count.";
+					break;
+				case -4:
+					sErrMsg = "Input file contain invalid video frame resolution.";
+					break;
+				case -3:
+					sErrMsg = "Input file contain invalid FPS value.";
+					break;
+				case -2:
+					sErrMsg = "Please make sure input file is a supported video format.";
+					break;
+				case -1:
+					sErrMsg = "Please make sure input file is a valid video file.";
+					break;
+			}
+			
+			logger.log(Level.SEVERE, "(ErrCode:"+iErrCode+") "+sErrMsg+" - "+aVideoFile.getName());
 		}
 		///////////////////////
 		
