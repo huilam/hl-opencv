@@ -25,16 +25,20 @@ package hl.opencv.video;
 import java.io.File;
 
 import org.json.JSONObject;
-import org.opencv.videoio.Videoio;
 
 import hl.common.FileUtil;
 import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.decoder.VideoFileDecoder;
+import hl.opencv.video.utils.VideoFileUtil;
 
 public class TestVideoFileMeta {
 	
-	
 	public static void main(String args[]) throws Exception
+	{
+		testVideoMetaData();
+	}
+	
+	public static void testVideoMetaData() throws Exception
 	{
 		OpenCvUtil.initOpenCV();
 		
@@ -46,6 +50,11 @@ public class TestVideoFileMeta {
 		int i = 0;
 		for(File fileImg : files)
 		{
+			
+			JSONObject jsonMetaTest = VideoFileUtil.getVideoFileMetadata(fileImg);
+			System.out.println("jsonMetaTest= "+jsonMetaTest);
+			System.out.println();
+			
 			VideoFileDecoder decoder = new VideoFileDecoder(fileImg);
 			
 			JSONObject jsonMeta = decoder.getVideoFileMetadata();
@@ -62,9 +71,19 @@ public class TestVideoFileMeta {
 				System.out.println("   - Videoio.CAP_PROP_FPS:"+jsonMeta.optDouble("Videoio.CAP_PROP_FPS"));
 				System.out.println("   - Videoio.CAP_PROP_FRAME_WIDTH:"+jsonMeta.optLong("Videoio.CAP_PROP_FRAME_WIDTH"));
 				System.out.println("   - Videoio.CAP_PROP_FRAME_HEIGHT:"+jsonMeta.optLong("Videoio.CAP_PROP_FRAME_HEIGHT"));
+				
+				JSONObject jsonMeta2 = decoder.getVideoFileMetadata(true);
+				System.out.println("   - Videoio.jsonMeta2.FRAME_COUNT:"+jsonMeta2.optLong("FRAME_COUNT"));
+				
+				JSONObject jsonMeta3 = decoder.getVideoFileMetadata(true);
+				System.out.println("   - Videoio.jsonMeta3.PREVIEW_FRAMES:"+jsonMeta3.optJSONObject("PREVIEW_FRAMES"));
+				
+				JSONObject jsonMeta4 = decoder.getVideoFileMetadata();
+				System.out.println("   - Videoio.jsonMeta4.PREVIEW_FRAMES:"+jsonMeta4.optJSONObject("PREVIEW_FRAMES"));
+
 			}
 			
-			decoder.release();
+			decoder.close();
 		}
 		
 	}

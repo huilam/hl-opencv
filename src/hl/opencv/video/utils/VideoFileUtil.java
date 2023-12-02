@@ -23,6 +23,8 @@
 package hl.opencv.video.utils;
 
 import java.io.File;
+import java.io.IOException;
+
 import org.json.JSONObject;
 import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.decoder.VideoFileDecoder;
@@ -47,8 +49,13 @@ public class VideoFileUtil {
 		}
 		finally
 		{
-			if(vidFileDecoder!=null)
-				vidFileDecoder.release();
+			try {
+				if(vidFileDecoder!=null)
+					vidFileDecoder.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		return jsonMeta;

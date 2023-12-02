@@ -86,16 +86,16 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		
 		if(json_video_meta!=null)
 		{
-			jsonMeta = new JSONObject(json_video_meta);
+			jsonMeta = new JSONObject(json_video_meta.toString());
 			if(isShowPreview)
 			{
-				if(aPreviewWidth!=default_preview_width)
+				if(aPreviewWidth!=default_preview_width || json_video_default_preview==null)
 				{
 					jsonMeta = null;
 				}
 				else
 				{
-					jsonMeta.put("PREVIEW_FRAMES", new JSONObject(json_video_default_preview));
+					jsonMeta.put("PREVIEW_FRAMES", new JSONObject(json_video_default_preview.toString()));
 				}
 			}
 		}
@@ -107,14 +107,19 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	{
 		if(jsonMeta!=null)
 		{
-			json_video_meta = new JSONObject(jsonMeta);
+			json_video_meta = new JSONObject(jsonMeta.toString());
 			
 			JSONObject jsonPreviews = (JSONObject)json_video_meta.remove("PREVIEW_FRAMES");
 			
 			if(jsonPreviews!=null && aPreviewWidth==default_preview_width)
 			{
-				json_video_default_preview = new JSONObject(jsonPreviews);
+				json_video_default_preview = new JSONObject(jsonPreviews.toString());
 			}
+		}
+		else
+		{
+			json_video_meta = null;
+			json_video_default_preview = null;
 		}
 	}
 	
@@ -132,9 +137,12 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 			{
 				jsonMeta = super.getVidCapMetadata(isShowPreview, aPreviewWidth);
 				//
-				jsonMeta.put("SOURCE", videoFile.getAbsolutePath());
-				jsonMeta.put("FILE_SIZE", videoFile.length());
-				jsonMeta.put("FILE_LAST_MODIFIED", videoFile.lastModified());
+				if(jsonMeta!=null)
+				{
+					jsonMeta.put("SOURCE", videoFile.getAbsolutePath());
+					jsonMeta.put("FILE_SIZE", videoFile.length());
+					jsonMeta.put("FILE_LAST_MODIFIED", videoFile.lastModified());
+				}
 			}
 		
 			//update cache
