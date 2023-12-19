@@ -528,8 +528,9 @@ public class VideoCaptureDecoder implements AutoCloseable {
 										lActualSkipped++;
 										continue;
 									}
+									matPrevDescriptors.release();
 								}
-								
+																
 								matPrevDescriptors = matCurDescriptors;
 							}
 							
