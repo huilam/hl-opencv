@@ -1023,7 +1023,7 @@ public class OpenCvUtil{
 	
 	public static void main(String args[]) throws Exception
 	{
-		//OpenCvUtil.initOpenCV();
-		//Core.getBuildInformation();
+		OpenCvUtil.initOpenCV();
+		Core.getBuildInformation();
 	}
 }
