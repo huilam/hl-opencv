@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
@@ -542,6 +541,10 @@ public class OpenCvUtil{
 			}
 			throw new RuntimeException(sErr.toString());
 		}
+		else
+		{
+			
+		}
 		
 		return cvLib;
 	}
@@ -1021,9 +1024,59 @@ public class OpenCvUtil{
 		OpenCvMask.reduceMaskNoise(aBinaryMask, aMinNoiseSize);
 	}
 	
+	public static String getFeatureInfo()
+	{
+		StringBuffer sbInfo = new StringBuffer();
+		
+		sbInfo.append("OpenCV "+Core.VERSION+" ("+(Core.NATIVE_LIBRARY_NAME+")")).append("\n");
+		
+		String sFeatures[] = new String[]{"FFMPEG:", "GStreamer:","OpenVINO:","CUDA:"};
+		for(String sFeatureName : sFeatures)
+		{
+			sbInfo.append(" - "+extractFeatureInfo(Core.getBuildInformation(), sFeatureName)).append("\n");
+		}
+		
+		return sbInfo.toString();
+	}
+	
+	private static String extractFeatureInfo(final String aText, String aFeatureName)
+	{
+		int idxFeature = aText.indexOf(aFeatureName);
+		
+		if(idxFeature>-1)
+		{
+			String sFeatureText = aText.substring(idxFeature);
+			
+			int idxEnd = sFeatureText.indexOf("\n");
+			if(idxEnd==-1)
+				idxEnd = 50;
+			String sTemp = sFeatureText.substring(0, idxEnd);
+			return sTemp.replaceAll("\\s+", "").toUpperCase();
+		}
+		else
+			return aFeatureName+"-";
+	}
+	
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		Core.getBuildInformation();
+		System.out.println(OpenCvUtil.getFeatureInfo());
+
+		
+		//Pattern p = Pattern.compile(".+?(FFMPEG:.+?YES).+?");
+		//Matcher m = p.matcher(sBuildInfo.indexOf("FFMPEG"));
+		/**
+		if(m.matches())
+		{
+			for(int i=0; i<m.groupCount();i++)
+			{
+				System.out.println(i+"="+m.group(i));
+			}
+		}
+		else
+		{
+			System.out.println("No matches");
+		}
+		**/
 	}
 }
