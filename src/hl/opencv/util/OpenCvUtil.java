@@ -543,7 +543,7 @@ public class OpenCvUtil{
 		}
 		else
 		{
-			
+			System.out.println(getFeatureInfo());
 		}
 		
 		return cvLib;
@@ -1024,14 +1024,26 @@ public class OpenCvUtil{
 		OpenCvMask.reduceMaskNoise(aBinaryMask, aMinNoiseSize);
 	}
 	
+	public static boolean isFeatureEnabled(String aFeatureName)
+	{
+		String sFeatureStatus = getFeatureInfo(new String[] {aFeatureName});
+		
+		return (sFeatureStatus.indexOf("YES")>-1);
+	}
+	
 	public static String getFeatureInfo()
+	{
+		String sFeatures[] = new String[]{"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
+		return getFeatureInfo(sFeatures);
+	}
+	
+	public static String getFeatureInfo(String[] aFeatureNames)
 	{
 		StringBuffer sbInfo = new StringBuffer();
 		
-		sbInfo.append("OpenCV "+Core.VERSION+" ("+(Core.NATIVE_LIBRARY_NAME+")")).append("\n");
+		sbInfo.append("OpenCV "+Core.VERSION).append("\n");
 		
-		String sFeatures[] = new String[]{"FFMPEG:", "GStreamer:","OpenVINO:","CUDA:"};
-		for(String sFeatureName : sFeatures)
+		for(String sFeatureName : aFeatureNames)
 		{
 			sbInfo.append(" - "+extractFeatureInfo(Core.getBuildInformation(), sFeatureName)).append("\n");
 		}
@@ -1039,13 +1051,22 @@ public class OpenCvUtil{
 		return sbInfo.toString();
 	}
 	
-	private static String extractFeatureInfo(final String aText, String aFeatureName)
+	private static String extractFeatureInfo(final String aSourceText, String aFeatureName)
 	{
-		int idxFeature = aText.indexOf(aFeatureName);
+		if(aSourceText==null || aFeatureName==null)
+			return null;
+		
+		if(!aFeatureName.endsWith(":"))
+			aFeatureName = aFeatureName + ":";
+		
+		String sUpCaseSource = aSourceText.toUpperCase();
+		aFeatureName = aFeatureName.toUpperCase();
+		
+		int idxFeature = sUpCaseSource.indexOf(aFeatureName);
 		
 		if(idxFeature>-1)
 		{
-			String sFeatureText = aText.substring(idxFeature);
+			String sFeatureText = aSourceText.substring(idxFeature);
 			
 			int idxEnd = sFeatureText.indexOf("\n");
 			if(idxEnd==-1)
@@ -1060,23 +1081,12 @@ public class OpenCvUtil{
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		System.out.println(OpenCvUtil.getFeatureInfo());
-
 		
-		//Pattern p = Pattern.compile(".+?(FFMPEG:.+?YES).+?");
-		//Matcher m = p.matcher(sBuildInfo.indexOf("FFMPEG"));
-		/**
-		if(m.matches())
+		String sFeatures[] = new String[] {"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
+		for(String sFeature : sFeatures)
 		{
-			for(int i=0; i<m.groupCount();i++)
-			{
-				System.out.println(i+"="+m.group(i));
-			}
+			System.out.println(sFeature +":"+OpenCvUtil.isFeatureEnabled(sFeature));
 		}
-		else
-		{
-			System.out.println("No matches");
-		}
-		**/
+
 	}
 }
