@@ -541,10 +541,6 @@ public class OpenCvUtil{
 			}
 			throw new RuntimeException(sErr.toString());
 		}
-		else
-		{
-			System.out.println(getFeatureInfo());
-		}
 		
 		return cvLib;
 	}
@@ -1031,7 +1027,7 @@ public class OpenCvUtil{
 		return (sFeatureStatus.indexOf("YES")>-1);
 	}
 	
-	public static String getFeatureInfo()
+	public static String getDefaultFeatureInfo()
 	{
 		String sFeatures[] = new String[]{"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
 		return getFeatureInfo(sFeatures);
@@ -1081,12 +1077,16 @@ public class OpenCvUtil{
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		
+		OpenCvUtil.initOpenCV();
+		OpenCvUtil.initOpenCV();
+		OpenCvUtil.initOpenCV();
+		/**
 		String sFeatures[] = new String[] {"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
 		for(String sFeature : sFeatures)
 		{
 			System.out.println(sFeature +":"+OpenCvUtil.isFeatureEnabled(sFeature));
 		}
+		**/
 
 	}
 }

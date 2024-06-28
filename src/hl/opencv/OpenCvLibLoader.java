@@ -31,6 +31,7 @@ import java.net.URLClassLoader;
 import org.opencv.core.Core;
 
 import hl.common.FileUtil;
+import hl.opencv.util.OpenCvUtil;
 
 public class OpenCvLibLoader{
 	
@@ -160,6 +161,8 @@ public class OpenCvLibLoader{
 						}
 					}
 				}
+				
+				System.out.println(OpenCvUtil.getDefaultFeatureInfo());
 			}
 			
 			
@@ -170,25 +173,9 @@ public class OpenCvLibLoader{
 		return this.loaded;
 	}
 	
-	private static OpenCvLibLoader testLoadCvLib(String aNativeLibPath)
-	{
-		File curDir = new File(aNativeLibPath);
-		//
-		String sNativeLibPath = curDir.getAbsolutePath();
-		String sNativeLibName = Core.NATIVE_LIBRARY_NAME;
-		OpenCvLibLoader cvLoader = new OpenCvLibLoader(sNativeLibName, sNativeLibPath);
-		
-		if(cvLoader.init())
-		{
-			System.out.println("Loaded OpenCV Version : "+cvLoader.getVersion());
-		}
-		else
-			System.err.println("Err : "+cvLoader.getInitException());
-		return cvLoader;
-	}
 	
 	public static void main(String args[]) throws Exception
 	{
-		OpenCvLibLoader cvLib = testLoadCvLib("./lib/opencv/4.8.0/x86_64");
+		OpenCvLibLoader cvLib = OpenCvLibLoader.getMasterInstance();
 	}
 }
