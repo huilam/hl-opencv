@@ -18,5 +18,7 @@
 	<classpathentry kind="lib" path="lib/isoparser/muxer-1.9.56.jar"/>
 	<classpathentry kind="lib" path="lib/isoparser/slf4j-api-2.0.7.jar"/>
 	<classpathentry kind="lib" path="lib/isoparser/streaming-1.9.56.jar"/>
+	<classpathentry kind="lib" path="lib/opencv/4.10.0/native"/>
+	<classpathentry kind="lib" path="lib/opencv/4.10.0/opencv-4100.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
