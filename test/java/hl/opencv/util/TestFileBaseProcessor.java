@@ -47,22 +47,33 @@ public class TestFileBaseProcessor {
 		
 		int iImageSeqNo = 0;
 		int iVideoSeqNo = 0;
-		for(File f : folder.listFiles())
+		File [] files = folder.listFiles();
+		
+		if(files!=null)
 		{
-			if(!f.isFile())
-				continue;
+			System.out.println("Total Files = "+files.length);
 			
-			String sFileName = f.getName().toLowerCase();
-			String sFileExt = sFileName.substring(sFileName.length()-4);
-			
-			if(listImageExt.contains(sFileExt))
+			for(File f : files)
 			{
-				processImageFile(++iImageSeqNo, f);
+				if(!f.isFile())
+					continue;
+				
+				String sFileName = f.getName().toLowerCase();
+				String sFileExt = sFileName.substring(sFileName.length()-4);
+				
+				if(listImageExt.contains(sFileExt))
+				{
+					processImageFile(++iImageSeqNo, f);
+				}
+				else if(listVideoExt.contains(sFileExt))
+				{
+					processVideoFile(++iVideoSeqNo, f);
+				}
 			}
-			else if(listVideoExt.contains(sFileExt))
-			{
-				processVideoFile(++iVideoSeqNo, f);
-			}
+		}
+		else
+		{
+			System.out.println("Folder NOT found ! "+folder.getAbsolutePath());
 		}
 	}
 	
