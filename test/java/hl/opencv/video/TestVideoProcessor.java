@@ -37,43 +37,35 @@ public class TestVideoProcessor {
 	{
 		OpenCvUtil.initOpenCV();
 		File fileVid = 
-				//new File("./test/videos/privacy-demo-h264.mp4");
-				//new File("./test/videos/nls/xinlai-video-03.MP4")
-				new File("./test/videos/nls/ace_cam1_15mins.mkv")
-				//
-				//new File("./test/videos/nls/xinlai-01_30s_5fps.mp4")
-				//
-			//	,new File("./test/videos/youtube/SG_REQ_NOMASK.mp4")
-				;
+				new File("./test/videos/Main Gate Inlane.mp4");
 		
 		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
 	
 		VideoProcessor test = new VideoProcessor();
 		
-		String sPluginClassName = null;
+		String sPluginClassName =  VideoFileReEncodingPlugin.class.getName();
 		
-		int iPluginId = 2;
+		int iPluginId = 1;
 	
 		switch(iPluginId)
 		{
 			case 1 : 
 				break;
-			case 2 : sPluginClassName = VideoProcessorDebugPlugin.class.getName();
+			case 2 : 
+				sPluginClassName = VideoProcessorDebugPlugin.class.getName();
 				break;
-			case 3 : sPluginClassName = VideoImageExtractorPlugin.class.getName();
+			case 3 : 
+				sPluginClassName = VideoImageExtractorPlugin.class.getName();
 				break;
-			case 4 : sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
+			case 4 : 
+				sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
 				break;
 			default :
-				sPluginClassName = VideoFileReEncodingPlugin.class.getName();
-				break;
 		}
 		//test.processLiveCamera(0, sPluginClassName, -1);
 
 		
-		
-		
-		test.processVideoFile(fileVid, new VideoProcessorDebugPlugin(), 0, -1);
+		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
 		
 	}
 }

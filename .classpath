@@ -20,5 +20,5 @@
 	<classpathentry kind="lib" path="lib/isoparser/streaming-1.9.56.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/4.10.0/opencv-4100.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/native"/>
-	<classpathentry kind="output" path="build"/>
+	<classpathentry kind="output" path="classes"/>
 </classpath>

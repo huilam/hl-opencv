@@ -22,6 +22,7 @@
 
 package hl.opencv.video.plugins;
 
+import java.io.File;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -42,6 +43,17 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
 		
+		if(videoEnc!=null)
+		{
+			try {
+				videoEnc.setResolution(aResWidth, aResHeight);
+				videoEnc.startEncoding((int) aFps);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				videoEnc = null;
+			}
+		}
 		return true;
 	}
 
@@ -49,8 +61,15 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	public Mat decodedVideoFrame(String aVideoSourceName, Mat matFrame, long aCurFrameNo, long aCurFrameMs,
 			double aProgressPercentage) {
 		
-		videoEnc.encodeFrame(matFrame);
-
+		if(videoEnc!=null)
+		{
+			boolean isEncoded = videoEnc.encodeFrame(matFrame);
+			
+			if(aCurFrameNo%100==0)
+				System.out.println();
+			System.out.print(isEncoded?".":"");
+		}
+		
 		return matFrame;
 	}
 
@@ -77,6 +96,9 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
+		boolean isOutputVidSaved = videoEnc.endEncoding();
+		
+		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoSourceName);
 		long lDurationMs = aAdjSelFrameMsTo - aAdjSelFrameMsFrom;
 		System.out.println(" - Process From/To: "+toDurationStr(aAdjSelFrameMsFrom)+" / "+toDurationStr(aAdjSelFrameMsTo)+" ("+lDurationMs +" ms)");
@@ -95,24 +117,44 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 		
 		System.out.println(" - Processed FPS : "+dFps);
 		System.out.println(" - Processing Time/Frame : "+dMsPerFrame+" ms");
+		
+		if(isOutputVidSaved)
+		{
+			System.out.println(" - Saved : "+videoEnc.getOutputFilename());
+		}
+		
 		return null;
 	}
 
 	@Override
 	public boolean initPlugin(JSONObject aMetaJson) {
 		
-		String sVideoSource = aMetaJson.getString("SOURCE");
-		
 		videoEnc = new VideoEncoder(OUTPUT_VIDEO_ENCODER, 
 				(int)encodeResolution.width, 
 				(int)encodeResolution.height);
+		
+		
+		String sVideoSource = aMetaJson.getString("SOURCE");
+		
+		File fileVid = new File(sVideoSource);
+		if(fileVid.isFile())
+		{
+			String outputVidfolder = fileVid.getParentFile().getAbsolutePath()+"/output/"+System.currentTimeMillis();
+			new File(outputVidfolder).mkdirs();
+			
+			String sOutputVidFile = outputVidfolder+"/"+fileVid.getName();
+			videoEnc.setOutputFilename(sOutputVidFile);
+		
+		}
+		System.out.println(sVideoSource);
 		
 		return true;
 	}
 
 	@Override
 	public void destroyPlugin(JSONObject aMetaJson)
-	{ 
+	{
+		
 	}
 	
 	/////////////////////////////////

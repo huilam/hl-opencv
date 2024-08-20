@@ -41,15 +41,21 @@ public class VideoEncoder {
 	
 	public VideoEncoder(String aEncodingFormat, int aResWidth, int aResHeight)
 	{
-		setEncodingFormat(aEncodingFormat);
-		setResolution(aResWidth, aResHeight);
+		init(aEncodingFormat, aResWidth, aResHeight);
+		
 	}
-	
 	public VideoEncoder(int aResWidth, int aResHeight)
 	{
-		setEncodingFormat(encoding_format);
-		setResolution(aResWidth, aResHeight);
+		init(this.encoding_format, aResWidth, aResHeight);
 	}
+	
+	private void init(String aEncodingFormat, int aResWidth, int aResHeight)
+	{
+		setEncodingFormat(aEncodingFormat);
+		setResolution(aResWidth, aResHeight);
+		videoWriter = new VideoWriter();
+	}
+	
 	
 	public void setEncodingFormat(String aEncodingFormat)
 	{
@@ -61,10 +67,16 @@ public class VideoEncoder {
 		this.video_file_name = aOutputFileName;
 	}
 	
+	public String getOutputFilename()
+	{
+		return this.video_file_name;
+	}
+	
 	public void setResolution(int iWidth, int iHeight)
 	{
 		this.encoding_resolution = new Size(iWidth, iHeight);
 	}
+	
 	
 	////
 	public boolean startEncoding(int aFps) throws Exception
@@ -94,7 +106,6 @@ public class VideoEncoder {
 			throw new Exception(sbError.toString());
 		}
 		/////////////
-		videoWriter = new VideoWriter();
 		
 		int iEncodeFormatFourCC = VideoWriter.fourcc(
 				encoding_format.charAt(0), encoding_format.charAt(1),
@@ -107,7 +118,7 @@ public class VideoEncoder {
 	}
 	
 	public boolean encodeFrame(Mat aMatFrame)
-	{
+	{	
 		if(videoWriter.isOpened())
 		{
 			videoWriter.write(aMatFrame);
@@ -120,8 +131,9 @@ public class VideoEncoder {
 		if(videoWriter!=null)
 		{
 			videoWriter.release();
+			return true;
 		}
-		return true;
+		return false;	
 	}
 	
 	//////////
