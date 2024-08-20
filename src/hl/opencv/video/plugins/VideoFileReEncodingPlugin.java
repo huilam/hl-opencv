@@ -39,6 +39,12 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	private Size encodeResolution 	= new Size();
 	private VideoEncoder videoEnc 	= null;
 	private File folderOutput 		= null;
+	private boolean quiet_mode 		= false;
+	
+	public void setQuietMode(boolean aQuiteMode)
+	{
+		this.quiet_mode = aQuiteMode;
+	}
 	
 	public void setOutputFolder(File aOutputFolder)
 	{
@@ -71,9 +77,12 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 		{
 			boolean isEncoded = videoEnc.encodeFrame(matFrame);
 			
-			if(aCurFrameNo%100==0)
-				System.out.println();
-			System.out.print(isEncoded?".":"");
+			if(!quiet_mode)
+			{
+				if(aCurFrameNo%100==0)
+					System.out.println();
+				System.out.print(isEncoded?".":"");
+			}
 		}
 		
 		return matFrame;
@@ -102,7 +111,9 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
-		boolean isOutputVidSaved = videoEnc.endEncoding();
+		boolean isOutputVidSaved = (videoEnc!=null) ? 
+					videoEnc.endEncoding() 
+					: false;
 		
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoSourceName);
@@ -163,7 +174,8 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	@Override
 	public void destroyPlugin(JSONObject aMetaJson)
 	{
-		
+		if(videoEnc!=null)
+			videoEnc.endEncoding();
 	}
 	
 	/////////////////////////////////

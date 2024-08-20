@@ -96,10 +96,16 @@ public class VideoProcessor {
 					VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
 					if(vidDecoder!=null)
 					{
-						vidDecoder.setVideoCapture(vcap);
-						vidDecoder.setVideoCaptureName(aVidFile.getName());
-						lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
-						plugin.destroyPlugin(jsonMeta);
+						try {
+							plugin.initPlugin(jsonMeta);
+							vidDecoder.setVideoCapture(vcap);
+							vidDecoder.setVideoCaptureName(aVidFile.getName());
+							lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
+						}
+						finally
+						{
+							plugin.destroyPlugin(jsonMeta);
+						}
 					}
 				}
 			}
@@ -135,7 +141,7 @@ public class VideoProcessor {
 			if(classPlugin!=null)
 			{
 				plugin = (IVideoProcessorPlugin) classPlugin.getDeclaredConstructor().newInstance();
-				if(plugin.initPlugin(aMetaJson))
+				if(plugin!=null)
 				{
 					return plugin;
 				}
