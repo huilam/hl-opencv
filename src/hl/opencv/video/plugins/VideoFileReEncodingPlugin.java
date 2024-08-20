@@ -39,6 +39,11 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	private Size encodeResolution 	= new Size();
 	private VideoEncoder videoEnc 	= null;
 	private File folderOutput 		= null;
+	
+	public void setOutputFolder(File aOutputFolder)
+	{
+		this.folderOutput = aOutputFolder;
+	}
 
 	@Override
 	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
