@@ -36,8 +36,9 @@ import hl.opencv.video.encoder.VideoEncoder;
 public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	
 	private static final String OUTPUT_VIDEO_ENCODER 	= "h264";
-	private Size encodeResolution = new Size();
-	private VideoEncoder videoEnc = null;
+	private Size encodeResolution 	= new Size();
+	private VideoEncoder videoEnc 	= null;
+	private File folderOutput 		= null;
 
 	@Override
 	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
@@ -139,12 +140,15 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 		File fileVid = new File(sVideoSource);
 		if(fileVid.isFile())
 		{
-			String outputVidfolder = fileVid.getParentFile().getAbsolutePath()+"/output/"+System.currentTimeMillis();
-			new File(outputVidfolder).mkdirs();
+			if(this.folderOutput==null)
+			{
+				String outputVidfolder = fileVid.getParentFile().getAbsolutePath()+"/output/"+System.currentTimeMillis();
+				this.folderOutput = new File(outputVidfolder);
+			}
+			this.folderOutput.mkdirs();
 			
-			String sOutputVidFile = outputVidfolder+"/"+fileVid.getName();
+			String sOutputVidFile = folderOutput.getAbsolutePath()+"/"+fileVid.getName();
 			videoEnc.setOutputFilename(sOutputVidFile);
-		
 		}
 		System.out.println(sVideoSource);
 		
