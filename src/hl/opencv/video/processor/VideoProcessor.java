@@ -23,6 +23,8 @@
 package hl.opencv.video.processor;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,24 +56,24 @@ public class VideoProcessor {
 		this.min_similarity_threshold = aThresholdScore;
 	}
 	
-	public long processVideoFile(File aVidFile, String aProcessorPluginName)
+	public Map<String, ?> processVideoFile(File aVidFile, String aProcessorPluginName)
 	{
 		return processVideoFile(aVidFile, aProcessorPluginName, 0, -1);
 	}
 	
-	public long processVideoFile(File aVidFile, String aProcessorPluginName,
+	public Map<String, ?> processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
 		if(!aVidFile.isFile())
 		{
 			logger.log(Level.SEVERE, "Video file NOT found !- "+aVidFile.getAbsolutePath());
-			return 0;
+			return null;
 		}
 		
 		if(aProcessorPluginName==null || aProcessorPluginName.trim().length()==0)
 		{
 			logger.log(Level.SEVERE, "Invalid Plugin ClassName !- "+aProcessorPluginName);
-			return 0;
+			return null;
 		}
 		
 		JSONObject jsonMeta = VideoFileUtil.getVideoFileMetadata(aVidFile);
@@ -79,12 +81,12 @@ public class VideoProcessor {
 		return processVideoFile(aVidFile, plugin, aFrameDurationFrom, aFrameDurationTo);
 	}
 	
-	public long processVideoFile(File aVidFile, IVideoProcessorPlugin plugin)
+	public Map<String, ?> processVideoFile(File aVidFile, IVideoProcessorPlugin plugin)
 	{
 		return processVideoFile(aVidFile, plugin, 0, -1);
 	}
 	
-	public long processVideoFile(File aVidFile, IVideoProcessorPlugin plugin,
+	public Map<String, ?> processVideoFile(File aVidFile, IVideoProcessorPlugin plugin,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
 		long lFramesProcessed = 0;
@@ -147,7 +149,12 @@ public class VideoProcessor {
 			if(plugin==null)
 				logger.log(Level.SEVERE, "Invalid plugin - "+plugin);
 		}		
-		return lFramesProcessed;
+		
+		Map<String, Object> mapResult = new HashMap<String, Object>();
+		
+		mapResult.put("framesProcessed", lFramesProcessed);
+		
+		return mapResult;
 	}
 	
 	//////////////////////////////////////
