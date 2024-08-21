@@ -39,7 +39,20 @@ public class VideoProcessor {
 	
 	private static Logger logger = Logger.getLogger(VideoProcessor.class.getName());
 	
+	private double min_brightness_threshold = -1;
+	private double min_similarity_threshold = -1;
+	
 	//////////////////////////////////////
+	
+	public void setMinBrightnessScoreForProcessing(double aThresholdScore)
+	{
+		this.min_brightness_threshold = aThresholdScore;
+	}
+	
+	public void setMinSimilarityScoreForProcessing(double aThresholdScore)
+	{
+		this.min_similarity_threshold = aThresholdScore;
+	}
 	
 	public long processVideoFile(File aVidFile, String aProcessorPluginName)
 	{
@@ -94,8 +107,15 @@ public class VideoProcessor {
 				else
 				{
 					VideoCaptureDecoder vidDecoder = initVideoDecoderWithPlugin(plugin);
+					
 					if(vidDecoder!=null)
 					{
+						if(this.min_brightness_threshold>-1)
+							vidDecoder.setMin_brightness_skip_threshold(this.min_brightness_threshold);
+						
+						if(this.min_similarity_threshold>-1)
+							vidDecoder.setMin_similarity_skip_threshold(this.min_similarity_threshold);
+						
 						try {
 							plugin.initPlugin(jsonMeta);
 							vidDecoder.setVideoCapture(vcap);
