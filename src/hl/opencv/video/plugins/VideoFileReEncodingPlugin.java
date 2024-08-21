@@ -46,11 +46,21 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 		this.quiet_mode = aQuiteMode;
 	}
 	
+	public boolean isQuietMode()
+	{
+		return this.quiet_mode;
+	}
+	
 	public void setOutputFolder(File aOutputFolder)
 	{
 		this.folderOutput = aOutputFolder;
 	}
 
+	public File getOutputFolder()
+	{
+		return this.folderOutput;
+	}
+	
 	@Override
 	public boolean processStarted(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, int aResWidth,
 			int aResHeight, long aTotalSelectedFrames, double aFps, long aSelectedDurationMs) {
@@ -66,7 +76,7 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 				videoEnc = null;
 			}
 		}
-		return true;
+		return (videoEnc!=null);
 	}
 
 	@Override
