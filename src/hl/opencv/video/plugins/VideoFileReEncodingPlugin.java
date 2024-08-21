@@ -156,6 +156,9 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 		json.put("TotalProcessed", aTotalProcessed);
 		json.put("TotalSkipped", aTotalSkipped);
 		json.put("ElpasedMs", aElpasedMs);
+		//
+		json.put("OutputFolder", getOutputFolder().getAbsolutePath());
+		json.put("QuietMode", isQuietMode());
 		
 		return json;
 	}
