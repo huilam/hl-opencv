@@ -97,7 +97,7 @@ public class TestWebcamDecoder extends VideoCamDecoder {
 	}
 	
 	@Override 
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public JSONObject processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
 		System.out.println();
@@ -109,7 +109,9 @@ public class TestWebcamDecoder extends VideoCamDecoder {
 		System.out.println(" - Total Skipped : "+aTotalSkipped);	
 		
 		System.out.println(" - Processed FPS : "+(1000/dMsPerFrame));
-
+		
+		return super.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
+				aTotalProcessed, aTotalSkipped, aElpasedMs);
 	}
 	
 	

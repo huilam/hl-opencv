@@ -96,7 +96,7 @@ public class TestVideoDecoder extends VideoFileDecoder {
 	}
 	
 	@Override 
-	public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public JSONObject processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
 		System.out.println();
@@ -108,7 +108,8 @@ public class TestVideoDecoder extends VideoFileDecoder {
 		System.out.println(" - Total Skipped : "+aTotalSkipped);	
 		
 		System.out.println(" - Processed FPS : "+(1000/dMsPerFrame));
-
+		return super.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
+				aTotalProcessed, aTotalSkipped, aElpasedMs);
 	}
 	
 	

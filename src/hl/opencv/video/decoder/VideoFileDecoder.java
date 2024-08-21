@@ -258,24 +258,26 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 		return iErrCode;
 	}
 	
-	public long processVideoFile()
+	public JSONObject processVideoFile()
 	{
 		return processVideoFile(0, -1);
 	}
 	
-	public long processVideoFile(final long aSelectedTimestampFrom) 
+	public JSONObject processVideoFile(final long aSelectedTimestampFrom) 
 	{
 		return processVideoFile(aSelectedTimestampFrom, -1);
 	}
 	
-	public long processVideoFile(final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
+	public JSONObject processVideoFile(final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
 		File videoFile = this.video_file;
 		
 		int iErrCode = validateFileInput(videoFile, aSelectedTimestampFrom, aSelectedTimestampTo);
 		if(iErrCode<0)
 		{
-			return iErrCode;
+			JSONObject jsonErr = new JSONObject();
+			jsonErr.put("error_code", iErrCode);
+			return jsonErr;
 		}
 		return super.processVideo(aSelectedTimestampFrom, aSelectedTimestampTo);
 	}

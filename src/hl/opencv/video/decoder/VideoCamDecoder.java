@@ -25,7 +25,6 @@ package hl.opencv.video.decoder;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
-import org.opencv.core.Core;
 import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
@@ -176,12 +175,12 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 		return super.getVidCapMetadata(isShowPreview, aPreviewWidth);
 	}
 	
-	public long processCamera()
+	public JSONObject processCamera()
 	{
 		return processCamera(-1);
 	}
 	
-	public long processCamera(final long aSelectedTimestampTo)
+	public JSONObject processCamera(final long aSelectedTimestampTo)
 	{
 		return super.processVideo(0, aSelectedTimestampTo);
 	}

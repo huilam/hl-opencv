@@ -56,12 +56,12 @@ public class VideoProcessor {
 		this.min_similarity_threshold = aThresholdScore;
 	}
 	
-	public Map<String, ?> processVideoFile(File aVidFile, String aProcessorPluginName)
+	public JSONObject processVideoFile(File aVidFile, String aProcessorPluginName)
 	{
 		return processVideoFile(aVidFile, aProcessorPluginName, 0, -1);
 	}
 	
-	public Map<String, ?> processVideoFile(File aVidFile, String aProcessorPluginName,
+	public JSONObject processVideoFile(File aVidFile, String aProcessorPluginName,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
 		if(!aVidFile.isFile())
@@ -81,15 +81,15 @@ public class VideoProcessor {
 		return processVideoFile(aVidFile, plugin, aFrameDurationFrom, aFrameDurationTo);
 	}
 	
-	public Map<String, ?> processVideoFile(File aVidFile, IVideoProcessorPlugin plugin)
+	public JSONObject processVideoFile(File aVidFile, IVideoProcessorPlugin plugin)
 	{
 		return processVideoFile(aVidFile, plugin, 0, -1);
 	}
 	
-	public Map<String, ?> processVideoFile(File aVidFile, IVideoProcessorPlugin plugin,
+	public JSONObject processVideoFile(File aVidFile, IVideoProcessorPlugin plugin,
 			long aFrameDurationFrom, long aFrameDurationTo)
 	{
-		long lFramesProcessed = 0;
+		JSONObject jsonReturn = null;
 		VideoFileDecoder vid = null;
 		VideoCapture vcap = null;
 		
@@ -122,7 +122,9 @@ public class VideoProcessor {
 							plugin.initPlugin(jsonMeta);
 							vidDecoder.setVideoCapture(vcap);
 							vidDecoder.setVideoCaptureName(aVidFile.getName());
-							lFramesProcessed = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
+							
+							jsonReturn = vidDecoder.processVideo(aFrameDurationFrom, aFrameDurationTo);
+							
 						}
 						finally
 						{
@@ -150,11 +152,7 @@ public class VideoProcessor {
 				logger.log(Level.SEVERE, "Invalid plugin - "+plugin);
 		}		
 		
-		Map<String, Object> mapResult = new HashMap<String, Object>();
-		
-		mapResult.put("framesProcessed", lFramesProcessed);
-		
-		return mapResult;
+		return jsonReturn;
 	}
 	
 	//////////////////////////////////////
@@ -217,10 +215,10 @@ public class VideoProcessor {
 							aProgressPercentage, aReason);
 				}
 				
-				public void processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+				public JSONObject processEnded(String aVideoFileName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 						long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 				{
-					aProcessorPlugin.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
+					return aProcessorPlugin.processEnded(aVideoFileName, aAdjSelFrameMsFrom, aAdjSelFrameMsTo, 
 							aTotalProcessed, aTotalSkipped, aElpasedMs);
 				}
 			};

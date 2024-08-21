@@ -294,14 +294,16 @@ public class VideoCaptureDecoder implements AutoCloseable {
 		return mapFrames;
 	}
 	
-	public long processVideo()
+	public JSONObject processVideo()
 	{
 		return processVideo(0, -1);
 	}
 
-	public long processVideo(
+	public JSONObject processVideo(
 			final long aSelectedTimestampFrom, final long aSelectedTimestampTo)
 	{
+		JSONObject jsonVidProcess = null;
+		
 		boolean isLiveCam 	= true;
 		
 		VideoCapture vid 	= null;
@@ -409,7 +411,7 @@ public class VideoCaptureDecoder implements AutoCloseable {
 						(long)dTotalSelectedFrames, dFps, (long) dTotalSelectedDurationMs );
 				
 				if(!isProcessVideo)
-					return 0;
+					return jsonVidProcess;
 				
 				ImgSegmentation imgSegment = null;
 				if(this.mat_seg_bgref!=null)
@@ -563,7 +565,7 @@ public class VideoCaptureDecoder implements AutoCloseable {
 		}finally
 		{
 			long lTotalElapsedMs = System.currentTimeMillis() - lElapseStartMs;
-			processEnded(sVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
+			jsonVidProcess = processEnded(sVidCapName, lAdjSelFrameMsFrom, lAdjSelFrameMsTo, 
 					(long)lActualProcessed, lActualSkipped, lTotalElapsedMs);
 			
 			if(vid!=null)
@@ -581,7 +583,7 @@ public class VideoCaptureDecoder implements AutoCloseable {
 			release();
 		}
 		
-		return (long)lActualProcessed;
+		return jsonVidProcess;
 	}
 	
 	///// 
@@ -592,10 +594,17 @@ public class VideoCaptureDecoder implements AutoCloseable {
 		return true;
 	}
 	
-	public void processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public JSONObject processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs)
 	{
-		
+		JSONObject json = new JSONObject();
+		json.put("VideoSourceName", aVideoSourceName);
+		json.put("FrameMsFrom", aAdjSelFrameMsFrom);
+		json.put("FrameMsTo", aAdjSelFrameMsTo);
+		json.put("TotalProcessed", aTotalProcessed);
+		json.put("TotalSkipped", aTotalSkipped);
+		json.put("ElpasedMs", aElpasedMs);
+		return json;
 	}
 	
 	public Mat skippedVideoFrame(String aVideoSourceName, Mat matFrame, 

@@ -22,8 +22,6 @@
 
 package hl.opencv.video.plugins;
 
-import java.util.Map;
-
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 
