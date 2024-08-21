@@ -23,7 +23,6 @@
 package hl.opencv.video.plugins;
 
 import java.io.File;
-import java.util.Map;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
@@ -85,7 +84,7 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Map<?,?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public JSONObject processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
@@ -95,7 +94,19 @@ public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
 		System.out.println(" - Images Extract Location: "+folder_imgoutput.getAbsolutePath());
 		System.out.println(" - Images Extract Success: "+extract_success_count);
 		System.out.println(" - Images Extract Failed : "+extract_failed_count);
-		return null;
+		
+		JSONObject json = new JSONObject();
+		json.put("VideoSourceName", aVideoSourceName);
+		json.put("FrameMsFrom", aAdjSelFrameMsFrom);
+		json.put("FrameMsTo", aAdjSelFrameMsTo);
+		json.put("TotalProcessed", aTotalProcessed);
+		json.put("TotalSkipped", aTotalSkipped);
+		json.put("ElpasedMs", aElpasedMs);
+		
+		json.put("ExtractOutputPath", folder_imgoutput.getAbsolutePath());
+		json.put("ExtractSuccessCount", extract_success_count);
+		json.put("ExtractFiledCount", extract_failed_count);
+		return json;
 	}
 
 	@Override

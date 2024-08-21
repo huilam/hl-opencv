@@ -44,7 +44,7 @@ public interface IVideoProcessorPlugin {
 	public Mat processAborted(String aVideoSourceName, Mat matFrame, 
 			long aCurFrameIdx, long aCurFrameMs,  double aProgressPercentage, String aReason);
 	
-	public Map<?, ?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
+	public JSONObject processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo, 
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs);
 	
 	public void destroyPlugin(JSONObject aMetaJson);

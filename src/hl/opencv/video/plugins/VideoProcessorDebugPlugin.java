@@ -22,8 +22,6 @@
 
 package hl.opencv.video.plugins;
 
-import java.util.Map;
-
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 
@@ -89,7 +87,7 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Map<?,?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public JSONObject processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		System.out.println();
 		System.out.println("[COMPLETED] "+aVideoSourceName);
@@ -110,7 +108,18 @@ public class VideoProcessorDebugPlugin implements IVideoProcessorPlugin {
 		
 		System.out.println(" - Processed FPS : "+dFps);
 		System.out.println(" - Processing Time/Frame : "+dMsPerFrame+" ms");
-		return null;
+		
+		
+		JSONObject json = new JSONObject();
+		json.put("VideoSourceName", aVideoSourceName);
+		json.put("FrameMsFrom", aAdjSelFrameMsFrom);
+		json.put("FrameMsTo", aAdjSelFrameMsTo);
+		json.put("TotalProcessed", aTotalProcessed);
+		json.put("TotalSkipped", aTotalSkipped);
+		json.put("ElpasedMs", aElpasedMs);
+		
+		
+		return json;
 	}
 
 	@Override

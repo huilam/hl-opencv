@@ -23,7 +23,6 @@
 package hl.opencv.video.plugins;
 
 import java.io.File;
-import java.util.Map;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
@@ -116,7 +115,7 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Map<String, ?> processEnded(String aVideoSourceName, 
+	public JSONObject processEnded(String aVideoSourceName, 
 			long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
@@ -150,7 +149,15 @@ public class VideoFileReEncodingPlugin implements IVideoProcessorPlugin {
 			System.out.println(" - Saved : "+videoEnc.getOutputFilename());
 		}
 		
-		return null;
+		JSONObject json = new JSONObject();
+		json.put("VideoSourceName", aVideoSourceName);
+		json.put("FrameMsFrom", aAdjSelFrameMsFrom);
+		json.put("FrameMsTo", aAdjSelFrameMsTo);
+		json.put("TotalProcessed", aTotalProcessed);
+		json.put("TotalSkipped", aTotalSkipped);
+		json.put("ElpasedMs", aElpasedMs);
+		
+		return json;
 	}
 
 	@Override

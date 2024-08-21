@@ -22,8 +22,6 @@
 
 package hl.opencv.video.plugins;
 
-import java.util.Map;
-
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -90,7 +88,7 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 	}
 
 	@Override
-	public Map<?, ?> processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
+	public JSONObject processEnded(String aVideoSourceName, long aAdjSelFrameMsFrom, long aAdjSelFrameMsTo,
 			long aTotalProcessed, long aTotalSkipped, long aElpasedMs) {
 		
 		System.out.println();
@@ -100,7 +98,17 @@ public class VideoImageSizeCalcPlugin implements IVideoProcessorPlugin {
 		System.out.println(" - "+image_file_format+" Quality : "+jpg_quality+"%");
 		System.out.println(" - Total "+image_file_format+" File Count : "+_total_jpg_file_count);
 		System.out.println(" - Total "+image_file_format+" File Size  : "+bytesToWords(_total_jpg_file_size));
-		return null;
+		
+		
+		JSONObject json = new JSONObject();
+		json.put("VideoSourceName", aVideoSourceName);
+		json.put("FrameMsFrom", aAdjSelFrameMsFrom);
+		json.put("FrameMsTo", aAdjSelFrameMsTo);
+		json.put("TotalProcessed", aTotalProcessed);
+		json.put("TotalSkipped", aTotalSkipped);
+		json.put("ElpasedMs", aElpasedMs);
+		
+		return json;
 	}
 
 	@Override
