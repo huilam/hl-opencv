@@ -1029,7 +1029,7 @@ public class OpenCvUtil{
 	
 	public static String getDefaultFeatureInfo()
 	{
-		String sFeatures[] = new String[]{"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
+		String sFeatures[] = new String[]{"FFMPEG","GSTREAMER","OPENCL","OPENVINO","CUDA"};
 		return getFeatureInfo(sFeatures);
 	}
 	
