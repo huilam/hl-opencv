@@ -179,7 +179,12 @@ public class VideoCaptureDecoder implements AutoCloseable {
 			
 			double dTotalFrameCount = vid.get(Videoio.CAP_PROP_FRAME_COUNT);
 			double dFps = vid.get(Videoio.CAP_PROP_FPS);
-			double dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
+			double dEstDurationMs = 0;
+			
+			if(dFps>0)
+			{
+				dEstDurationMs = Math.floor((dTotalFrameCount / dFps)*1000);
+			}
 			//
 			jsonMeta.put("FPS", dFps);
 			jsonMeta.put("EST_DURATION", toDurationStr((long)dEstDurationMs));
