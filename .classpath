@@ -13,8 +13,8 @@
 	<classpathentry kind="lib" path="lib/isoparser/slf4j-api-2.0.7.jar"/>
 	<classpathentry kind="lib" path="lib/isoparser/streaming-1.9.56.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/native"/>
-	<classpathentry kind="lib" path="lib/hl-common_jdk11_20241018-1056-05.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/4.11.0/opencv-4110.jar"/>
 	<classpathentry kind="lib" path="lib/json-20250107.jar"/>
+	<classpathentry kind="lib" path="lib/hl-common_jdk17_20250426-1945-14.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
