@@ -59,6 +59,7 @@ public class OpenCvUtil{
 	
 	private static Decoder base64Decoder = Base64.getDecoder();
 	private static Encoder base64Encoder = Base64.getEncoder();
+	private static OpenCvLibLoader opencvLib = null;
 	
 	private static int BRIGHTNESS_MAX_SAMPLING_WIDTH = 500;
 	
@@ -509,32 +510,32 @@ public class OpenCvUtil{
 	
 	public static OpenCvLibLoader initOpenCV()
 	{
-		return initOpenCV("/");
+		if(opencvLib==null)
+			opencvLib = initOpenCV("/");
+		return opencvLib;
 	}
 	
 	public static OpenCvLibLoader initOpenCV(String aCustomLibPath)
 	{
-		OpenCvLibLoader cvLib = null;
-		
 		if(aCustomLibPath==null||aCustomLibPath.trim().length()==0)
 			aCustomLibPath = "/";
 		
 		if(aCustomLibPath.equals("/"))
 		{
-			cvLib = OpenCvLibLoader.getMasterInstance();
+			opencvLib = OpenCvLibLoader.getMasterInstance();
 		}
 		else
 		{
-			cvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, aCustomLibPath);
+			opencvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, aCustomLibPath);
 		}
 		
-		if(!cvLib.init())
+		if(!opencvLib.init())
 		{
 			StringBuffer sErr = new StringBuffer();
 			sErr.append("OpenCv is NOT loaded ! libname:").append(Core.NATIVE_LIBRARY_NAME);
 			sErr.append(", libpath:").append(aCustomLibPath);
 			
-			Exception e = cvLib.getInitException();
+			Exception e = opencvLib.getInitException();
 			if(e!=null)
 			{
 				sErr.append("\n    Exception:").append(e.getMessage());
@@ -542,7 +543,7 @@ public class OpenCvUtil{
 			throw new RuntimeException(sErr.toString());
 		}
 		
-		return cvLib;
+		return opencvLib;
 	}
 	
 	////////////////////////////////
