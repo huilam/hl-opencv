@@ -31,12 +31,78 @@ import org.opencv.videoio.Videoio;
 import hl.opencv.util.OpenCvUtil;
 
 public class CamUtil {
+	
+	public static int[] VID_CAP_PRIORITIES = 
+			new int[] {Videoio.CAP_DSHOW, Videoio.CAP_FFMPEG,  Videoio.CAP_ANY};
+	
+	private static int DEF_VID_CAP_ID = -1;
+	
+	public static int getDefVidCapDriverId()
+	{
+		return getDefVidCapDriverId(0);
+	}
+	
+	public static int getDefVidCapDriverId(int aDeviceId)
+	{
+		if(DEF_VID_CAP_ID<0)
+		{
+			boolean isWindows = false;
+			
+			String osName = System.getProperty("os.name");
+			if(osName!=null)
+			{
+				osName = osName.toLowerCase();
+				isWindows = osName.contains("windows");
+			}
+			
+			VideoCapture vid = null;
+			try {
+				
+				for(int iCAP_ID : VID_CAP_PRIORITIES)
+				{
+					if(!isWindows && iCAP_ID==Videoio.CAP_DSHOW)
+					{
+						System.out.println("Skip CAP_"+iCAP_ID);
+						continue;
+					}
+					
+					System.out.println("Trying CAP_"+iCAP_ID);
+					
+					vid = new VideoCapture(aDeviceId, iCAP_ID);
+					if(vid.isOpened())
+					{
+						DEF_VID_CAP_ID = iCAP_ID;
+						break;
+					}
+					else
+					{
+						if(vid!=null)
+						{
+							vid.release();
+						}
+					}
+				}
+			}
+			finally
+			{
+				if(vid!=null)
+				{
+					vid.release();
+				}
+			}
+			System.out.println("Init with CAP_"+DEF_VID_CAP_ID);
+		}
+		return DEF_VID_CAP_ID;
+	}
 
 	public static JSONArray listLocalCameras(boolean isIncludeSampleBase64)
 	{
 		JSONArray jsonArrCams 	= new JSONArray();
 		VideoCapture vid 		= null;
 		Mat matSample			= null;
+		
+		int iCAPid = getDefVidCapDriverId(0);
+		
 		for(int i=0; i<50; i++)
 		{
 			try {
@@ -44,7 +110,7 @@ public class CamUtil {
 				{
 					matSample = new Mat();
 				}
-				vid = new VideoCapture(i);
+				vid = new VideoCapture(i, iCAPid);
 				if(vid.isOpened())
 				{
 					int iWidth 	= (int) vid.get(Videoio.CAP_PROP_FRAME_WIDTH);
@@ -91,7 +157,8 @@ public class CamUtil {
 	//////////
 	public static void main(String args[]) throws Exception
 	{
-
+		OpenCvUtil.initOpenCV();
+		CamUtil.listLocalCameras(true);
 	}
 	
 }

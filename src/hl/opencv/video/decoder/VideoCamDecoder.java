@@ -29,6 +29,8 @@ import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import hl.opencv.video.utils.CamUtil;
+
 public class VideoCamDecoder extends VideoCaptureDecoder {
 	
 	private static Logger logger = Logger.getLogger(VideoCamDecoder.class.getName());
@@ -37,21 +39,26 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	private int cam_res_width 	= -1;
 	private int cam_res_height 	= -1;
 	private double cam_fps 		= 0;
+	private int[] vidcap_priorities = CamUtil.VID_CAP_PRIORITIES;
+	
 	//
 	public VideoCamDecoder(int aCapDeviceID)
 	{
-		initCamera(aCapDeviceID, Videoio.CAP_ANY);
+		initCamera(aCapDeviceID, vidcap_priorities);
 	}
 	
 	public VideoCamDecoder(int aCapDeviceID, int aApiPreference)
 	{
-		initCamera(aCapDeviceID, aApiPreference);
+		initCamera(aCapDeviceID, vidcap_priorities);
 	}
 	
-	private void initCamera(int aCapDeviceID, int aApiPreference)
+	private void initCamera(int aCapDeviceID, int[] aVidPriorities)
 	{
 		this.cam_id = aCapDeviceID;
-		VideoCapture vid = new VideoCapture(aCapDeviceID, aApiPreference);
+		
+		int iVidCapDriverId = CamUtil.getDefVidCapDriverId(aCapDeviceID);
+		
+		VideoCapture vid = new VideoCapture(aCapDeviceID, iVidCapDriverId);
 		super.setVideoCapture(vid);
 		//
 		String sCapSourceName = String.valueOf(aCapDeviceID);

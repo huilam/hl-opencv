@@ -32,6 +32,8 @@ import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 
+import hl.opencv.video.utils.CamUtil;
+
 public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	private static Logger logger = Logger.getLogger(VideoFileDecoder.class.getName());
@@ -51,7 +53,8 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	public VideoFileDecoder(File aVideoFile)
 	{
-		initVideoFile(aVideoFile, Videoio.CAP_ANY);
+		int iCAP = CamUtil.getDefVidCapDriverId(); 
+		initVideoFile(aVideoFile, iCAP);
 	}
 	
 	public VideoFileDecoder(File aVideoFile, int aApiPreference)
