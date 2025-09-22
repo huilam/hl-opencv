@@ -35,6 +35,7 @@ import java.util.Vector;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -59,7 +60,6 @@ public class OpenCvUtil{
 	
 	private static Decoder base64Decoder = Base64.getDecoder();
 	private static Encoder base64Encoder = Base64.getEncoder();
-	private static OpenCvLibLoader opencvLib = null;
 	
 	private static int BRIGHTNESS_MAX_SAMPLING_WIDTH = 500;
 	
@@ -510,30 +510,44 @@ public class OpenCvUtil{
 	
 	public static OpenCvLibLoader initOpenCV()
 	{
-		if(opencvLib==null)
-			opencvLib = initOpenCV("/");
-		return opencvLib;
+		return initOpenCVfromPath(new File("/"));
 	}
 	
-	public static OpenCvLibLoader initOpenCV(String aCustomLibPath)
+	public static OpenCvLibLoader initOpenCVfromPath(File aCustomLibPath)
 	{
-		if(aCustomLibPath==null||aCustomLibPath.trim().length()==0)
-			aCustomLibPath = "/";
+		return initOpenCV(aCustomLibPath, null);
+	}
+	
+	public static OpenCvLibLoader initOpenCV_withSuffix(final String aLibSuffix)
+	{
+		return initOpenCV_withSuffix(new File("/"),  aLibSuffix);
+	}
+	
+	public static OpenCvLibLoader initOpenCV_withSuffix(File aCustomLibPath, final String aLibSuffix)
+	{
+		return initOpenCV(aCustomLibPath,  Core.NATIVE_LIBRARY_NAME+aLibSuffix);
+	}
+	
+	private static OpenCvLibLoader initOpenCV(File aCustomLibPathFile, final String aLibraryFileName)
+	{
+		String sNativeLibFileName = null;
+		String sCustomLibPath = aCustomLibPathFile!=null?aCustomLibPathFile.getAbsolutePath():null;
 		
-		if(aCustomLibPath.equals("/"))
-		{
-			opencvLib = OpenCvLibLoader.getMasterInstance();
-		}
+		if(aLibraryFileName==null || aLibraryFileName.trim().length()==0)
+			sNativeLibFileName = Core.NATIVE_LIBRARY_NAME;
 		else
-		{
-			opencvLib = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, aCustomLibPath);
-		}
+			sNativeLibFileName = aLibraryFileName;
+		
+		if(sCustomLibPath==null||sCustomLibPath.trim().length()==0)
+			sCustomLibPath = "/";
+		
+		OpenCvLibLoader opencvLib = OpenCvLibLoader.getInstance(sNativeLibFileName, sCustomLibPath);
 		
 		if(!opencvLib.init())
 		{
 			StringBuffer sErr = new StringBuffer();
-			sErr.append("OpenCv is NOT loaded ! libname:").append(Core.NATIVE_LIBRARY_NAME);
-			sErr.append(", libpath:").append(aCustomLibPath);
+			sErr.append("OpenCv is NOT loaded ! libname:").append(sNativeLibFileName);
+			sErr.append(", libpath:").append(sCustomLibPath);
 			
 			Exception e = opencvLib.getInitException();
 			if(e!=null)
@@ -1077,10 +1091,11 @@ public class OpenCvUtil{
 	
 	public static void main(String args[]) throws Exception
 	{
+		//OpenCvUtil.initOpenCV();
 		OpenCvUtil.initOpenCV();
-		OpenCvUtil.initOpenCV();
-		OpenCvUtil.initOpenCV();
-		OpenCvUtil.initOpenCV();
+		
+		//OpenCvUtil.initOpenCV("/Users/onghuilam/dev");
+		OpenCvUtil.initOpenCV_withSuffix(new File("/Users/onghuilam/dev"),"_gstreamer");
 		/**
 		String sFeatures[] = new String[] {"FFMPEG","GSTREAMER","OPENVINO","CUDA"};
 		for(String sFeature : sFeatures)

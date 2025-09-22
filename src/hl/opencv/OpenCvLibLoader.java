@@ -27,6 +27,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.opencv.core.Core;
 
@@ -44,18 +46,32 @@ public class OpenCvLibLoader{
 	private String opencv_version	= null;
 	private String opencv_buildinfo	= null;
 	
-	private static OpenCvLibLoader instance = null;
 	private static Object synObj = new Object();
 	private static Object synInitObj = new Object();
 	
-	public static OpenCvLibLoader getMasterInstance()
+	private static Map<String, OpenCvLibLoader> mapOpenCvLibLoader = new HashMap<>();
+	
+	public static OpenCvLibLoader getInstance()
 	{
+		return getInstance(Core.NATIVE_LIBRARY_NAME, "/");
+	}
+	
+	public static OpenCvLibLoader getInstance(String aLibFileName, String aCustomPath)
+	{
+		if(aCustomPath==null || aCustomPath.trim().length()==0)
+			aCustomPath = "/";
+		else if(!aCustomPath.endsWith("/"))
+			aCustomPath = aCustomPath + "/";
+		
+		OpenCvLibLoader instance = mapOpenCvLibLoader.get(aCustomPath+aLibFileName);
+		
 		if(instance==null)
 		{
 			synchronized(synObj) 
 			{
-				instance = new OpenCvLibLoader(Core.NATIVE_LIBRARY_NAME, "/");
-				instance.init();
+				instance = new OpenCvLibLoader(aLibFileName, aCustomPath);
+				if(instance.init())
+					mapOpenCvLibLoader.put(aCustomPath+aLibFileName, instance);
 			}
 		}
 		return instance;
@@ -176,6 +192,6 @@ public class OpenCvLibLoader{
 	
 	public static void main(String args[]) throws Exception
 	{
-		OpenCvLibLoader cvLib = OpenCvLibLoader.getMasterInstance();
+		OpenCvLibLoader cvLib = OpenCvLibLoader.getInstance();
 	}
 }
