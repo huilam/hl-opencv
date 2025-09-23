@@ -22,6 +22,9 @@
 
 package hl.opencv.video.utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.opencv.core.Mat;
@@ -32,46 +35,102 @@ import hl.opencv.util.OpenCvUtil;
 
 public class CamUtil {
 	
-	public static int[] VID_CAP_PRIORITIES = 
-			new int[] {Videoio.CAP_DSHOW, Videoio.CAP_FFMPEG,  Videoio.CAP_ANY};
-	
 	private static int DEF_VID_CAP_ID = -1;
+	private static List<Integer> LIST_VID_CAP_PRIORITIES = null;
 	
 	public static int getDefVidCapDriverId()
 	{
 		return getDefVidCapDriverId(0);
 	}
 	
+	public static void setVidCapDriverPriorities(int aVidCapDrivers[])
+	{
+		if(aVidCapDrivers!=null && aVidCapDrivers.length>0)
+		{
+			if(LIST_VID_CAP_PRIORITIES==null)
+				LIST_VID_CAP_PRIORITIES = new ArrayList<Integer>();
+			for(int iVidCapDriver : aVidCapDrivers)
+			{
+				LIST_VID_CAP_PRIORITIES.add(iVidCapDriver);
+			}
+		}
+	}
+	public static List<Integer> getVidCapDriverPriorities()
+	{
+		if(LIST_VID_CAP_PRIORITIES!=null)
+			return LIST_VID_CAP_PRIORITIES;
+		
+		
+		List<Integer> listDriverPriorities = new ArrayList<>();
+		
+		String osName = System.getProperty("os.name");
+		if(osName!=null)
+		{
+			osName = osName.toLowerCase();
+			if(osName.contains("windows"))
+			{
+				listDriverPriorities.add(Videoio.CAP_DSHOW);
+				listDriverPriorities.add(Videoio.CAP_MSMF);
+			}
+			else if(osName.contains("linux"))
+			{
+				listDriverPriorities.add(Videoio.CAP_V4L2);
+			}
+			else if(osName.contains("mac") || osName.contains("darwin"))
+			{
+				listDriverPriorities.add(Videoio.CAP_AVFOUNDATION);
+			}
+		}
+		listDriverPriorities.add(Videoio.CAP_FFMPEG);
+		listDriverPriorities.add(Videoio.CAP_ANY);
+		
+		LIST_VID_CAP_PRIORITIES = listDriverPriorities;
+		
+		return LIST_VID_CAP_PRIORITIES;
+	}
+	
 	public static int getDefVidCapDriverId(int aDeviceId)
 	{
 		if(DEF_VID_CAP_ID<0)
 		{
-			boolean isWindows = false;
-			
-			String osName = System.getProperty("os.name");
-			if(osName!=null)
-			{
-				osName = osName.toLowerCase();
-				isWindows = osName.contains("windows");
-			}
-			
 			VideoCapture vid = null;
 			try {
 				
-				for(int iCAP_ID : VID_CAP_PRIORITIES)
+				for(Integer iCAP_ID : getVidCapDriverPriorities())
 				{
-					if(!isWindows && iCAP_ID==Videoio.CAP_DSHOW)
+					String sCapName = "CAP_"+iCAP_ID;
+					switch(iCAP_ID)
 					{
-						System.out.println("Skip CAP_"+iCAP_ID);
-						continue;
+						case Videoio.CAP_ANY: 
+							sCapName = "CAP_ANY";
+							break;
+						case Videoio.CAP_DSHOW: 
+							sCapName = "CAP_DSHOW";
+							break;
+						case Videoio.CAP_MSMF: 
+							sCapName = "CAP_MSMF";
+							break;
+						case Videoio.CAP_FFMPEG: 
+							sCapName = "CAP_FFMPEG";
+							break;
+						case Videoio.CAP_AVFOUNDATION: 
+							sCapName = "CAP_AVFOUNDATION";
+							break;
+						case Videoio.CAP_V4L2: 
+							sCapName = "CAP_V4L2";
+							break;
+						case Videoio.CAP_GSTREAMER: 
+							sCapName = "CAP_GSTREAMER";
+							break;
 					}
 					
-					System.out.println("Trying CAP_"+iCAP_ID);
+					System.out.print("Trying "+sCapName+" ("+iCAP_ID+")");
 					
 					vid = new VideoCapture(aDeviceId, iCAP_ID);
 					if(vid.isOpened())
 					{
 						DEF_VID_CAP_ID = iCAP_ID;
+						System.out.println(" Success !");
 						break;
 					}
 					else
@@ -80,6 +139,7 @@ public class CamUtil {
 						{
 							vid.release();
 						}
+						System.out.println();
 					}
 				}
 			}
@@ -90,8 +150,13 @@ public class CamUtil {
 					vid.release();
 				}
 			}
-			System.out.println("Init with CAP_"+DEF_VID_CAP_ID);
 		}
+		
+		if(DEF_VID_CAP_ID==-1)
+		{
+			System.out.print("NO Capture Driver Available !");
+		}
+		
 		return DEF_VID_CAP_ID;
 	}
 

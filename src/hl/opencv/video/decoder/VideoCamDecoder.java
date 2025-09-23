@@ -22,6 +22,7 @@
 
 package hl.opencv.video.decoder;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
@@ -39,24 +40,26 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	private int cam_res_width 	= -1;
 	private int cam_res_height 	= -1;
 	private double cam_fps 		= 0;
-	private int[] vidcap_priorities = CamUtil.VID_CAP_PRIORITIES;
 	
 	//
 	public VideoCamDecoder(int aCapDeviceID)
 	{
-		initCamera(aCapDeviceID, vidcap_priorities);
+		initCamera(aCapDeviceID, -1);
 	}
 	
 	public VideoCamDecoder(int aCapDeviceID, int aApiPreference)
 	{
-		initCamera(aCapDeviceID, vidcap_priorities);
+		initCamera(aCapDeviceID, aApiPreference);
 	}
 	
-	private void initCamera(int aCapDeviceID, int[] aVidPriorities)
+	private void initCamera(int aCapDeviceID, int aApiPreference)
 	{
 		this.cam_id = aCapDeviceID;
 		
-		int iVidCapDriverId = CamUtil.getDefVidCapDriverId(aCapDeviceID);
+		int iVidCapDriverId = aApiPreference;
+		
+		if(iVidCapDriverId<0)
+			iVidCapDriverId = CamUtil.getDefVidCapDriverId(aCapDeviceID);
 		
 		VideoCapture vid = new VideoCapture(aCapDeviceID, iVidCapDriverId);
 		super.setVideoCapture(vid);

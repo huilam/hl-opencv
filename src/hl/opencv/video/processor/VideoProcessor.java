@@ -23,8 +23,6 @@
 package hl.opencv.video.processor;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
