@@ -23,12 +23,14 @@
 package hl.opencv.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.opencv.core.Mat;
 
-import hl.opencv.video.VideoDecoder;
+import hl.opencv.video.decoder.VideoFileDecoder;
 
 public class TestFileBaseProcessor {
 	
@@ -87,9 +89,8 @@ public class TestFileBaseProcessor {
 	
 	public void processVideoFile(int aSeqNo, File aVideoFile)
 	{
-		VideoDecoder vidDecoder = new VideoDecoder()
-		{
-			@Override 
+		VideoFileDecoder vidDecoder = new VideoFileDecoder(aVideoFile)
+		{	@Override 
 			public boolean processStarted(String aVideoFileName, 
 					long aFrameTimestampFrom, long aFrameTimestampTo, int aResWidth, int aResHeight, 
 					long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
@@ -116,16 +117,31 @@ public class TestFileBaseProcessor {
 			}
 			
 			@Override 
-			public void processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
+			public JSONObject processEnded(String aVideoFileName, long aFromTimeMs, long aToTimeMs, 
 					long aTotalFrames, long aTotalProcessed, long aElpasedMs)
 			{
 				System.out.println();
 				System.out.println("[COMPLETED] "+aVideoFileName);
 				System.out.println("Total processed / total : "+aTotalProcessed+" / "+aTotalFrames);
 				System.out.println("Total elapsed time (ms) : "+aElpasedMs);
+				return null;
 			}
 		};
-		vidDecoder.processVideoFile(aVideoFile);
+		
+		///
+		try {
+			vidDecoder.processVideoFile();
+		}
+		finally
+		{
+			try {
+				if(vidDecoder!=null)
+					vidDecoder.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	protected boolean video_processStarted(String aVideoFileName, 
@@ -133,12 +149,14 @@ public class TestFileBaseProcessor {
 			long aTotalSelectedFrames, double aFps, long aSelectedDurationMs)
 	{
 		System.out.println(" - "+aVideoFileName+" : "+aResWidth+"x"+aResHeight);
-		return false;
+		return true;
 	}
 	
 	protected Mat video_decodedVideoFrame(String aVideoFileName, Mat matFrame, 
 			long aFrameNo, long aFrameTimestamp, double aProgressPercentage)
 	{
+		if(aFrameNo%10==0)
+			System.out.println(" - "+aVideoFileName+" : #"+aFrameNo+" - "+aProgressPercentage+" %");
 		return matFrame;
 	}
 	
@@ -151,7 +169,9 @@ public class TestFileBaseProcessor {
 
 	public static void main(String[] args)
 	{
-		File folder = new File("./test/videos/nls");
+		File folder = new File("./test/videos");
+		
+		OpenCvUtil.initOpenCV();
 		
 		TestFileBaseProcessor processor = new TestFileBaseProcessor();
 		

@@ -49,6 +49,7 @@ public class CamUtil {
 		{
 			if(LIST_VID_CAP_PRIORITIES==null)
 				LIST_VID_CAP_PRIORITIES = new ArrayList<Integer>();
+			LIST_VID_CAP_PRIORITIES.clear();
 			for(int iVidCapDriver : aVidCapDrivers)
 			{
 				LIST_VID_CAP_PRIORITIES.add(iVidCapDriver);

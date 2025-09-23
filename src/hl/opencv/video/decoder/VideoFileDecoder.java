@@ -41,6 +41,7 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	private int default_preview_width 				= 200;
 	private JSONObject json_video_meta				= null;
 	private JSONObject json_video_default_preview	= null;
+	private int[] opencv_video_file_drivers 			= new int[] {Videoio.CAP_FFMPEG, Videoio.CAP_ANY};
 	
 	
 	private static long MAX_RES_8K 		= 8192;
@@ -48,27 +49,47 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	private static String[] SUPP_VIDEO_FORMAT_EXT = new String[] {".mp4",".mkv",".avi"};
 	
 	////
+	public void setPreferredVideoFileDriver(int[] aVideoFileDrivers)
+	{
+		this.opencv_video_file_drivers = aVideoFileDrivers;
+	}
 	
 	public VideoFileDecoder(File aVideoFile)
 	{
-		//for file should use Videoio.CAP_ANY
-		initVideoFile(aVideoFile, Videoio.CAP_ANY);
+		initVideoFile(aVideoFile, opencv_video_file_drivers);
 	}
 	
 	public VideoFileDecoder(File aVideoFile, int aApiPreference)
 	{
-		initVideoFile(aVideoFile, aApiPreference);
+		initVideoFile(aVideoFile, new int[]{aApiPreference});
 	}
 	
-	private void initVideoFile(File aVideoFile, int aApiPreference)
+	private void initVideoFile(File aVideoFile, int[] aApiPreferences)
 	{
 		//
-		VideoCapture vid = 
-				new VideoCapture(aVideoFile.getAbsolutePath(), aApiPreference);
-		super.setVideoCapture(vid);
-		this.video_file = aVideoFile;
-		//
-		super.setVideoCaptureName(aVideoFile.getName());
+		if(aVideoFile.isFile())
+		{
+			String sVidFileName = aVideoFile.getAbsolutePath();
+			
+			VideoCapture vid = null;
+			for(int iApiDriver : aApiPreferences)
+			{
+				System.out.println("iApiDriver="+iApiDriver);
+				vid = new VideoCapture(sVidFileName, iApiDriver);
+				
+				if(vid.open(sVidFileName))
+					break;
+			}
+			
+			super.setVideoCapture(vid);
+			this.video_file = aVideoFile;
+			//
+			super.setVideoCaptureName(aVideoFile.getName());
+		}
+		else
+		{
+			System.err.println("File NOT found ! - "+aVideoFile.getAbsolutePath());
+		}
 	}
 	
 	public JSONObject getVideoFileMetadata()

@@ -127,6 +127,8 @@ public class TestVideoDecoder extends VideoFileDecoder {
 		JSONObject jsonMeta = test.getVideoFileMetadata();
 		//System.out.println(jsonMeta);
 		
+		if(jsonMeta!=null)
+		{
 		long lTotalFrameCount = jsonMeta.optLong("FRAME_COUNT",-1);
 		System.out.println("FRAME_COUNT="+lTotalFrameCount);
 
@@ -145,6 +147,7 @@ public class TestVideoDecoder extends VideoFileDecoder {
 		
 		System.out.println("mapFramesByMs.size()="+mapFramesByMs.size()+" vs 2");
 		System.out.println("mapFramesByIdx.size()="+mapFramesByIdx.size()+" vs 3");
+		}
 		
 		//test.processVideoFile(fileVid);
 		
