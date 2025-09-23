@@ -43,21 +43,23 @@ public class VideoFileUtil {
 		
 		VideoFileDecoder vidFileDecoder = null;
 		
-		try{
-			vidFileDecoder = new VideoFileDecoder(aVidFile);
-			jsonMeta = vidFileDecoder.getVideoFileMetadata(isShowPreview);
-		}
-		finally
+		if(aVidFile!=null && aVidFile.isFile())
 		{
-			try {
-				if(vidFileDecoder!=null)
-					vidFileDecoder.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			try{
+				vidFileDecoder = new VideoFileDecoder(aVidFile);
+				jsonMeta = vidFileDecoder.getVideoFileMetadata(isShowPreview);
+			}
+			finally
+			{
+				try {
+					if(vidFileDecoder!=null)
+						vidFileDecoder.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
-		
 		return jsonMeta;
 	}
 	
@@ -75,10 +77,14 @@ public class VideoFileUtil {
 		for(File f : fileVids)
 		{
 			JSONObject jsonMeta = VideoFileUtil.getVideoFileMetadata(f);
-			System.out.println(f.getName()+" : ");
-			System.out.println("   "+jsonMeta.toString());
-			System.out.println("----------------");
-			System.out.println();
+			
+			if(jsonMeta!=null)
+			{
+				System.out.println(f.getName()+" : ");
+				System.out.println("   "+jsonMeta.toString());
+				System.out.println("----------------");
+				System.out.println();
+			}
 		}
 		
 	}
