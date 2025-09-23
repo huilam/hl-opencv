@@ -22,7 +22,6 @@
 
 package hl.opencv.video.decoder;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 import org.json.JSONObject;
@@ -40,7 +39,6 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	private int cam_res_width 	= -1;
 	private int cam_res_height 	= -1;
 	private double cam_fps 		= 0;
-	
 	//
 	public VideoCamDecoder(int aCapDeviceID)
 	{
@@ -51,6 +49,8 @@ public class VideoCamDecoder extends VideoCaptureDecoder {
 	{
 		initCamera(aCapDeviceID, aApiPreference);
 	}
+	
+	////
 	
 	private void initCamera(int aCapDeviceID, int aApiPreference)
 	{

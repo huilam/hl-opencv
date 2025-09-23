@@ -24,7 +24,9 @@ package hl.opencv.video.decoder;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +68,8 @@ public class VideoCaptureDecoder implements AutoCloseable {
 	protected Rect rect_crop_roi 	= null;
 	
 	protected Mat mat_seg_bgref 	= null;
+	
+	private List<Integer> opencv_driver_priorities	= null;
 	
 	protected VideoCaptureDecoder()
 	{
@@ -114,6 +118,47 @@ public class VideoCaptureDecoder implements AutoCloseable {
 		}
 	}
 	
+	public List<Integer> getVideoIoPriorities()
+	{
+		return opencv_driver_priorities;
+	}
+	
+	public void setVideoIoPriorities(List<Integer> aVidCapDrivers)
+	{
+		if(aVidCapDrivers!=null)
+		{
+			setVideoIoPriorities(
+					aVidCapDrivers.toArray(new Integer[aVidCapDrivers.size()]));
+		}
+		else
+		{
+			setVideoIoPriorities(new Integer[]{});
+		}
+	}
+	
+	public void setVideoIoPriorities(Integer aVidCapDrivers[])
+	{
+		if(aVidCapDrivers!=null && aVidCapDrivers.length>0)
+		{
+			if(opencv_driver_priorities==null)
+			{
+				opencv_driver_priorities = new ArrayList<>();
+			}
+			else
+			{
+				opencv_driver_priorities.clear();
+			}
+			
+			for(int iDriver : aVidCapDrivers)
+			{
+				opencv_driver_priorities.add(iDriver);
+			}
+		}
+		else
+		{
+			opencv_driver_priorities = null;
+		}
+	}
 	////
 	public double getMin_similarity_skip_threshold() {
 		return min_similarity_skip_threshold;

@@ -23,6 +23,8 @@
 package hl.opencv.video.decoder;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,39 +42,45 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 	
 	private int default_preview_width 				= 200;
 	private JSONObject json_video_meta				= null;
-	private JSONObject json_video_default_preview	= null;
-	private int[] opencv_video_file_drivers 			= new int[] {Videoio.CAP_FFMPEG, Videoio.CAP_ANY};
-	
+	private JSONObject json_video_default_preview	= null;	
 	
 	private static long MAX_RES_8K 		= 8192;
 	private static long MAX_FPS_100 	= 100;
 	private static String[] SUPP_VIDEO_FORMAT_EXT = new String[] {".mp4",".mkv",".avi"};
 	
 	////
-	public void setPreferredVideoFileDriver(int[] aVideoFileDrivers)
-	{
-		this.opencv_video_file_drivers = aVideoFileDrivers;
-	}
-	
 	public VideoFileDecoder(File aVideoFile)
 	{
-		initVideoFile(aVideoFile, opencv_video_file_drivers);
+		initVideoFile(aVideoFile, null);
 	}
 	
 	public VideoFileDecoder(File aVideoFile, int aApiPreference)
 	{
-		initVideoFile(aVideoFile, new int[]{aApiPreference});
+		initVideoFile(aVideoFile, new Integer[]{aApiPreference});
 	}
 	
-	private void initVideoFile(File aVideoFile, int[] aApiPreferences)
+	private void initVideoFile(File aVideoFile, Integer[] aApiPreferences)
 	{
 		//
+		if(aApiPreferences==null || aApiPreferences.length==0)
+		{
+			List<Integer> list = getVideoIoPriorities();
+			if(list==null)
+			{
+				list = new ArrayList<>();
+				list.add(Videoio.CAP_FFMPEG);
+				list.add(Videoio.CAP_ANY);
+				setVideoIoPriorities(list);
+			}
+			aApiPreferences = list.toArray(new Integer[list.size()]);
+		}
+		
 		if(aVideoFile.isFile())
 		{
 			String sVidFileName = aVideoFile.getAbsolutePath();
 			
 			VideoCapture vid = null;
-			for(int iApiDriver : aApiPreferences)
+			for(Integer iApiDriver : aApiPreferences)
 			{
 				System.out.println("iApiDriver="+iApiDriver);
 				vid = new VideoCapture(sVidFileName, iApiDriver);

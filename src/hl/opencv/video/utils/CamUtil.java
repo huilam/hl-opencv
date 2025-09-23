@@ -36,32 +36,14 @@ import hl.opencv.util.OpenCvUtil;
 public class CamUtil {
 	
 	private static int DEF_VID_CAP_ID = -1;
-	private static List<Integer> LIST_VID_CAP_PRIORITIES = null;
 	
 	public static int getDefVidCapDriverId()
 	{
 		return getDefVidCapDriverId(0);
 	}
 	
-	public static void setVidCapDriverPriorities(int aVidCapDrivers[])
+	public static List<Integer> getDefaultVideoIOPriorities()
 	{
-		if(aVidCapDrivers!=null && aVidCapDrivers.length>0)
-		{
-			if(LIST_VID_CAP_PRIORITIES==null)
-				LIST_VID_CAP_PRIORITIES = new ArrayList<Integer>();
-			LIST_VID_CAP_PRIORITIES.clear();
-			for(int iVidCapDriver : aVidCapDrivers)
-			{
-				LIST_VID_CAP_PRIORITIES.add(iVidCapDriver);
-			}
-		}
-	}
-	public static List<Integer> getVidCapDriverPriorities()
-	{
-		if(LIST_VID_CAP_PRIORITIES!=null)
-			return LIST_VID_CAP_PRIORITIES;
-		
-		
 		List<Integer> listDriverPriorities = new ArrayList<>();
 		
 		String osName = System.getProperty("os.name");
@@ -85,9 +67,7 @@ public class CamUtil {
 		listDriverPriorities.add(Videoio.CAP_FFMPEG);
 		listDriverPriorities.add(Videoio.CAP_ANY);
 		
-		LIST_VID_CAP_PRIORITIES = listDriverPriorities;
-		
-		return LIST_VID_CAP_PRIORITIES;
+		return listDriverPriorities;
 	}
 	
 	public static int getDefVidCapDriverId(int aDeviceId)
@@ -97,7 +77,7 @@ public class CamUtil {
 			VideoCapture vid = null;
 			try {
 				
-				for(Integer iCAP_ID : getVidCapDriverPriorities())
+				for(Integer iCAP_ID : getDefaultVideoIOPriorities())
 				{
 					String sCapName = "CAP_"+iCAP_ID;
 					switch(iCAP_ID)
