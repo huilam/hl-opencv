@@ -42,10 +42,10 @@ public class TestVideoFileMeta {
 	{
 		OpenCvUtil.initOpenCV();
 		
-		File imgFolder = new File("./test/videos/nls");
+		File imgFolder = new File("./test/videos/");
 		
 		File[] files = 
-				FileUtil.getFilesWithExtensions(imgFolder, new String[] {"mkv"});
+				FileUtil.getFilesWithExtensions(imgFolder, new String[] {"mp4"});
 		
 		int i = 0;
 		for(File fileImg : files)

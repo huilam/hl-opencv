@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.json.JSONObject;
 import org.opencv.core.Mat;
+
+import hl.common.FileUtil;
 import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.decoder.VideoFileDecoder;
 
@@ -116,53 +118,55 @@ public class TestVideoDecoder extends VideoFileDecoder {
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		File fileVid = 
-				new File("./test/videos/crl/trimmed_10sec.mp4");
-				//new File("./test/videos/youtube/SG_REQ_NOMASK.mp4");
 		
-		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
+		File[] videoFIles = FileUtil.getFilesWithExtensions(new File("./test/videos/"), 
+				new String[] {".mp4"});
 		
-		TestVideoDecoder test = new TestVideoDecoder(fileVid);
-		
-		JSONObject jsonMeta = test.getVideoFileMetadata();
-		//System.out.println(jsonMeta);
-		
-		if(jsonMeta!=null)
+		for(File vid : videoFIles)
 		{
-		long lTotalFrameCount = jsonMeta.optLong("FRAME_COUNT",-1);
-		System.out.println("FRAME_COUNT="+lTotalFrameCount);
-
-		long lDurationMs = jsonMeta.optLong("EST_DURATION_MS",-1);
-		System.out.println("EST_DURATION_MS="+lDurationMs);
-		
-		long lLastFrameIdx = jsonMeta.optLong("LAST_FRAME_IDX",-1);
-		System.out.println("LAST_FRAME_IDX="+lLastFrameIdx);
-		
-		long lLastFrameMs = jsonMeta.optLong("LAST_FRAME_MS",-1);
-		System.out.println("LAST_FRAME_MS="+lLastFrameMs);
-		
-		Map<Long, Mat> mapFramesByMs = test.getFramesByTimestamp(new long[] {0, lLastFrameMs});
-		Map<Long, Mat> mapFramesByIdx = test.getFramesByIndex(new long[] {0, 1, lTotalFrameCount-1, lTotalFrameCount});
-		
-		
-		System.out.println("mapFramesByMs.size()="+mapFramesByMs.size()+" vs 2");
-		System.out.println("mapFramesByIdx.size()="+mapFramesByIdx.size()+" vs 3");
+			System.out.println(vid.getName()+ " = "+vid.exists());
+			
+			TestVideoDecoder test = new TestVideoDecoder(vid);
+			
+			JSONObject jsonMeta = test.getVideoFileMetadata();
+			//System.out.println(jsonMeta);
+			
+			if(jsonMeta!=null)
+			{
+			long lTotalFrameCount = jsonMeta.optLong("FRAME_COUNT",-1);
+			System.out.println("FRAME_COUNT="+lTotalFrameCount);
+	
+			long lDurationMs = jsonMeta.optLong("EST_DURATION_MS",-1);
+			System.out.println("EST_DURATION_MS="+lDurationMs);
+			
+			long lLastFrameIdx = jsonMeta.optLong("LAST_FRAME_IDX",-1);
+			System.out.println("LAST_FRAME_IDX="+lLastFrameIdx);
+			
+			long lLastFrameMs = jsonMeta.optLong("LAST_FRAME_MS",-1);
+			System.out.println("LAST_FRAME_MS="+lLastFrameMs);
+			
+			Map<Long, Mat> mapFramesByMs = test.getFramesByTimestamp(new long[] {0, lLastFrameMs});
+			Map<Long, Mat> mapFramesByIdx = test.getFramesByIndex(new long[] {0, 1, lTotalFrameCount-1, lTotalFrameCount});
+			
+			test.close();
+			System.out.println("mapFramesByMs.size()="+mapFramesByMs.size()+" vs 2");
+			System.out.println("mapFramesByIdx.size()="+mapFramesByIdx.size()+" vs 3");
+			}
+			
+			//test.processVideoFile(fileVid);
+			
+			/**
+			long lFreeMemory1 = Runtime.getRuntime().freeMemory();
+			
+			TestVideoDecoder test = new TestVideoDecoder();
+			test.processVideoFile(fileVid);
+			long lFreeMemory2 = Runtime.getRuntime().freeMemory();
+			
+			System.out.println("totalMemory="+Runtime.getRuntime().totalMemory());
+			System.out.println("freeMemory (before) ="+lFreeMemory1);
+			System.out.println("freeMemory (after) ="+lFreeMemory2);
+			System.out.println("freeMemorry (after-before) ="+(lFreeMemory2-lFreeMemory1));
+			**/
 		}
-		
-		//test.processVideoFile(fileVid);
-		
-		/**
-		long lFreeMemory1 = Runtime.getRuntime().freeMemory();
-		
-		TestVideoDecoder test = new TestVideoDecoder();
-		test.processVideoFile(fileVid);
-		long lFreeMemory2 = Runtime.getRuntime().freeMemory();
-		
-		System.out.println("totalMemory="+Runtime.getRuntime().totalMemory());
-		System.out.println("freeMemory (before) ="+lFreeMemory1);
-		System.out.println("freeMemory (after) ="+lFreeMemory2);
-		System.out.println("freeMemorry (after-before) ="+(lFreeMemory2-lFreeMemory1));
-		**/
-		
 	}
 }

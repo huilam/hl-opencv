@@ -23,9 +23,11 @@
 package hl.opencv.video;
 
 import java.io.File;
+
+import hl.common.FileUtil;
 import hl.opencv.util.OpenCvUtil;
 import hl.opencv.video.plugins.VideoFileReEncodingPlugin;
-import hl.opencv.video.plugins.VideoImageExtractorPlugin;
+import hl.opencv.video.plugins.VideoFrameExtractorPlugin;
 import hl.opencv.video.plugins.VideoImageSizeCalcPlugin;
 import hl.opencv.video.plugins.VideoProcessorDebugPlugin;
 import hl.opencv.video.processor.VideoProcessor;
@@ -36,36 +38,36 @@ public class TestVideoProcessor {
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvUtil.initOpenCV();
-		File fileVid = 
-				new File("./test/videos/Main Gate Inlane.mp4");
 		
-		System.out.println(fileVid.getName()+ " = "+fileVid.exists());
-	
-		VideoProcessor test = new VideoProcessor();
+		File[] videoFIles = FileUtil.getFilesWithExtensions(new File("./test/videos/"), 
+				new String[] {".mp4"});
 		
-		String sPluginClassName =  VideoFileReEncodingPlugin.class.getName();
-		
-		int iPluginId = 1;
-	
-		switch(iPluginId)
+		for(File vid : videoFIles)
 		{
-			case 1 : 
-				break;
-			case 2 : 
-				sPluginClassName = VideoProcessorDebugPlugin.class.getName();
-				break;
-			case 3 : 
-				sPluginClassName = VideoImageExtractorPlugin.class.getName();
-				break;
-			case 4 : 
-				sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
-				break;
-			default :
-		}
-		//test.processLiveCamera(0, sPluginClassName, -1);
-
+			System.out.println("Processing "+vid.getName()+" ...");
 		
-		test.processVideoFile(fileVid, sPluginClassName, 0, -1);
+			VideoProcessor test = new VideoProcessor();
+			String sPluginClassName =  VideoFileReEncodingPlugin.class.getName();
+			
+			int iPluginId = 1;
+		
+			switch(iPluginId)
+			{
+				case 1 : 
+					break;
+				case 2 : 
+					sPluginClassName = VideoProcessorDebugPlugin.class.getName();
+					break;
+				case 3 : 
+					sPluginClassName = VideoFrameExtractorPlugin.class.getName();
+					break;
+				case 4 : 
+					sPluginClassName = VideoImageSizeCalcPlugin.class.getName();
+					break;
+				default :
+			}
+			test.processVideoFile(vid, sPluginClassName, 0, -1);
+		}
 		
 	}
 }

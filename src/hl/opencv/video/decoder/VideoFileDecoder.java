@@ -82,7 +82,7 @@ public class VideoFileDecoder extends VideoCaptureDecoder {
 			VideoCapture vid = null;
 			for(Integer iApiDriver : aApiPreferences)
 			{
-				System.out.println("iApiDriver="+iApiDriver);
+				//System.out.println("iApiDriver="+iApiDriver);
 				vid = new VideoCapture(sVidFileName, iApiDriver);
 				
 				if(vid.open(sVidFileName))

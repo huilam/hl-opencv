@@ -23,6 +23,7 @@
 package hl.opencv.video.processor;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +42,7 @@ public class VideoProcessor {
 	
 	private double min_brightness_threshold = -1;
 	private double min_similarity_threshold = -1;
+	private Integer[] video_io_priorities = null;
 	
 	//////////////////////////////////////
 	
@@ -129,6 +131,14 @@ public class VideoProcessor {
 							plugin.destroyPlugin(jsonMeta);
 						}
 					}
+					
+					if(vidDecoder!=null)
+						try {
+							vidDecoder.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 			}
 			finally

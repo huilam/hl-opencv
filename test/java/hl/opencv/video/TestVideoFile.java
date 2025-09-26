@@ -26,6 +26,7 @@ import java.io.File;
 
 import org.opencv.core.Mat;
 
+import hl.common.FileUtil;
 import hl.opencv.util.OpenCvUtil;
 
 public class TestVideoFile {
@@ -35,32 +36,35 @@ public class TestVideoFile {
 	{
 		OpenCvUtil.initOpenCV();
 		
+		File[] videoFIles = FileUtil.getFilesWithExtensions(new File("./test/videos/"), 
+				new String[] {".mp4"});
 		
-		File file = new File("./test/videos/bdd100k/cc3f1794-f4868199.mp4");
-		
-		TestVideoDecoder vidDecoder = new TestVideoDecoder(file);
-		vidDecoder.fileOutput = new File(file.getParentFile().getAbsolutePath()+"/output");
-		vidDecoder.setBgref_mat(null);
-		
-		//
-		File fileROIMask = new File(file.getParentFile().getAbsolutePath()+"/mask-test.jpg");
-		if(fileROIMask.isFile())
+		for(File vid : videoFIles)
 		{
-			Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
-			vidDecoder.setROI_mat(matROImask);
+			TestVideoDecoder vidDecoder = new TestVideoDecoder(vid);
+			vidDecoder.fileOutput = new File(vid.getParentFile().getAbsolutePath()+"/output");
+			vidDecoder.setBgref_mat(null);
+			vidDecoder.close();
+			
+			//
+			File fileROIMask = new File(vid.getParentFile().getAbsolutePath()+"/mask-test.jpg");
+			if(fileROIMask.isFile())
+			{
+				Mat matROImask = OpenCvUtil.loadImage(fileROIMask.getAbsolutePath());
+				vidDecoder.setROI_mat(matROImask);
+			}
+			
+			//vidDecoder.setCrop_ROI_rect(new org.opencv.core.Rect(100,100,10,10));
+			//
+			vidDecoder.setMin_brightness_skip_threshold(0);
+			vidDecoder.setMax_brightness_calc_width(200);
+			//
+			vidDecoder.setMin_similarity_skip_threshold(0);
+			vidDecoder.setMax_similarity_compare_width(500);
+			//
+			vidDecoder.processVideoFile(0, 1000);
+			
 		}
-		
-		//vidDecoder.setCrop_ROI_rect(new org.opencv.core.Rect(100,100,10,10));
-		//
-		vidDecoder.setMin_brightness_skip_threshold(0);
-		vidDecoder.setMax_brightness_calc_width(200);
-		//
-		vidDecoder.setMin_similarity_skip_threshold(0);
-		vidDecoder.setMax_similarity_compare_width(500);
-		//
-		vidDecoder.processVideoFile(0, 1000);
-		
-		
 	}
 		
 }

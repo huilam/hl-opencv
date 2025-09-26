@@ -29,7 +29,7 @@ import org.opencv.core.Mat;
 
 import hl.opencv.util.OpenCvUtil;
 
-public class VideoImageExtractorPlugin implements IVideoProcessorPlugin {
+public class VideoFrameExtractorPlugin implements IVideoProcessorPlugin {
 	
 	private File folder_imgoutput = null;
 	private long extract_success_count = 0;
