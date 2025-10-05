@@ -30,6 +30,7 @@ import java.util.List;
 import org.json.JSONObject;
 import org.opencv.core.Mat;
 
+import hl.common.FileUtil;
 import hl.opencv.video.decoder.VideoFileDecoder;
 
 public class TestFileBaseProcessor {
@@ -38,18 +39,10 @@ public class TestFileBaseProcessor {
 	private List<String> listVideoExt = new ArrayList<String>();
 	
 	public void processFolder(File folder)
-	{
-		listImageExt.add(".jpg");
-		listImageExt.add(".png");
-		
-		listVideoExt.add(".mkv");
-		listVideoExt.add(".mp4");
-		
-		System.out.println();
-		
+	{	
 		int iImageSeqNo = 0;
 		int iVideoSeqNo = 0;
-		File [] files = folder.listFiles();
+		File [] files = FileUtil.getFilesWithExtensions(folder, new String[]{".jpg", ".png", ".mkv", ".mp4"});
 		
 		if(files!=null)
 		{

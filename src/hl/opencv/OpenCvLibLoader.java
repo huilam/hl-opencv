@@ -178,7 +178,14 @@ public class OpenCvLibLoader{
 					}
 				}
 				
-				System.out.println(OpenCvUtil.getDefaultFeatureInfo());
+				if(!this.loaded)
+				{
+					System.err.println(getInitException());
+				}
+				else
+				{
+					System.out.println(OpenCvUtil.getDefaultFeatureInfo());
+				}
 			}
 			
 			
@@ -193,5 +200,6 @@ public class OpenCvLibLoader{
 	public static void main(String args[]) throws Exception
 	{
 		OpenCvLibLoader cvLib = OpenCvLibLoader.getInstance();
+		System.out.println(OpenCvUtil.getDefaultFeatureInfo());
 	}
 }

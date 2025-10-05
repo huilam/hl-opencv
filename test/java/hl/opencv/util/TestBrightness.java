@@ -65,7 +65,7 @@ public class TestBrightness extends TestFileBaseProcessor {
 
 		OpenCvUtil.initOpenCV();
 		
-		File fileImages = new File("./test/images/ace");
+		File fileImages = new File("./test/images");
 
 		TestBrightness processor = new TestBrightness();
 		processor.processFolder(fileImages);
