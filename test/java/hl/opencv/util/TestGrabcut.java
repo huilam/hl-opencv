@@ -26,6 +26,8 @@ import java.io.File;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
+import hl.common.FileUtil;
+
 public class TestGrabcut{
 	
 	private static long getElapsedMs(long aStartTime)
@@ -36,18 +38,21 @@ public class TestGrabcut{
 	
 	public static void main(String[] args) throws InterruptedException
 	{
-		File fileImages = new File("./test/images/nini/Scoliosis");
-		File fileImageOutput = new File(fileImages.getAbsoluteFile()+"/output");
+		File folderImage = new File("./test/images/");
+		File fileImages[] = FileUtil.getFilesWithExtensions(
+				folderImage, new String[] {".jpg",".png"});
+		
+		File fileImageOutput = new File(folderImage.getAbsoluteFile()+"/output");
 		fileImageOutput.mkdirs();
 		
 		OpenCvUtil.initOpenCV();
 		
 		long lStart 	= 0;
 		
-		System.out.println("Processing "+fileImages.getAbsolutePath()+" "+fileImages.listFiles().length+" files ...");
+		System.out.println("Processing "+folderImage.getAbsolutePath()+" "+fileImages.length+" files ...");
 		
 		long iSeq = 0;
-		for(File fImg : fileImages.listFiles())
+		for(File fImg : fileImages)
 		{
 			iSeq++;
 			
