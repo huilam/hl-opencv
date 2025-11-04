@@ -510,7 +510,7 @@ public class OpenCvUtil{
 	
 	public static OpenCvLibLoader initOpenCV()
 	{
-		return initOpenCVfromPath(new File("/"));
+		return initOpenCVfromPath(null);
 	}
 	
 	public static OpenCvLibLoader initOpenCVfromPath(File aCustomLibPath)
@@ -520,7 +520,7 @@ public class OpenCvUtil{
 	
 	public static OpenCvLibLoader initOpenCV_withSuffix(final String aLibSuffix)
 	{
-		return initOpenCV_withSuffix(new File("/"),  aLibSuffix);
+		return initOpenCV_withSuffix(null,  aLibSuffix);
 	}
 	
 	public static OpenCvLibLoader initOpenCV_withSuffix(File aCustomLibPath, final String aLibSuffix)
