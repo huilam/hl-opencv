@@ -30,6 +30,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.geometry.Geometry;
 import org.opencv.imgproc.Imgproc;
 
 public class OpenCvMask{
@@ -179,10 +180,10 @@ public class OpenCvMask{
 						contours_remove = new ArrayList<MatOfPoint>();
 						for(MatOfPoint c : contours)
 						{
-							if(aMinContourArea>0 && Imgproc.contourArea(c)<aMinContourArea)
+							if(aMinContourArea>0 && Geometry.contourArea(c)<aMinContourArea)
 								contours_remove.add(c);
 							
-							if(aMaxContourArea>0 && Imgproc.contourArea(c)>aMaxContourArea)
+							if(aMaxContourArea>0 && Geometry.contourArea(c)>aMaxContourArea)
 								contours_remove.add(c);
 						}
 						if(contours_remove.size()>0)
