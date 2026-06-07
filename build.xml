@@ -3,6 +3,7 @@
 	<property name="src" location="src"/>
 	<property name="build" location="build"/>
 	<property name="jdk.ver" value="21"/>
+	<property name="opencv.ver" value="5"/>
 	
 	<tstamp>
 	    <format property="buildno" pattern="yyyyMMdd-HHmm-ss"/>
@@ -18,7 +19,7 @@
 	<target name="jar" depends="compile">
 		<mkdir dir="${build}/version"/>
 		<touch file="${build}/version/${ant.project.name}_${buildno}"/>
-		<jar jarfile="${build}/${ant.project.name}_jdk${jdk.ver}_${buildno}.jar" basedir="${build}" />
+		<jar jarfile="${build}/${ant.project.name}_cv${opencv.ver}_jdk${jdk.ver}_${buildno}.jar" basedir="${build}" />
 	</target>
 	
 	<target name="clean">
@@ -28,7 +29,7 @@
 	<path id="compile.classpath">
 		<fileset dir="${basedir}">
 		    <include name="lib/*.jar" />
-		    <include name="lib/**/*.jar" />
+		    <include name="lib/opencv/cv${opencv.ver}/**/*.jar" />
 		</fileset>
 	</path>
 </project>
