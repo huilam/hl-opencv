@@ -8,9 +8,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/opencv/native"/>
-	<classpathentry kind="lib" path="lib/json-20250107.jar"/>
 	<classpathentry kind="lib" path="lib/hl-common_jdk17_20251103-1008-52.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/opencv-4120.jar"/>
 	<classpathentry kind="lib" path="lib/opencv/hl-opencv_patch_cv4_jdk21_20260607-2029-57.jar"/>
+	<classpathentry kind="lib" path="lib/json-20260522.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
