@@ -2,6 +2,7 @@
 OpenCV multi-version jar+native loader and convenience utility methods.
 
 Tested on OpenCV 
+- 5.0.0
 - 4.7.0
 - 4.6.0
 
